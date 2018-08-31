@@ -34,3 +34,4 @@
 .vs/
 .vscode/
 build/
+version.hpp
