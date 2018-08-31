@@ -1,0 +1,5 @@
+#pragma once
+
+const uint32_t EngineVersionMajor = @EngineVersionMajor@;
+const uint32_t EngineVersionMinor = @EngineVersionMinor@;
+const uint32_t EngineVersionPatch = @EngineVersionPatch@;
