@@ -1,22 +1,31 @@
 #pragma once
 
+#include "VulkanFunctionLoader.hpp"
 #include <glfw/glfw3.h>
 #include <memory>
 #include <vector>
-#include "Instance.hpp"
 #include "RenderObject.hpp"
-#include "VulkanFunctionLoader.hpp"
 
 namespace vka {
-class Surface : RenderObject {
+
+class Instance;
+
+class Surface {
 public:
-  VkSurfaceKHR getHandle() { return surfaceHandle; }
+  struct CreateInfo {
+    int width;
+    int height;
+    const char* windowTitle;
+  };
+  VkSurfaceKHR getSurfaceHandle() { return surfaceHandle; }
+  GLFWwindow* getWindowHandle() { return windowHandle; }
   Surface() = delete;
-  Surface(std::shared_ptr<Instance>);
+  Surface(std::shared_ptr<Instance>, CreateInfo);
+  ~Surface();
 
 private:
+  std::shared_ptr<Instance> instance;
   VkSurfaceKHR surfaceHandle;
-  GLFWwindow* window;
-  void validateImpl() override;
+  GLFWwindow* windowHandle;
 };
 }  // namespace vka
