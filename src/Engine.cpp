@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <thread>
 #include "Instance.hpp"
-#include "Window.hpp"
 
 namespace vka {
 
@@ -23,14 +22,12 @@ static void mouseButtonCallback(
   auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
 }
 
-Engine::Engine(
-    UpdateCallback updateCallback,
-    int width,
-    int height,
-    const char* windowTitle)
-    : updateCallback(updateCallback),
-      window(std::make_shared<Window>(width, height, windowTitle)) {
-  initInputCallbacks();
+Engine::Engine(Engine::CreateInfo engineCreateInfo)
+    : engineCreateInfo(engineCreateInfo),
+      instance(
+          std::make_shared<Instance>(engineCreateInfo.instanceCreateInfo)) {
+  auto surface = instance->createSurface(engineCreateInfo.surfaceCreateInfo);
+  initInputCallbacks(surface->getWindowHandle());
 }
 
 void Engine::renderThreadFunc() {
@@ -44,8 +41,7 @@ void Engine::renderThreadFunc() {
   }
 }
 
-void Engine::initInputCallbacks() {
-  auto windowHandle = window->getHandle();
+void Engine::initInputCallbacks(GLFWwindow* windowHandle) {
   glfwSetMouseButtonCallback(windowHandle, mouseButtonCallback);
   glfwSetKeyCallback(windowHandle, keyCallback);
   glfwSetCursorPosCallback(windowHandle, cursorPositionCallback);
