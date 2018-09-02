@@ -1,11 +1,9 @@
 #pragma once
 
+#include "VulkanFunctionLoader.hpp"
 #include <memory>
 #include <vector>
-#include "Instance.hpp"
 #include "QueueTraits.hpp"
-#include "RenderObject.hpp"
-#include "VulkanFunctionLoader.hpp"
 
 namespace vka {
 enum class PhysicalDeviceFeatures {
@@ -18,20 +16,29 @@ enum class PhysicalDeviceFeatures {
   samplerAnistropy
 };
 
-class Device : RenderObject {
+class Instance;
+
+class Device {
 public:
-  std::vector<PhysicalDeviceFeatures> requiredFeatures;
-  std::vector<const char*> deviceExtensions;
-  std::vector<QueueTraits> queueTraits;
+  struct Requirements {
+    std::vector<PhysicalDeviceFeatures> requiredFeatures;
+    std::vector<const char*> deviceExtensions;
+    std::vector<QueueTraits> queueTraits;
+  };
+
   VkDevice getHandle() { return deviceHandle; }
   Device() = delete;
-  Device(std::shared_ptr<Instance>);
+  Device(std::shared_ptr<Instance>, Requirements);
 
 private:
+  Requirements requirements;
   VkPhysicalDevice physicalDeviceHandle;
-  VkDevice deviceHandle;
+  VkPhysicalDeviceProperties deviceProperties;
+  std::vector<VkQueueFamilyProperties> queueFamilyproperties;
+  VkPhysicalDeviceMemoryProperties memoryProperties;
 
-  void validateImpl() override;
+  VkDevice deviceHandle;
+  std::vector<VkQueue> queues;
 };
 
 }  // namespace vka

@@ -3,10 +3,25 @@
 #include "Instance.hpp"
 
 namespace vka {
-Device::Device(std::shared_ptr<Instance> instance) {}
-void Device::validateImpl() {
+Device::Device(
+    std::shared_ptr<Instance> instance, Device::Requirements requirements)
+    : requirements(requirements) {
+  physicalDeviceHandle = instance->physicalDevices.at(0);
+  vkGetPhysicalDeviceProperties(physicalDeviceHandle, &deviceProperties);
+
+  uint32_t queueFamilyPropertyCount = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(
+      physicalDeviceHandle, &queueFamilyPropertyCount, nullptr);
+  queueFamilyproperties.resize(queueFamilyPropertyCount);
+  vkGetPhysicalDeviceQueueFamilyProperties(
+      physicalDeviceHandle,
+      &queueFamilyPropertyCount,
+      queueFamilyproperties.data());
+
+  vkGetPhysicalDeviceMemoryProperties(physicalDeviceHandle, &memoryProperties);
+
   VkPhysicalDeviceFeatures enabledFeatures{};
-  for (auto feature : requiredFeatures) {
+  for (auto feature : requirements.requiredFeatures) {
     switch (feature) {
       case PhysicalDeviceFeatures::robustBufferAccess:
         enabledFeatures.robustBufferAccess = true;
@@ -33,14 +48,20 @@ void Device::validateImpl() {
   }
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-  for (auto trait : queueTraits) {
+  for (auto trait : requirements.queueTraits) {
+    auto queueCreateInfo = queueCreateInfos.emplace_back();
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueCount = 1;
+    // queueCreateInfo.
   }
-  VkDeviceCreateInfo createInfo{};
-  createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  createInfo.pEnabledFeatures = &enabledFeatures;
-  createInfo.enabledExtensionCount =
-      static_cast<uint32_t>(deviceExtensions.size());
-  createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-  // createInfo.
+  VkDeviceCreateInfo deviceCreateInfo{};
+  deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+  deviceCreateInfo.enabledExtensionCount =
+      static_cast<uint32_t>(requirements.deviceExtensions.size());
+  deviceCreateInfo.ppEnabledExtensionNames =
+      requirements.deviceExtensions.data();
+  vkCreateDevice(
+      physicalDeviceHandle, &deviceCreateInfo, nullptr, &deviceHandle);
 }
 }  // namespace vka
