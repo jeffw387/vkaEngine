@@ -16,7 +16,6 @@ set(srcDir "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(includeDir "${CMAKE_CURRENT_SOURCE_DIR}/include")
 list(APPEND vkaEngineSources 
   "${srcDir}/Engine.cpp"
-  "${srcDir}/Window.cpp"
   "${srcDir}/Instance.cpp"
   "${srcDir}/Surface.cpp"
   "${srcDir}/RenderGraph.cpp"
@@ -26,7 +25,6 @@ list(APPEND vkaEngineSources
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
   "${includeDir}/Engine.hpp"
-  "${includeDir}/Window.hpp"
   "${includeDir}/RenderObject.hpp"
   "${includeDir}/Instance.hpp"
   "${includeDir}/Device.hpp"
