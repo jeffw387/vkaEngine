@@ -1,5 +1,12 @@
 #pragma once
 
-const uint32_t EngineVersionMajor = @EngineVersionMajor@;
-const uint32_t EngineVersionMinor = @EngineVersionMinor@;
-const uint32_t EngineVersionPatch = @EngineVersionPatch@;
+struct Version {
+  uint32_t major;
+  uint32_t minor;
+  uint32_t patch;
+};
+
+const Version EngineVersion = {
+  @EngineVersionMajor@,
+  @EngineVersionMinor@,
+  @EngineVersionPatch@};
