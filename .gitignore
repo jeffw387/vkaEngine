@@ -35,3 +35,4 @@
 .vscode/
 build/
 version.hpp
+vkaEngineLog.txt
