@@ -29,7 +29,6 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Instance.hpp"
   "${includeDir}/Device.hpp"
   "${includeDir}/Buffer.hpp"
-  "${includeDir}/QueueTraits.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/braintree.hpp"
   "${includeDir}/RenderGraph.hpp"
@@ -39,6 +38,8 @@ target_include_directories(vkaEngine PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(vkaEngine PROPERTIES
   CXX_STANDARD 17)
+
+target_compile_definitions(vkaEngine PUBLIC NOMINMAX VK_USE_PLATFORM_WIN32_KHR)
 
 add_custom_command(
   TARGET vkaEngine
@@ -90,5 +91,8 @@ if(NOT TARGET tbb_static)
   message(FATAL_ERROR "tbb_static target not found")
   endif()
 target_link_libraries(vkaEngine PUBLIC tbb_static)
+
+add_subdirectory(external/spdlog)
+target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
 
 add_subdirectory(tests)
