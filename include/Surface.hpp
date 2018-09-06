@@ -9,22 +9,23 @@
 namespace vka {
 
 class Instance;
+struct SurfaceCreateInfo {
+  int width;
+  int height;
+  const char* windowTitle;
+};
 
 class Surface {
 public:
-  struct CreateInfo {
-    int width;
-    int height;
-    const char* windowTitle;
-  };
   VkSurfaceKHR getSurfaceHandle() { return surfaceHandle; }
   GLFWwindow* getWindowHandle() { return windowHandle; }
   Surface() = delete;
-  Surface(std::shared_ptr<Instance>, CreateInfo);
+  Surface(std::shared_ptr<Instance>, SurfaceCreateInfo);
   ~Surface();
+  std::shared_ptr<Instance> getInstance() { return instance.lock(); }
 
 private:
-  std::shared_ptr<Instance> instance;
+  std::weak_ptr<Instance> instance;
   VkSurfaceKHR surfaceHandle;
   GLFWwindow* windowHandle;
 };

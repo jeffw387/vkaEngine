@@ -1,4 +1,5 @@
 message("FROM TESTS: before adding testmain")
+set(BUILD_SHARED_LIBS OFF)
 add_executable(testmain "testmain.cpp")
 target_link_libraries(testmain PRIVATE vkaEngine)
 

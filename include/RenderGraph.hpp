@@ -109,7 +109,7 @@ public:
   VkAttachmentDescription description;
 
   void realize(
-      std::shared_ptr<Device> device, std::shared_ptr<Allocator> allocator);
+    std::shared_ptr<Device> device, std::shared_ptr<Allocator> allocator);
 
   void release();
 
@@ -139,7 +139,7 @@ class FrameGraph {
 
 public:
   std::shared_ptr<Attachment> addAttachment(
-      VkFormat format, VkExtent3D size, VkSampleCountFlagBits sampleCount);
+    VkFormat format, VkExtent3D size, VkSampleCountFlagBits sampleCount);
   std::shared_ptr<Subpass> addSubpass();
   void compile();
 

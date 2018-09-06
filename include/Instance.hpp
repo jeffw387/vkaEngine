@@ -3,41 +3,51 @@
 #include "VulkanFunctionLoader.hpp"
 #include <memory>
 #include <vector>
-#include "Device.hpp"
-#include "QueueTraits.hpp"
-#include "Surface.hpp"
 #include "version.hpp"
 
 namespace vka {
 
+class Engine;
 class Surface;
 class Device;
+struct DeviceRequirements;
+struct SurfaceCreateInfo;
 
-class Instance : std::enable_shared_from_this<Instance> {
+struct InstanceCreateInfo {
+  const char* appName;
+  Version appVersion;
+  std::vector<const char*> instanceExtensions;
+  std::vector<const char*> layers;
+};
+
+class Instance : public std::enable_shared_from_this<Instance> {
   friend class Device;
 
 public:
-  struct CreateInfo {
-    const char* appName;
-    uint32_t appMajorVersion;
-    uint32_t appMinorVersion;
-    uint32_t appPatchVersion;
-    std::vector<const char*> instanceExtensions;
-    std::vector<const char*> layers;
-  };
-  Instance(CreateInfo);
+  using Ptr = std::shared_ptr<Instance>;
 
-  std::shared_ptr<Device> addDevice(Device::Requirements*);
-  std::shared_ptr<Surface> createSurface(Surface::CreateInfo);
-  const std::vector<std::shared_ptr<Device>>& getDevices() { return devices; }
+  Instance() = delete;
+  Instance(const Instance&) = delete;
+  Instance& operator=(const Instance&);
+  Instance(std::shared_ptr<Engine>, InstanceCreateInfo);
+  Instance(Instance&&) = default;
+  Instance& operator=(Instance&&) = default;
+  ~Instance();
+
+  std::shared_ptr<Device> createDevice(DeviceRequirements);
+  std::shared_ptr<Surface> createSurface(SurfaceCreateInfo);
+  std::shared_ptr<Surface> getSurface() { return surface; }
+  std::shared_ptr<Device> getDevice() { return device; }
   VkInstance getHandle() { return instanceHandle; }
+  std::shared_ptr<Engine> getEngine() { return engine.lock(); }
 
 private:
-  CreateInfo instanceCreateInfo;
+  std::weak_ptr<Engine> engine;
+  InstanceCreateInfo instanceCreateInfo;
   LibraryHandle vulkanLibrary;
   VkInstance instanceHandle;
   std::shared_ptr<Surface> surface;
   std::vector<VkPhysicalDevice> physicalDevices;
-  std::vector<std::shared_ptr<Device>> devices;
+  std::shared_ptr<Device> device;
 };
 }  // namespace vka
