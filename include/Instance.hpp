@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 #include "version.hpp"
+#include "spdlog/spdlog.h"
+#include <GLFW/glfw3.h>
 
 namespace vka {
 
@@ -20,34 +22,52 @@ struct InstanceCreateInfo {
   std::vector<const char*> layers;
 };
 
-class Instance : public std::enable_shared_from_this<Instance> {
+struct InstanceDeleter {
+  using pointer = VkInstance;
+  void operator()(VkInstance instance) { vkDestroyInstance(instance, nullptr); }
+};
+using InstanceOwner = std::unique_ptr<VkInstance, InstanceDeleter>;
+
+struct GLFWOwner {
+  GLFWOwner() { glfwInit(); }
+
+  GLFWOwner(GLFWOwner&&) = default;
+  GLFWOwner& operator=(GLFWOwner&&) = default;
+  GLFWOwner(const GLFWOwner&) = delete;
+  GLFWOwner& operator=(const GLFWOwner&) = delete;
+  ~GLFWOwner() { glfwTerminate(); }
+};
+
+class Instance {
   friend class Device;
 
 public:
-  using Ptr = std::shared_ptr<Instance>;
-
   Instance() = delete;
   Instance(const Instance&) = delete;
   Instance& operator=(const Instance&);
-  Instance(std::shared_ptr<Engine>, InstanceCreateInfo);
+  Instance(Engine*, InstanceCreateInfo);
   Instance(Instance&&) = default;
   Instance& operator=(Instance&&) = default;
-  ~Instance();
+  ~Instance() = default;
 
-  std::shared_ptr<Device> createDevice(DeviceRequirements);
-  std::shared_ptr<Surface> createSurface(SurfaceCreateInfo);
-  std::shared_ptr<Surface> getSurface() { return surface; }
-  std::shared_ptr<Device> getDevice() { return device; }
+  Device* createDevice(DeviceRequirements);
+  Device* getDevice() { return device.get(); }
+  Engine* getEngine() { return engine; }
+  Surface* createSurface(SurfaceCreateInfo);
+  Surface* getSurface() { return surface.get(); }
   VkInstance getHandle() { return instanceHandle; }
-  std::shared_ptr<Engine> getEngine() { return engine.lock(); }
+
+  std::shared_ptr<spdlog::logger> multilogger;
 
 private:
-  std::weak_ptr<Engine> engine;
+  Engine* engine;
+  GLFWOwner glfwOwner;
   InstanceCreateInfo instanceCreateInfo;
   LibraryHandle vulkanLibrary;
   VkInstance instanceHandle;
-  std::shared_ptr<Surface> surface;
+  InstanceOwner instanceOwner;
+  std::unique_ptr<Surface> surface;
   std::vector<VkPhysicalDevice> physicalDevices;
-  std::shared_ptr<Device> device;
+  std::unique_ptr<Device> device;
 };
 }  // namespace vka

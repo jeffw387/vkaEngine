@@ -6,23 +6,23 @@
 #include "Engine.hpp"
 
 namespace vka {
-Surface::Surface(
-  std::shared_ptr<Instance> instance, SurfaceCreateInfo surfaceCreateInfo)
-  : instance(instance) {
+Surface::Surface(Instance* instance, SurfaceCreateInfo surfaceCreateInfo)
+    : instance(instance) {
+  multilogger = spdlog::get(LoggerName);
+  multilogger->info("Creating surface.");
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   windowHandle = glfwCreateWindow(
-    surfaceCreateInfo.width,
-    surfaceCreateInfo.height,
-    surfaceCreateInfo.windowTitle,
-    nullptr,
-    nullptr);
+      surfaceCreateInfo.width,
+      surfaceCreateInfo.height,
+      surfaceCreateInfo.windowTitle,
+      nullptr,
+      nullptr);
+  windowOwner = WindowOwner(windowHandle);
   auto surfaceResult = glfwCreateWindowSurface(
-    getInstance()->getHandle(), windowHandle, nullptr, &surfaceHandle);
+      instance->getHandle(), windowHandle, nullptr, &surfaceHandle);
   if (surfaceResult != VK_SUCCESS) {
-    auto multilogger = spdlog::get(LoggerName);
     multilogger->error("Surface not created, result code {}.", surfaceResult);
   }
+  surfaceOwner = SurfaceOwner(surfaceHandle, instance->getHandle());
 }
-
-Surface::~Surface() { glfwDestroyWindow(windowHandle); }
 }  // namespace vka

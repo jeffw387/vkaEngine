@@ -19,11 +19,11 @@ class DeviceBuffer {
 public:
   DeviceBuffer() = default;
   DeviceBuffer(
-    VkDeviceSize size,
-    VmaAllocator allocator,
-    VmaMemoryUsage usage,
-    VkBufferUsageFlags bufferUsage,
-    VmaPool pool = VK_NULL_HANDLE);
+      VkDeviceSize size,
+      VmaAllocator allocator,
+      VmaMemoryUsage usage,
+      VkBufferUsageFlags bufferUsage,
+      VmaPool pool = VK_NULL_HANDLE);
 
   ~DeviceBuffer();
 

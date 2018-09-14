@@ -5,8 +5,48 @@
 #include <memory>
 #include <vector>
 #include "spdlog/spdlog.h"
+#include "glm/glm.hpp"
+#include "ShaderModule.hpp"
+#include "CommandPool.hpp"
+#include "DescriptorPool.hpp"
+#include "DescriptorSetLayout.hpp"
+#include "Pipeline.hpp"
 
 namespace vka {
+
+// A frame is tied to a set of resources:
+// A command buffer is recorded, and for
+//   rendering this requires one or more:
+// Render passes, which can have multiple:
+// Pipelines (and Shaders) which can render one or more:
+// Materials, which can be applied to different:
+// Meshes/Geometries, of which there can be multiple:
+// Instances, each of which has its own transformation matrix
+
+// steps to update
+// 1. player input handling
+// 2. physics update
+// 3. world update (game logic)
+// 4. sort instance data to optimal render order (least state changes)
+//    (perhaps should store instances together so sorting isn't required)
+// 5. stage data if not on unified memory
+// 6. begin command buffer for copy
+// 7. upload any data to device as needed
+//    (transforms, other uniform data, etc.)
+// 8. create pipeline barrier so that rendering occurs after data copy:
+//    buffer barrier on the uniform buffers
+//    source stage: transfer
+//    dest stage: vertex shader
+//    source access: transfer write
+//    dest access: shader read
+// 9. end command buffer
+
+// steps to rendering a frame:
+// 1. acquire swap image
+// 2. acquire the most updated set of resources
+// 3. begin command buffer recording
+//    (should I use a command buffer per
+//    world region as well as per frame?)
 
 enum class PhysicalDeviceFeatures {
   robustBufferAccess,
@@ -19,44 +59,95 @@ enum class PhysicalDeviceFeatures {
 };
 
 class Instance;
+class CommandPool;
+class CommandBuffer;
+class DescriptorPool;
+class DescriptorSetLayout;
+class DescriptorSet;
+class ShaderModule;
+class Pipeline;
+
+struct DeviceDeleter {
+  using pointer = VkDevice;
+  void operator()(VkDevice deviceHandle) {
+    vkDestroyDevice(deviceHandle, nullptr);
+  }
+};
+using DeviceOwner = std::unique_ptr<VkDevice, DeviceDeleter>;
+
+struct AllocatorDeleter {
+  using pointer = VmaAllocator;
+  void operator()(VmaAllocator allocator) { vmaDestroyAllocator(allocator); }
+};
+using AllocatorOwner = std::unique_ptr<VmaAllocator, AllocatorDeleter>;
+
+struct DebugMessengerDeleter {
+  using pointer = VkDebugUtilsMessengerEXT;
+  VkInstance instanceHandle;
+  DebugMessengerDeleter() = default;
+  DebugMessengerDeleter(VkInstance instanceHandle)
+      : instanceHandle(instanceHandle) {}
+  void operator()(VkDebugUtilsMessengerEXT messenger) {
+    if (vkDestroyDebugUtilsMessengerEXT) {
+      vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
+    }
+  }
+};
+using DebugMessengerOwner =
+    std::unique_ptr<VkDebugUtilsMessengerEXT, DebugMessengerDeleter>;
 
 struct DeviceRequirements {
   std::vector<PhysicalDeviceFeatures> requiredFeatures;
   std::vector<const char*> deviceExtensions;
 };
-class Device : public std::enable_shared_from_this<Device> {
+class Device {
   static constexpr uint32_t U32Max = ~(0ui32);
 
 public:
   Device() = delete;
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;
-  Device(std::shared_ptr<Instance>, DeviceRequirements);
+  Device(Instance*, DeviceRequirements);
   Device(Device&&) = default;
   Device& operator=(Device&&) = default;
-  ~Device();
+  ~Device() = default;
   VkDevice getHandle() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  std::shared_ptr<Instance> getInstance() { return instance.lock(); }
+  Instance* getInstance() { return instance; }
+  Pipeline* createPipeline();
+  CommandPool* createCommandPool();
+  DescriptorPool* createDescriptorPool();
+  DescriptorSetLayout* createSetLayout(
+      std::vector<VkDescriptorSetLayoutBinding> bindings);
+  ShaderModule* createShaderModule(std::string shaderPath);
 
 private:
-  std::weak_ptr<Instance> instance;
+  Instance* instance;
   DeviceRequirements requirements;
   std::shared_ptr<spdlog::logger> multilogger;
   VkPhysicalDevice physicalDeviceHandle;
   VkPhysicalDeviceProperties deviceProperties;
   std::vector<VkQueueFamilyProperties> queueFamilyProperties;
   VkPhysicalDeviceMemoryProperties memoryProperties;
-  VmaAllocator allocator;
 
   VkDevice deviceHandle;
+  DeviceOwner deviceOwner;
+  VmaAllocator allocator;
+  AllocatorOwner allocatorOwner;
   uint32_t graphicsQueueIndex = U32Max;
   VkDeviceQueueCreateInfo queueCreateInfo = {
-    VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
+      VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
   VkQueue graphicsQueue;
 
   VkDebugUtilsMessengerEXT debugMessenger;
+  DebugMessengerOwner debugMessengerOwner;
+
+  std::vector<std::unique_ptr<Pipeline>> pipelines;
+  std::vector<std::unique_ptr<CommandPool>> commandPools;
+  std::vector<std::unique_ptr<DescriptorPool>> descriptorPools;
+  std::vector<std::unique_ptr<DescriptorSetLayout>> descriptorSetLayouts;
+  std::vector<std::unique_ptr<ShaderModule>> shaderModules;
 };
 
 }  // namespace vka

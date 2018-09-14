@@ -11,6 +11,9 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"
 
 namespace vka {
 static constexpr auto BufferCount = 3U;
@@ -23,25 +26,32 @@ class Engine;
 class Instance;
 struct InstanceCreateInfo;
 
-using UpdateCallback = std::function<void(std::shared_ptr<Engine>)>;
+using UpdateCallback = std::function<void(Engine*)>;
 struct EngineCreateInfo {
   UpdateCallback updateCallback;
 };
 
-class Engine : public std::enable_shared_from_this<Engine> {
-public:
-  using Ptr = std::shared_ptr<Engine>;
+struct Asset {};
 
+struct AssetData {
+  std::vector<const aiScene*> importedAssets;
+  std::unordered_map<const aiScene*, Asset> assets;
+};
+
+class Engine {
+public:
   Engine() = delete;
   Engine(const Engine&) = delete;
   Engine& operator=(const Engine&) = delete;
   Engine(EngineCreateInfo);
   Engine(Engine&&) = default;
   Engine& operator=(Engine&&) = default;
+  ~Engine() = default;
 
-  std::shared_ptr<Instance> createInstance(InstanceCreateInfo);
+  Instance* createInstance(InstanceCreateInfo);
   void run();
   void setUpdatesPerSecond(uint32_t count) { updatesPerSecond = count; }
+  const aiScene* LoadAsset(const std::string& assetPath);
 
 private:
   void initInputCallbacks();
@@ -53,14 +63,18 @@ private:
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
   EngineCreateInfo engineCreateInfo;
-  std::shared_ptr<Instance> instance;
+  unsigned int assetImportFlags;
+  Assimp::Importer assetImporter;
+  std::unique_ptr<Instance> instance;
   std::mutex stateMutex;
+  bool running = false;
   int32_t updateIndex = -1;
   int32_t lastUpdatedIndex = -1;
   int32_t renderIndex = -1;
   bool continueRendering;
   bool continueUpdating;
   uint32_t updatesPerSecond;
+  Clock::time_point startTime;
   std::array<Clock::time_point, BufferCount> indexUpdateTime;
   UpdateCallback updateCallback;
 

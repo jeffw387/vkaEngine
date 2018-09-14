@@ -7,27 +7,51 @@ project(vkaEngineProject
   LANGUAGES C CXX 
   VERSION ${EngineVersionMajor}.${EngineVersionMinor}.${EngineVersionPatch})
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in" 
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/version.hpp" @ONLY)
-
 set(BUILD_SHARED_LIBS OFF)
-
+  
 set(srcDir "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(includeDir "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+configure_file("${includeDir}/version.hpp.in" 
+  "${includeDir}/version.hpp" @ONLY)
+
+set(DebugBool "$<$<CONFIG:Debug>:true>")
+message("DebugBool: ${DebugBool}")
+
+configure_file("${includeDir}/Config.hpp.in" 
+    "${includeDir}/Config.hpp.cfg" @ONLY)
+
+file(GENERATE OUTPUT "${includeDir}/Config.hpp"
+  INPUT "${includeDir}/Config.hpp.cfg")
+
 list(APPEND vkaEngineSources 
   "${srcDir}/Engine.cpp"
   "${srcDir}/Instance.cpp"
   "${srcDir}/Surface.cpp"
   "${srcDir}/RenderGraph.cpp"
   "${srcDir}/Buffer.cpp"
+  "${srcDir}/CommandPool.cpp"
+  "${srcDir}/DescriptorPool.cpp"
+  "${srcDir}/DescriptorSetLayout.cpp"
+  "${srcDir}/ShaderModule.cpp"
+  "${srcDir}/PipelineLayout.cpp"
+  "${srcDir}/Pipeline.cpp"
+  "${srcDir}/Buffer.cpp"
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
+  "${includeDir}/Config.hpp"
   "${includeDir}/Engine.hpp"
   "${includeDir}/RenderObject.hpp"
   "${includeDir}/Instance.hpp"
   "${includeDir}/Device.hpp"
+  "${includeDir}/CommandPool.hpp"
+  "${includeDir}/DescriptorPool.hpp"
+  "${includeDir}/DescriptorSetLayout.hpp"
+  "${includeDir}/ShaderModule.hpp"
+  "${includeDir}/PipelineLayout.hpp"
+  "${includeDir}/Pipeline.hpp"
   "${includeDir}/Buffer.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/braintree.hpp"

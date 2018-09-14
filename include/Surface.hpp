@@ -5,10 +5,29 @@
 #include <memory>
 #include <vector>
 #include "RenderObject.hpp"
+#include "spdlog/spdlog.h"
 
 namespace vka {
 
 class Instance;
+
+struct SurfaceDeleter {
+  using pointer = VkSurfaceKHR;
+  VkInstance instanceHandle;
+
+  SurfaceDeleter() = default;
+  SurfaceDeleter(VkInstance instanceHandle) : instanceHandle(instanceHandle) {}
+  void operator()(VkSurfaceKHR surfaceHandle) {
+    vkDestroySurfaceKHR(instanceHandle, surfaceHandle, nullptr);
+  }
+};
+using SurfaceOwner = std::unique_ptr<VkSurfaceKHR, SurfaceDeleter>;
+
+struct WindowDeleter {
+  void operator()(GLFWwindow* window) { glfwDestroyWindow(window); }
+};
+using WindowOwner = std::unique_ptr<GLFWwindow, WindowDeleter>;
+
 struct SurfaceCreateInfo {
   int width;
   int height;
@@ -20,13 +39,19 @@ public:
   VkSurfaceKHR getSurfaceHandle() { return surfaceHandle; }
   GLFWwindow* getWindowHandle() { return windowHandle; }
   Surface() = delete;
-  Surface(std::shared_ptr<Instance>, SurfaceCreateInfo);
-  ~Surface();
-  std::shared_ptr<Instance> getInstance() { return instance.lock(); }
+  Surface(Instance*, SurfaceCreateInfo);
+  Surface(Surface&&) = default;
+  Surface(const Surface&) = delete;
+  Surface& operator=(Surface&&) = default;
+  Surface& operator=(const Surface&) = delete;
+  ~Surface() = default;
 
 private:
-  std::weak_ptr<Instance> instance;
+  std::shared_ptr<spdlog::logger> multilogger;
+  Instance* instance;
   VkSurfaceKHR surfaceHandle;
+  SurfaceOwner surfaceOwner;
   GLFWwindow* windowHandle;
+  WindowOwner windowOwner;
 };
 }  // namespace vka

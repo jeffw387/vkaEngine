@@ -2,12 +2,12 @@
 
 namespace vka {
 DeviceBuffer::DeviceBuffer(
-  VkDeviceSize size,
-  VmaAllocator allocator,
-  VmaMemoryUsage memUsage,
-  VkBufferUsageFlags bufferUsage,
-  VmaPool pool)
-  : allocator(allocator) {
+    VkDeviceSize size,
+    VmaAllocator allocator,
+    VmaMemoryUsage memUsage,
+    VkBufferUsageFlags bufferUsage,
+    VmaPool pool)
+    : allocator(allocator) {
   VkBufferCreateInfo bufferCreateInfo{};
   bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferCreateInfo.size = size;
@@ -18,12 +18,12 @@ DeviceBuffer::DeviceBuffer(
   allocCreateInfo.usage = memUsage;
 
   vmaCreateBuffer(
-    allocator,
-    &bufferCreateInfo,
-    &allocCreateInfo,
-    &buffer,
-    &allocation,
-    &allocationInfo);
+      allocator,
+      &bufferCreateInfo,
+      &allocCreateInfo,
+      &buffer,
+      &allocation,
+      &allocationInfo);
 }
 
 DeviceBuffer::~DeviceBuffer() {

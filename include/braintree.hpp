@@ -176,7 +176,7 @@ template <class Parent>
 class CompositeBuilder {
 public:
   CompositeBuilder(Parent* parent, Composite* node)
-    : parent(parent), node(node) {}
+      : parent(parent), node(node) {}
 
   template <class NodeType, typename... Args>
   CompositeBuilder<Parent> leaf(Args... args) {
@@ -190,7 +190,7 @@ public:
     auto child = std::make_shared<CompositeType>((args)...);
     node->addChild(child);
     return CompositeBuilder<CompositeBuilder<Parent>>(
-      this, (CompositeType*)child.get());
+        this, (CompositeType*)child.get());
   }
 
   template <class DecoratorType, typename... Args>
@@ -198,7 +198,7 @@ public:
     auto child = std::make_shared<DecoratorType>((args)...);
     node->addChild(child);
     return DecoratorBuilder<CompositeBuilder<Parent>>(
-      this, (DecoratorType*)child.get());
+        this, (DecoratorType*)child.get());
   }
 
   Parent& end() { return *parent; }
@@ -212,7 +212,7 @@ template <class Parent>
 class DecoratorBuilder {
 public:
   DecoratorBuilder(Parent* parent, Decorator* node)
-    : parent(parent), node(node) {}
+      : parent(parent), node(node) {}
 
   template <class NodeType, typename... Args>
   DecoratorBuilder<Parent> leaf(Args... args) {
@@ -226,7 +226,7 @@ public:
     auto child = std::make_shared<CompositeType>((args)...);
     node->setChild(child);
     return CompositeBuilder<DecoratorBuilder<Parent>>(
-      this, (CompositeType*)child.get());
+        this, (CompositeType*)child.get());
   }
 
   template <class DecoratorType, typename... Args>
@@ -234,7 +234,7 @@ public:
     auto child = std::make_shared<DecoratorType>((args)...);
     node->setChild(child);
     return DecoratorBuilder<DecoratorBuilder<Parent>>(
-      this, (DecoratorType*)child.get());
+        this, (DecoratorType*)child.get());
   }
 
   Parent& end() { return *parent; }
@@ -378,11 +378,11 @@ public:
 class ParallelSequence : public Composite {
 public:
   ParallelSequence(bool successOnAll = true, bool failOnAll = true)
-    : useSuccessFailPolicy(true),
-      successOnAll(successOnAll),
-      failOnAll(failOnAll) {}
+      : useSuccessFailPolicy(true),
+        successOnAll(successOnAll),
+        failOnAll(failOnAll) {}
   ParallelSequence(int minSuccess, int minFail)
-    : minSuccess(minSuccess), minFail(minFail) {}
+      : minSuccess(minSuccess), minFail(minFail) {}
 
   Status update() override {
     assert(hasChildren() && "Composite has no children");
