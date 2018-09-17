@@ -9,7 +9,7 @@ class DescriptorPool {
 public:
   DescriptorPool() = delete;
   DescriptorPool(
-      Device* device,
+      VkDevice device,
       const std::vector<VkDescriptorPoolSize>& poolSizes,
       uint32_t maxSets);
   DescriptorPool(DescriptorPool&&) = default;
@@ -17,13 +17,13 @@ public:
   DescriptorPool(const DescriptorPool&) = delete;
   DescriptorPool& operator=(const DescriptorPool&) = delete;
   ~DescriptorPool();
-  VkDescriptorPool getHandle() { return poolHandle; }
+  operator VkDescriptorPool() { return poolHandle; }
 
   auto allocateDescriptorSets(std::vector<VkDescriptorSetLayout> layouts);
   void reset();
 
 private:
-  Device* device;
+  VkDevice device;
   VkDescriptorPool poolHandle;
 };
 }  // namespace vka

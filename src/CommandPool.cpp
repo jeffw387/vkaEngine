@@ -3,13 +3,14 @@
 #include "Device.hpp"
 
 namespace vka {
-CommandPool::CommandPool(Device* device) : device(device) {
+CommandPool::CommandPool(VkDevice device, uint32_t gfxQueueIndex)
+    : device(device) {
   VkCommandPoolCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  createInfo.queueFamilyIndex = device->gfxQueueIndex();
+  createInfo.queueFamilyIndex = gfxQueueIndex;
 
-  auto poolResult = vkCreateCommandPool(
-      device->getHandle(), &createInfo, nullptr, &poolHandle);
+  auto poolResult =
+      vkCreateCommandPool(device, &createInfo, nullptr, &poolHandle);
 }
 
 auto CommandPool::allocateCommandBuffers(
@@ -22,15 +23,13 @@ auto CommandPool::allocateCommandBuffers(
   allocateInfo.commandBufferCount = static_cast<uint32_t>(count);
   allocateInfo.commandPool = poolHandle;
   allocateInfo.level = level;
-  vkAllocateCommandBuffers(device->getHandle(), &allocateInfo, result.data());
+  vkAllocateCommandBuffers(device, &allocateInfo, result.data());
   return result;
 }
 
-void CommandPool::reset() {
-  vkResetCommandPool(device->getHandle(), poolHandle, 0);
-}
+void CommandPool::reset() { vkResetCommandPool(device, poolHandle, 0); }
 
 CommandPool::~CommandPool() {
-  vkDestroyCommandPool(device->getHandle(), poolHandle, nullptr);
+  vkDestroyCommandPool(device, poolHandle, nullptr);
 }
 }  // namespace vka

@@ -5,7 +5,7 @@
 
 namespace vka {
 DescriptorPool::DescriptorPool(
-    Device* device,
+    VkDevice device,
     const std::vector<VkDescriptorPoolSize>& poolSizes,
     uint32_t maxSets)
     : device(device) {
@@ -14,8 +14,7 @@ DescriptorPool::DescriptorPool(
   createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
   createInfo.pPoolSizes = poolSizes.data();
   createInfo.maxSets = maxSets;
-  vkCreateDescriptorPool(
-      device->getHandle(), &createInfo, nullptr, &poolHandle);
+  vkCreateDescriptorPool(device, &createInfo, nullptr, &poolHandle);
 }
 
 auto DescriptorPool::allocateDescriptorSets(
@@ -27,15 +26,13 @@ auto DescriptorPool::allocateDescriptorSets(
   allocateInfo.descriptorPool = poolHandle;
   allocateInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
   allocateInfo.pSetLayouts = layouts.data();
-  vkAllocateDescriptorSets(device->getHandle(), &allocateInfo, result.data());
+  vkAllocateDescriptorSets(device, &allocateInfo, result.data());
   return result;
 }
 
-void DescriptorPool::reset() {
-  vkResetDescriptorPool(device->getHandle(), poolHandle, 0);
-}
+void DescriptorPool::reset() { vkResetDescriptorPool(device, poolHandle, 0); }
 
 DescriptorPool::~DescriptorPool() {
-  vkDestroyDescriptorPool(device->getHandle(), poolHandle, nullptr);
+  vkDestroyDescriptorPool(device, poolHandle, nullptr);
 }
 }  // namespace vka

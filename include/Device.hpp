@@ -84,21 +84,6 @@ struct AllocatorDeleter {
 };
 using AllocatorOwner = std::unique_ptr<VmaAllocator, AllocatorDeleter>;
 
-struct DebugMessengerDeleter {
-  using pointer = VkDebugUtilsMessengerEXT;
-  VkInstance instanceHandle;
-  DebugMessengerDeleter() = default;
-  DebugMessengerDeleter(VkInstance instanceHandle)
-      : instanceHandle(instanceHandle) {}
-  void operator()(VkDebugUtilsMessengerEXT messenger) {
-    if (vkDestroyDebugUtilsMessengerEXT) {
-      vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
-    }
-  }
-};
-using DebugMessengerOwner =
-    std::unique_ptr<VkDebugUtilsMessengerEXT, DebugMessengerDeleter>;
-
 struct DeviceRequirements {
   std::vector<PhysicalDeviceFeatures> requiredFeatures;
   std::vector<const char*> deviceExtensions;
@@ -110,14 +95,13 @@ public:
   Device() = delete;
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;
-  Device(Instance*, DeviceRequirements);
+  Device(VkInstance, DeviceRequirements);
   Device(Device&&) = default;
   Device& operator=(Device&&) = default;
   ~Device() = default;
-  VkDevice getHandle() { return deviceHandle; }
+  operator VkDevice() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  Instance* getInstance() { return instance; }
   GraphicsPipeline* createGrapicsPipeline(const VkGraphicsPipelineCreateInfo&);
   ComputePipeline* createComputePipeline(const VkComputePipelineCreateInfo&);
   CommandPool* createCommandPool();
@@ -127,9 +111,10 @@ public:
   ShaderModule* createShaderModule(std::string shaderPath);
 
 private:
-  Instance* instance;
+  VkInstance instance;
   DeviceRequirements requirements;
   std::shared_ptr<spdlog::logger> multilogger;
+  std::vector<VkPhysicalDevice> physicalDevices;
   VkPhysicalDevice physicalDeviceHandle;
   VkPhysicalDeviceProperties deviceProperties;
   std::vector<VkQueueFamilyProperties> queueFamilyProperties;
@@ -143,9 +128,6 @@ private:
   VkDeviceQueueCreateInfo queueCreateInfo = {
       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
   VkQueue graphicsQueue;
-
-  VkDebugUtilsMessengerEXT debugMessenger;
-  DebugMessengerOwner debugMessengerOwner;
 
   std::vector<std::unique_ptr<GraphicsPipeline>> graphicsPipelines;
   std::vector<std::unique_ptr<ComputePipeline>> computePipelines;

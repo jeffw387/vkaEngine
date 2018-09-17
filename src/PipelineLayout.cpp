@@ -3,7 +3,7 @@
 
 namespace vka {
 PipelineLayout::PipelineLayout(
-    Device* device,
+    VkDevice device,
     const std::vector<VkPushConstantRange>& pushRanges,
     const std::vector<VkDescriptorSetLayout>& setLayouts) {
   VkPipelineLayoutCreateInfo createInfo{
@@ -12,11 +12,10 @@ PipelineLayout::PipelineLayout(
   createInfo.pPushConstantRanges = pushRanges.data();
   createInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
   createInfo.pSetLayouts = setLayouts.data();
-  vkCreatePipelineLayout(
-      device->getHandle(), &createInfo, nullptr, &layoutHandle);
+  vkCreatePipelineLayout(device, &createInfo, nullptr, &layoutHandle);
 }
 
 PipelineLayout::~PipelineLayout() {
-  vkDestroyPipelineLayout(device->getHandle(), layoutHandle, nullptr);
+  vkDestroyPipelineLayout(device, layoutHandle, nullptr);
 }
 }  // namespace vka

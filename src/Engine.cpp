@@ -139,7 +139,7 @@ void Engine::run() {
     }
   }
   renderThread.join();
-  vkDeviceWaitIdle(instance->getDevice()->getHandle());
+  vkDeviceWaitIdle(*instance->getDevice());
 }
 
 void Engine::setLastUpdated(int32_t index) {

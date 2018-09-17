@@ -8,6 +8,32 @@
 #include "spdlog/spdlog.h"
 
 namespace vka {
+static VkBool32 vulkanDebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
+  auto multilogger = reinterpret_cast<spdlog::logger*>(pUserData);
+  if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+    multilogger->error(
+        "Vulkan Error: {} {}",
+        pCallbackData->pMessageIdName,
+        pCallbackData->pMessage);
+  } else if (
+      messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+    multilogger->warn(
+        "Vulkan Warning: {} {}",
+        pCallbackData->pMessageIdName,
+        pCallbackData->pMessage);
+  } else {
+    multilogger->info(
+        "Vulkan Info: {} {}",
+        pCallbackData->pMessageIdName,
+        pCallbackData->pMessage);
+  }
+  return VK_FALSE;
+}
+
 Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
     : engine(engine), instanceCreateInfo(instanceCreateInfo) {
   multilogger = spdlog::get(LoggerName);
@@ -59,20 +85,33 @@ Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
 
   LoadInstanceLevelEntryPoints(instanceHandle);
 
-  uint32_t physicalDeviceCount = 0;
-  vkEnumeratePhysicalDevices(instanceHandle, &physicalDeviceCount, nullptr);
-  physicalDevices.resize(physicalDeviceCount);
-  vkEnumeratePhysicalDevices(
-      instanceHandle, &physicalDeviceCount, physicalDevices.data());
+  VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
+  messengerCreateInfo.sType =
+      VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+  messengerCreateInfo.messageSeverity =
+      VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+  messengerCreateInfo.messageType =
+      VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
+  messengerCreateInfo.pUserData = multilogger.get();
+  if (vkCreateDebugUtilsMessengerEXT) {
+    vkCreateDebugUtilsMessengerEXT(
+        instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
+    debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);
+  }
 }
 
 Device* Instance::createDevice(DeviceRequirements requirements) {
-  device = std::make_unique<Device>(this, requirements);
+  device = std::make_unique<Device>(instanceHandle, requirements);
   return device.get();
 }
 
 Surface* Instance::createSurface(SurfaceCreateInfo surfaceCreateInfo) {
-  surface = std::make_unique<Surface>(this, surfaceCreateInfo);
+  surface = std::make_unique<Surface>(instanceHandle, surfaceCreateInfo);
   return surface.get();
 }
 

@@ -6,7 +6,7 @@
 #include "Engine.hpp"
 
 namespace vka {
-Surface::Surface(Instance* instance, SurfaceCreateInfo surfaceCreateInfo)
+Surface::Surface(VkInstance instance, SurfaceCreateInfo surfaceCreateInfo)
     : instance(instance) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating surface.");
@@ -18,11 +18,11 @@ Surface::Surface(Instance* instance, SurfaceCreateInfo surfaceCreateInfo)
       nullptr,
       nullptr);
   windowOwner = WindowOwner(windowHandle);
-  auto surfaceResult = glfwCreateWindowSurface(
-      instance->getHandle(), windowHandle, nullptr, &surfaceHandle);
+  auto surfaceResult =
+      glfwCreateWindowSurface(instance, windowHandle, nullptr, &surfaceHandle);
   if (surfaceResult != VK_SUCCESS) {
     multilogger->error("Surface not created, result code {}.", surfaceResult);
   }
-  surfaceOwner = SurfaceOwner(surfaceHandle, instance->getHandle());
+  surfaceOwner = SurfaceOwner(surfaceHandle, instance);
 }
 }  // namespace vka

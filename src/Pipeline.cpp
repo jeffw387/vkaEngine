@@ -214,28 +214,28 @@ GraphicsPipelineCreateInfo::operator const VkGraphicsPipelineCreateInfo&() {
 }
 
 GraphicsPipeline::GraphicsPipeline(
-    Device* device,
+    VkDevice device,
     VkPipelineCache cache,
     const VkGraphicsPipelineCreateInfo& createInfo)
     : device(device) {
   vkCreateGraphicsPipelines(
-      device->getHandle(), cache, 1, &createInfo, nullptr, &pipelineHandle);
+      device, cache, 1, &createInfo, nullptr, &pipelineHandle);
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
-  vkDestroyPipeline(device->getHandle(), pipelineHandle, nullptr);
+  vkDestroyPipeline(device, pipelineHandle, nullptr);
 }
 
 ComputePipeline::ComputePipeline(
-    Device* device,
+    VkDevice device,
     VkPipelineCache cache,
     const VkComputePipelineCreateInfo& createInfo) {
   vkCreateComputePipelines(
-      device->getHandle(), cache, 1, &createInfo, nullptr, &pipelineHandle);
+      device, cache, 1, &createInfo, nullptr, &pipelineHandle);
 }
 
 ComputePipeline::~ComputePipeline() {
-  vkDestroyPipeline(device->getHandle(), pipelineHandle, nullptr);
+  vkDestroyPipeline(device, pipelineHandle, nullptr);
 }
 
 }  // namespace vka

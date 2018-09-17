@@ -43,22 +43,21 @@ private:
   std::vector<VkSubpassDependency> dependencies;
   VkRenderPassCreateInfo createInfo;
 };
+
 class RenderPass {
 public:
   RenderPass() = delete;
-  RenderPass(
-      Device* device,
-      std::vector<VkAttachmentDescription> attachments,
-      std::vector<VkSubpassDescription> subpasses,
-      std::vector<VkSubpassDependency> dependencies);
+  RenderPass(VkDevice device, const VkRenderPassCreateInfo& createInfo);
   RenderPass(RenderPass&&) = default;
   RenderPass& operator=(RenderPass&&) = default;
   RenderPass(const RenderPass&) = delete;
   RenderPass& operator=(const RenderPass&) = delete;
   ~RenderPass();
 
+  operator VkRenderPass() { return renderPassHandle; }
+
 private:
-  Device* device;
+  VkDevice device;
   VkRenderPass renderPassHandle;
 };
 }  // namespace vka

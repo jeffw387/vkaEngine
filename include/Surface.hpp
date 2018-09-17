@@ -4,7 +4,6 @@
 #include <glfw/glfw3.h>
 #include <memory>
 #include <vector>
-#include "RenderObject.hpp"
 #include "spdlog/spdlog.h"
 
 namespace vka {
@@ -39,7 +38,7 @@ public:
   VkSurfaceKHR getSurfaceHandle() { return surfaceHandle; }
   GLFWwindow* getWindowHandle() { return windowHandle; }
   Surface() = delete;
-  Surface(Instance*, SurfaceCreateInfo);
+  Surface(VkInstance, SurfaceCreateInfo);
   Surface(Surface&&) = default;
   Surface(const Surface&) = delete;
   Surface& operator=(Surface&&) = default;
@@ -48,7 +47,7 @@ public:
 
 private:
   std::shared_ptr<spdlog::logger> multilogger;
-  Instance* instance;
+  VkInstance instance;
   VkSurfaceKHR surfaceHandle;
   SurfaceOwner surfaceOwner;
   GLFWwindow* windowHandle;

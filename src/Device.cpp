@@ -9,38 +9,19 @@
 #include "Config.hpp"
 
 namespace vka {
-
-static VkBool32 vulkanDebugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData) {
-  auto multilogger = reinterpret_cast<spdlog::logger*>(pUserData);
-  if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-    multilogger->error(
-        "Vulkan Error: {} {}",
-        pCallbackData->pMessageIdName,
-        pCallbackData->pMessage);
-  } else if (
-      messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-    multilogger->warn(
-        "Vulkan Warning: {} {}",
-        pCallbackData->pMessageIdName,
-        pCallbackData->pMessage);
-  } else {
-    multilogger->info(
-        "Vulkan Info: {} {}",
-        pCallbackData->pMessageIdName,
-        pCallbackData->pMessage);
-  }
-  return VK_FALSE;
-}
-
-Device::Device(Instance* instance, DeviceRequirements requirements)
+Device::Device(VkInstance instance, DeviceRequirements requirements)
     : instance(instance), requirements(requirements) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating device.");
-  physicalDeviceHandle = getInstance()->physicalDevices.at(0);
+
+  uint32_t physicalDeviceCount = 0;
+  vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
+  physicalDevices.resize(physicalDeviceCount);
+  vkEnumeratePhysicalDevices(
+      instance, &physicalDeviceCount, physicalDevices.data());
+
+  physicalDeviceHandle = physicalDevices.at(0);
+
   vkGetPhysicalDeviceProperties(physicalDeviceHandle, &deviceProperties);
 
   uint32_t queueFamilyPropertyCount = 0;
@@ -137,29 +118,5 @@ Device::Device(Instance* instance, DeviceRequirements requirements)
   allocatorCreateInfo.device = deviceHandle;
   vmaCreateAllocator(&allocatorCreateInfo, &allocator);
   allocatorOwner = AllocatorOwner(allocator);
-
-  VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
-  messengerCreateInfo.sType =
-      VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-  messengerCreateInfo.messageSeverity =
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-  messengerCreateInfo.messageType =
-      VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-  messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
-  messengerCreateInfo.pUserData = multilogger.get();
-
-  if (vkCreateDebugUtilsMessengerEXT) {
-    vkCreateDebugUtilsMessengerEXT(
-        getInstance()->getHandle(),
-        &messengerCreateInfo,
-        nullptr,
-        &debugMessenger);
-    debugMessengerOwner =
-        DebugMessengerOwner(debugMessenger, getInstance()->getHandle());
-  }
 }
 }  // namespace vka

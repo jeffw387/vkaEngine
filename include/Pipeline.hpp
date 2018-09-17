@@ -138,7 +138,7 @@ class GraphicsPipeline {
 public:
   GraphicsPipeline() = delete;
   GraphicsPipeline(
-      Device* device,
+      VkDevice device,
       VkPipelineCache cache,
       const VkGraphicsPipelineCreateInfo& createInfo);
   GraphicsPipeline(GraphicsPipeline&&) = default;
@@ -147,10 +147,10 @@ public:
   GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
   ~GraphicsPipeline();
 
-  VkPipeline getHandle() { return pipelineHandle; }
+  operator VkPipeline() { return pipelineHandle; }
 
 private:
-  Device* device;
+  VkDevice device;
   VkPipeline pipelineHandle;
 };
 
@@ -158,7 +158,7 @@ class ComputePipeline {
 public:
   ComputePipeline() = delete;
   ComputePipeline(
-      Device* device,
+      VkDevice device,
       VkPipelineCache cache,
       const VkComputePipelineCreateInfo& createInfo);
   ComputePipeline(ComputePipeline&&) = default;
@@ -167,10 +167,10 @@ public:
   ComputePipeline& operator=(const ComputePipeline&) = delete;
   ~ComputePipeline();
 
-  VkPipeline getHandle() { return pipelineHandle; }
+  operator VkPipeline() { return pipelineHandle; }
 
 private:
-  Device* device;
+  VkDevice device;
   VkPipeline pipelineHandle;
 };
 }  // namespace vka

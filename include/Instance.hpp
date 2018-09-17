@@ -28,6 +28,21 @@ struct InstanceDeleter {
 };
 using InstanceOwner = std::unique_ptr<VkInstance, InstanceDeleter>;
 
+struct DebugMessengerDeleter {
+  using pointer = VkDebugUtilsMessengerEXT;
+  VkInstance instanceHandle;
+  DebugMessengerDeleter() = default;
+  DebugMessengerDeleter(VkInstance instanceHandle)
+      : instanceHandle(instanceHandle) {}
+  void operator()(VkDebugUtilsMessengerEXT messenger) {
+    if (vkDestroyDebugUtilsMessengerEXT) {
+      vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
+    }
+  }
+};
+using DebugMessengerOwner =
+    std::unique_ptr<VkDebugUtilsMessengerEXT, DebugMessengerDeleter>;
+
 struct GLFWOwner {
   GLFWOwner() { glfwInit(); }
 
@@ -52,10 +67,9 @@ public:
 
   Device* createDevice(DeviceRequirements);
   Device* getDevice() { return device.get(); }
-  Engine* getEngine() { return engine; }
   Surface* createSurface(SurfaceCreateInfo);
   Surface* getSurface() { return surface.get(); }
-  VkInstance getHandle() { return instanceHandle; }
+  operator VkInstance() { return instanceHandle; }
 
   std::shared_ptr<spdlog::logger> multilogger;
 
@@ -66,8 +80,9 @@ private:
   LibraryHandle vulkanLibrary;
   VkInstance instanceHandle;
   InstanceOwner instanceOwner;
+  VkDebugUtilsMessengerEXT debugMessenger;
+  DebugMessengerOwner debugMessengerOwner;
   std::unique_ptr<Surface> surface;
-  std::vector<VkPhysicalDevice> physicalDevices;
   std::unique_ptr<Device> device;
 };
 }  // namespace vka

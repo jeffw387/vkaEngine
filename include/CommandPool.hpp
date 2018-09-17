@@ -6,7 +6,7 @@ namespace vka {
 class Device;
 class CommandPool {
 public:
-  CommandPool(Device* device);
+  CommandPool(VkDevice device, uint32_t gfxQueueIndex);
   CommandPool() = delete;
   CommandPool(const CommandPool&) = delete;
   CommandPool& operator=(const CommandPool&) = delete;
@@ -14,12 +14,12 @@ public:
   CommandPool& operator=(CommandPool&&) = default;
   ~CommandPool();
 
-  VkCommandPool getHandle() { return poolHandle; }
+  operator VkCommandPool() { return poolHandle; }
   auto allocateCommandBuffers(size_t count, VkCommandBufferLevel level);
   void reset();
 
 private:
-  Device* device;
+  VkDevice device;
   VkCommandPool poolHandle;
 };
 }  // namespace vka
