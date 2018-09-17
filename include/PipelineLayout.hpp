@@ -9,9 +9,10 @@ class Device;
 class PipelineLayout {
 public:
   PipelineLayout() = delete;
-  PipelineLayout(Device* device, 
-    const std::vector<VkPushConstantRange>& pushRanges,
-    const std::vector<VkDescriptorSetLayout>& setLayouts);
+  PipelineLayout(
+      Device* device,
+      const std::vector<VkPushConstantRange>& pushRanges,
+      const std::vector<VkDescriptorSetLayout>& setLayouts);
   PipelineLayout(PipelineLayout&&) = default;
   PipelineLayout& operator=(PipelineLayout&&) = default;
   PipelineLayout(const PipelineLayout&) = delete;
@@ -19,8 +20,9 @@ public:
   ~PipelineLayout();
 
   VkPipelineLayout getHandle() { return layoutHandle; }
+
 private:
   Device* device;
   VkPipelineLayout layoutHandle;
 };
-}
+}  // namespace vka

@@ -8,7 +8,9 @@ class Device;
 class DescriptorSetLayout {
 public:
   DescriptorSetLayout() = delete;
-  DescriptorSetLayout(Device* device, const std::vector<VkDescriptorSetLayoutBinding>&);
+  DescriptorSetLayout(
+      Device* device,
+      const std::vector<VkDescriptorSetLayoutBinding>&);
   DescriptorSetLayout(DescriptorSetLayout&&) = default;
   DescriptorSetLayout& operator=(DescriptorSetLayout&&) = default;
   DescriptorSetLayout(const DescriptorSetLayout&) = delete;
@@ -16,6 +18,7 @@ public:
   ~DescriptorSetLayout();
 
   VkDescriptorSetLayout getHandle() { return layoutHandle; }
+
 private:
   Device* device;
   VkDescriptorSetLayout layoutHandle;

@@ -65,7 +65,10 @@ class DescriptorPool;
 class DescriptorSetLayout;
 class DescriptorSet;
 class ShaderModule;
-class Pipeline;
+class GraphicsPipelineCreateInfo;
+class ComputePipelineCreateInfo;
+class GraphicsPipeline;
+class ComputePipeline;
 
 struct DeviceDeleter {
   using pointer = VkDevice;
@@ -115,7 +118,8 @@ public:
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
   Instance* getInstance() { return instance; }
-  Pipeline* createPipeline();
+  GraphicsPipeline* createGrapicsPipeline(const VkGraphicsPipelineCreateInfo&);
+  ComputePipeline* createComputePipeline(const VkComputePipelineCreateInfo&);
   CommandPool* createCommandPool();
   DescriptorPool* createDescriptorPool();
   DescriptorSetLayout* createSetLayout(
@@ -143,7 +147,8 @@ private:
   VkDebugUtilsMessengerEXT debugMessenger;
   DebugMessengerOwner debugMessengerOwner;
 
-  std::vector<std::unique_ptr<Pipeline>> pipelines;
+  std::vector<std::unique_ptr<GraphicsPipeline>> graphicsPipelines;
+  std::vector<std::unique_ptr<ComputePipeline>> computePipelines;
   std::vector<std::unique_ptr<CommandPool>> commandPools;
   std::vector<std::unique_ptr<DescriptorPool>> descriptorPools;
   std::vector<std::unique_ptr<DescriptorSetLayout>> descriptorSetLayouts;

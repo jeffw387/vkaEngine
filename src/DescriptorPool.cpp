@@ -18,10 +18,12 @@ DescriptorPool::DescriptorPool(
       device->getHandle(), &createInfo, nullptr, &poolHandle);
 }
 
-auto DescriptorPool::allocateDescriptorSets(std::vector<VkDescriptorSetLayout> layouts) {
+auto DescriptorPool::allocateDescriptorSets(
+    std::vector<VkDescriptorSetLayout> layouts) {
   std::vector<VkDescriptorSet> result;
   result.resize(layouts.size());
-  VkDescriptorSetAllocateInfo allocateInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+  VkDescriptorSetAllocateInfo allocateInfo{
+      VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
   allocateInfo.descriptorPool = poolHandle;
   allocateInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
   allocateInfo.pSetLayouts = layouts.data();
