@@ -138,35 +138,37 @@ void GraphicsPipelineCreateInfo::setDepthBoundsTestEnable(
   depthStencilInfo.depthBoundsTestEnable = depthBoundsTestEnable;
 }
 
-void GraphicsPipelineCreateInfo::setDepthBounds(float minDepthBounds, float maxDepthBounds) {
+void GraphicsPipelineCreateInfo::setDepthBounds(
+    float minDepthBounds,
+    float maxDepthBounds) {
   depthStencilInfo.minDepthBounds = minDepthBounds;
   depthStencilInfo.maxDepthBounds = maxDepthBounds;
 }
 
 void GraphicsPipelineCreateInfo::addColorBlendAttachment(
-      VkBool32 blendEnable,
-      VkBlendFactor srcColorBlendFactor,
-      VkBlendFactor dstColorBlendFactor,
-      VkBlendOp colorBlendOp,
-      VkBlendFactor srcAlphaBlendFactor,
-      VkBlendFactor dstAlphaBlendFactor,
-      VkBlendOp alphaBlendOp,
-      VkColorComponentFlags colorWriteMask) {
-        VkPipelineColorBlendAttachmentState blendAttachment{};
-        blendAttachment.blendEnable = blendEnable;
-        blendAttachment.srcColorBlendFactor = srcColorBlendFactor;
-        blendAttachment.dstColorBlendFactor = dstColorBlendFactor;
-        blendAttachment.colorBlendOp = colorBlendOp;
-        blendAttachment.srcAlphaBlendFactor = srcAlphaBlendFactor;
-        blendAttachment.dstAlphaBlendFactor = dstAlphaBlendFactor;
-        blendAttachment.alphaBlendOp = alphaBlendOp;
-        blendAttachment.colorWriteMask = colorWriteMask;
-        colorBlendAttachments.push_back(blendAttachment);
-      }
+    VkBool32 blendEnable,
+    VkBlendFactor srcColorBlendFactor,
+    VkBlendFactor dstColorBlendFactor,
+    VkBlendOp colorBlendOp,
+    VkBlendFactor srcAlphaBlendFactor,
+    VkBlendFactor dstAlphaBlendFactor,
+    VkBlendOp alphaBlendOp,
+    VkColorComponentFlags colorWriteMask) {
+  VkPipelineColorBlendAttachmentState blendAttachment{};
+  blendAttachment.blendEnable = blendEnable;
+  blendAttachment.srcColorBlendFactor = srcColorBlendFactor;
+  blendAttachment.dstColorBlendFactor = dstColorBlendFactor;
+  blendAttachment.colorBlendOp = colorBlendOp;
+  blendAttachment.srcAlphaBlendFactor = srcAlphaBlendFactor;
+  blendAttachment.dstAlphaBlendFactor = dstAlphaBlendFactor;
+  blendAttachment.alphaBlendOp = alphaBlendOp;
+  blendAttachment.colorWriteMask = colorWriteMask;
+  colorBlendAttachments.push_back(blendAttachment);
+}
 
 void GraphicsPipelineCreateInfo::addDynamicState(VkDynamicState dynamicState) {
   dynamicStates.push_back(dynamicState);
-}      
+}
 
 GraphicsPipelineCreateInfo::operator const VkGraphicsPipelineCreateInfo&() {
   for (auto& stageData : shaderStageData) {

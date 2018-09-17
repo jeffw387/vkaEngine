@@ -28,7 +28,7 @@ list(APPEND vkaEngineSources
   "${srcDir}/Engine.cpp"
   "${srcDir}/Instance.cpp"
   "${srcDir}/Surface.cpp"
-  "${srcDir}/RenderGraph.cpp"
+  "${srcDir}/RenderPass.cpp"
   "${srcDir}/Buffer.cpp"
   "${srcDir}/CommandPool.cpp"
   "${srcDir}/DescriptorPool.cpp"
@@ -43,7 +43,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
   "${includeDir}/Config.hpp"
   "${includeDir}/Engine.hpp"
-  "${includeDir}/RenderObject.hpp"
+  "${includeDir}/RenderPass.hpp"
   "${includeDir}/Instance.hpp"
   "${includeDir}/Device.hpp"
   "${includeDir}/CommandPool.hpp"
@@ -55,7 +55,6 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Buffer.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/braintree.hpp"
-  "${includeDir}/RenderGraph.hpp"
   "${includeDir}/Surface.hpp")
 add_library(vkaEngine ${vkaEngineSources})
 target_include_directories(vkaEngine PUBLIC 
