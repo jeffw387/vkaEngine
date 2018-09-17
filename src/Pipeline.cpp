@@ -109,6 +109,65 @@ void GraphicsPipelineCreateInfo::addViewportScissor(
   scissors.push_back(scissor);
 }
 
+void GraphicsPipelineCreateInfo::setFrontFace(VkFrontFace frontFace) {
+  rasterizationInfo.frontFace = frontFace;
+}
+
+void GraphicsPipelineCreateInfo::setPolygonMode(VkPolygonMode polygonMode) {
+  rasterizationInfo.polygonMode = polygonMode;
+}
+
+void GraphicsPipelineCreateInfo::setCullMode(VkCullModeFlags cullMode) {
+  rasterizationInfo.cullMode = cullMode;
+}
+
+void GraphicsPipelineCreateInfo::setLineWidth(float lineWidth) {
+  rasterizationInfo.lineWidth = lineWidth;
+}
+
+void GraphicsPipelineCreateInfo::setDepthTestEnable(VkBool32 depthTestEnable) {
+  depthStencilInfo.depthTestEnable = depthTestEnable;
+}
+
+void GraphicsPipelineCreateInfo::setDepthCompareOp(VkCompareOp depthCompareOp) {
+  depthStencilInfo.depthCompareOp = depthCompareOp;
+}
+
+void GraphicsPipelineCreateInfo::setDepthBoundsTestEnable(
+    VkBool32 depthBoundsTestEnable) {
+  depthStencilInfo.depthBoundsTestEnable = depthBoundsTestEnable;
+}
+
+void GraphicsPipelineCreateInfo::setDepthBounds(float minDepthBounds, float maxDepthBounds) {
+  depthStencilInfo.minDepthBounds = minDepthBounds;
+  depthStencilInfo.maxDepthBounds = maxDepthBounds;
+}
+
+void GraphicsPipelineCreateInfo::addColorBlendAttachment(
+      VkBool32 blendEnable,
+      VkBlendFactor srcColorBlendFactor,
+      VkBlendFactor dstColorBlendFactor,
+      VkBlendOp colorBlendOp,
+      VkBlendFactor srcAlphaBlendFactor,
+      VkBlendFactor dstAlphaBlendFactor,
+      VkBlendOp alphaBlendOp,
+      VkColorComponentFlags colorWriteMask) {
+        VkPipelineColorBlendAttachmentState blendAttachment{};
+        blendAttachment.blendEnable = blendEnable;
+        blendAttachment.srcColorBlendFactor = srcColorBlendFactor;
+        blendAttachment.dstColorBlendFactor = dstColorBlendFactor;
+        blendAttachment.colorBlendOp = colorBlendOp;
+        blendAttachment.srcAlphaBlendFactor = srcAlphaBlendFactor;
+        blendAttachment.dstAlphaBlendFactor = dstAlphaBlendFactor;
+        blendAttachment.alphaBlendOp = alphaBlendOp;
+        blendAttachment.colorWriteMask = colorWriteMask;
+        colorBlendAttachments.push_back(blendAttachment);
+      }
+
+void GraphicsPipelineCreateInfo::addDynamicState(VkDynamicState dynamicState) {
+  dynamicStates.push_back(dynamicState);
+}      
+
 GraphicsPipelineCreateInfo::operator const VkGraphicsPipelineCreateInfo&() {
   for (auto& stageData : shaderStageData) {
     stageData.vkSpecInfo.mapEntryCount =
