@@ -13,17 +13,18 @@ CommandPool::CommandPool(VkDevice device, uint32_t gfxQueueIndex)
       vkCreateCommandPool(device, &createInfo, nullptr, &poolHandle);
 }
 
-auto CommandPool::allocateCommandBuffers(
+std::vector<CommandBuffer> CommandPool::allocateCommandBuffers(
     size_t count,
     VkCommandBufferLevel level) {
-  std::vector<VkCommandBuffer> result;
+  std::vector<CommandBuffer> result;
   result.resize(count);
   VkCommandBufferAllocateInfo allocateInfo{
       VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
   allocateInfo.commandBufferCount = static_cast<uint32_t>(count);
   allocateInfo.commandPool = poolHandle;
   allocateInfo.level = level;
-  vkAllocateCommandBuffers(device, &allocateInfo, result.data());
+  vkAllocateCommandBuffers(
+      device, &allocateInfo, reinterpret_cast<VkCommandBuffer*>(result.data()));
   return result;
 }
 

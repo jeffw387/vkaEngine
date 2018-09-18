@@ -119,4 +119,10 @@ Device::Device(VkInstance instance, DeviceRequirements requirements)
   vmaCreateAllocator(&allocatorCreateInfo, &allocator);
   allocatorOwner = AllocatorOwner(allocator);
 }
+
+CommandPool* Device::createCommandPool() {
+  commandPools.emplace_back(
+      std::make_unique<CommandPool>(deviceHandle, gfxQueueIndex()));
+  return commandPools.back().get();
+}
 }  // namespace vka

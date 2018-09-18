@@ -28,7 +28,12 @@ int main()
   vka::DeviceRequirements deviceRequirements{};
   deviceRequirements.deviceExtensions.push_back("VK_KHR_swapchain");
   auto device = instance->createDevice(deviceRequirements);
-
+  auto commandPool = device->createCommandPool();
+  auto cmd = 
+    commandPool->allocateCommandBuffers(
+      1, 
+      VK_COMMAND_BUFFER_LEVEL_PRIMARY)[0];
+  
   engine->run();
   return 0; 
 }
