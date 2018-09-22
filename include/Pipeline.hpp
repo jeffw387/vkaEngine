@@ -12,6 +12,43 @@ struct ShaderStageData {
   VkPipelineShaderStageCreateInfo createInfo;
 };
 
+class PipelineCache {
+public:
+  PipelineCache() = delete;
+  PipelineCache(VkDevice device, const std::vector<char>& initialData) {
+    VkPipelineCacheCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+    createInfo.initialDataSize = initialData.size();
+    createInfo.pInitialData = initialData.data();
+    vkCreatePipelineCache(device, &createInfo, nullptr, &cacheHandle);
+  }
+  PipelineCache(VkDevice device) {
+    VkPipelineCacheCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+    vkCreatePipelineCache(device, &createInfo, nullptr, &cacheHandle);
+  }
+  PipelineCache(const PipelineCache&) = delete;
+  PipelineCache& operator=(const PipelineCache&) = delete;
+  PipelineCache(PipelineCache&&) = default;
+  PipelineCache& operator=(PipelineCache&&) = default;
+  ~PipelineCache() { vkDestroyPipelineCache(device, cacheHandle, nullptr); }
+
+  operator VkPipelineCache() { return cacheHandle; }
+
+  auto getCacheData() {
+    std::vector<char> cacheData;
+    size_t dataSize{};
+    vkGetPipelineCacheData(device, cacheHandle, &dataSize, nullptr);
+    cacheData.resize(dataSize);
+    vkGetPipelineCacheData(device, cacheHandle, &dataSize, cacheData.data());
+    return cacheData;
+  }
+
+private:
+  VkDevice device;
+  VkPipelineCache cacheHandle;
+};
+
 class GraphicsPipelineCreateInfo {
 public:
   GraphicsPipelineCreateInfo(

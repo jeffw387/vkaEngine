@@ -29,16 +29,10 @@ public:
   Swapchain(VkDevice device, const VkSwapchainCreateInfoKHR& createInfo);
   const std::vector<VkImage>& getSwapImages();
   ~Swapchain();
+  operator VkSwapchainKHR();
+  operator VkSwapchainKHR*();
 
-  outcome::result<uint32_t, VkResult> acquireImage(VkSemaphore semaphore) {
-    uint32_t imageIndex{};
-    auto result = vkAcquireNextImageKHR(
-        device, swapchainHandle, UINT64_MAX, semaphore, 0, &imageIndex);
-    if (result != VK_SUCCESS) {
-      return outcome::failure(result);
-    }
-    return outcome::success(imageIndex);
-  }
+  outcome::result<uint32_t, VkResult> acquireImage(VkSemaphore semaphore);
 
 private:
   VkDevice device;

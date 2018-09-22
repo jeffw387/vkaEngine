@@ -7,10 +7,16 @@
 #include <memory>
 #include "Engine.hpp"
 #include "Config.hpp"
+#include "Swapchain.hpp"
+#include "Pipeline.hpp"
+#include <fstream>
 
 namespace vka {
-Device::Device(VkInstance instance, DeviceRequirements requirements)
-    : instance(instance), requirements(requirements) {
+Device::Device(
+    VkInstance instance,
+    VkSurfaceKHR surface,
+    DeviceRequirements requirements)
+    : instance(instance), surface(surface), requirements(requirements) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating device.");
 
@@ -41,7 +47,7 @@ Device::Device(VkInstance instance, DeviceRequirements requirements)
     }
     ++currentFamilyIndex;
   }
-  if (graphicsQueueIndex == U32Max) {
+  if (graphicsQueueIndex == UINT32_MAX) {
     multilogger->critical("No graphics-capable queue found!");
   }
 
@@ -120,9 +126,99 @@ Device::Device(VkInstance instance, DeviceRequirements requirements)
   allocatorOwner = AllocatorOwner(allocator);
 }
 
+VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {
+  VkSurfaceCapabilitiesKHR capabilities{};
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+      physicalDeviceHandle, surface, &capabilities);
+  return capabilities;
+}
+
+Swapchain* Device::createSwapchain() {
+  auto capabilities = getSurfaceCapabilities();
+
+  SwapchainCreateInfo createInfo{};
+  createInfo.addQueueFamilyIndex(graphicsQueueIndex);
+  createInfo.setImageExtent(capabilities.currentExtent);
+  createInfo.setSurfacePreTransform(capabilities.currentTransform);
+  createInfo.setSurface(surface);
+  swapchain = std::make_unique<Swapchain>(deviceHandle, createInfo);
+  return swapchain.get();
+}
+
+GraphicsPipeline* Device::createGraphicsPipeline(
+    const VkGraphicsPipelineCreateInfo& createInfo) {
+  graphicsPipelines.push_back(std::make_unique<GraphicsPipeline>(
+      deviceHandle, *pipelineCache, createInfo));
+  return graphicsPipelines.back().get();
+}
+
+ComputePipeline* Device::createComputePipeline(
+    const VkComputePipelineCreateInfo& createInfo) {
+  computePipelines.push_back(std::make_unique<ComputePipeline>(
+      deviceHandle, *pipelineCache, createInfo));
+  return computePipelines.back().get();
+}
+
 CommandPool* Device::createCommandPool() {
   commandPools.emplace_back(
       std::make_unique<CommandPool>(deviceHandle, gfxQueueIndex()));
   return commandPools.back().get();
 }
+
+DescriptorPool* Device::createDescriptorPool(
+    const std::vector<VkDescriptorPoolSize>& poolSizes,
+    uint32_t maxSets) {
+  descriptorPools.push_back(
+      std::make_unique<DescriptorPool>(deviceHandle, poolSizes, maxSets));
+  return descriptorPools.back().get();
+}
+
+DescriptorSetLayout* Device::createSetLayout(
+    const std::vector<VkDescriptorSetLayoutBinding>& bindings) {
+  descriptorSetLayouts.push_back(
+      std::make_unique<DescriptorSetLayout>(deviceHandle, bindings));
+  return descriptorSetLayouts.back().get();
+}
+
+ShaderModule* Device::createShaderModule(std::string shaderPath) {
+  std::vector<uint32_t> binaryData;
+  std::basic_ifstream<uint32_t> shaderFile(
+      shaderPath,
+      std::ios_base::binary | std::ios_base::ate | std::ios_base::in);
+  auto fileLength = shaderFile.tellg();
+  binaryData.resize(fileLength);
+  shaderFile.read(binaryData.data(), fileLength);
+  shaderModules.push_back(
+      std::make_unique<ShaderModule>(deviceHandle, binaryData));
+  return shaderModules.back().get();
+}
+
+VkResult Device::presentImage(uint32_t imageIndex, VkSemaphore waitSemaphore) {
+  VkPresentInfoKHR presentInfo{};
+  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  presentInfo.swapchainCount = 1;
+  presentInfo.pSwapchains = *swapchain;
+  presentInfo.pImageIndices = &imageIndex;
+  presentInfo.waitSemaphoreCount = 1;
+  presentInfo.pWaitSemaphores = &waitSemaphore;
+  return vkQueuePresentKHR(graphicsQueue, &presentInfo);
+}
+
+void Device::queueSubmit(
+    const std::vector<VkSemaphore>& waitSemaphores,
+    const std::vector<VkCommandBuffer>& commandBuffers,
+    const std::vector<VkSemaphore>& signalSemaphores) {
+  VkSubmitInfo submitInfo{};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+  submitInfo.pWaitSemaphores = waitSemaphores.data();
+  submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+  submitInfo.pCommandBuffers = commandBuffers.data();
+  submitInfo.signalSemaphoreCount =
+      static_cast<uint32_t>(signalSemaphores.size());
+  submitInfo.pSignalSemaphores = signalSemaphores.data();
+  vkQueueSubmit(graphicsQueue, 1, &submitInfo, 0);
+}
+
+void Device::waitIdle() { vkDeviceWaitIdle(deviceHandle); }
 }  // namespace vka

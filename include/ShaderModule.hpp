@@ -8,7 +8,7 @@ class Device;
 class ShaderModule {
 public:
   ShaderModule() = delete;
-  ShaderModule(VkDevice device, std::vector<char>& shaderBytes);
+  ShaderModule(VkDevice device, const std::vector<uint32_t>& shaderBytes);
   ShaderModule(ShaderModule&&) = default;
   ShaderModule& operator=(ShaderModule&&) = default;
   ShaderModule(const ShaderModule&) = delete;

@@ -29,7 +29,6 @@ list(APPEND vkaEngineSources
   "${srcDir}/Instance.cpp"
   "${srcDir}/Surface.cpp"
   "${srcDir}/RenderPass.cpp"
-  "${srcDir}/Buffer.cpp"
   "${srcDir}/CommandPool.cpp"
   "${srcDir}/DescriptorPool.cpp"
   "${srcDir}/DescriptorSetLayout.cpp"
@@ -37,13 +36,13 @@ list(APPEND vkaEngineSources
   "${srcDir}/ShaderModule.cpp"
   "${srcDir}/PipelineLayout.cpp"
   "${srcDir}/Pipeline.cpp"
-  "${srcDir}/Buffer.cpp"
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
   "${includeDir}/Config.hpp"
   "${includeDir}/Engine.hpp"
+  "${includeDir}/Asset.hpp"
   "${includeDir}/RenderPass.hpp"
   "${includeDir}/Instance.hpp"
   "${includeDir}/Device.hpp"
@@ -54,9 +53,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Swapchain.hpp"
   "${includeDir}/PipelineLayout.hpp"
   "${includeDir}/Pipeline.hpp"
-  "${includeDir}/Buffer.hpp"
   "${includeDir}/overloaded.hpp"
-  "${includeDir}/braintree.hpp"
   "${includeDir}/Surface.hpp")
 add_library(vkaEngine ${vkaEngineSources})
 target_include_directories(vkaEngine PUBLIC 

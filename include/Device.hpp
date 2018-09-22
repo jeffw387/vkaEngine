@@ -11,8 +11,11 @@
 #include "DescriptorPool.hpp"
 #include "DescriptorSetLayout.hpp"
 #include "Pipeline.hpp"
+#include "Swapchain.hpp"
+#include "outcome.hpp"
 
 namespace vka {
+namespace outcome = OUTCOME_V2_NAMESPACE;
 
 // A frame is tied to a set of resources:
 // A command buffer is recorded, and for
@@ -58,18 +61,6 @@ enum class PhysicalDeviceFeatures {
   samplerAnistropy
 };
 
-class Instance;
-class CommandPool;
-class CommandBuffer;
-class DescriptorPool;
-class DescriptorSetLayout;
-class DescriptorSet;
-class ShaderModule;
-class GraphicsPipelineCreateInfo;
-class ComputePipelineCreateInfo;
-class GraphicsPipeline;
-class ComputePipeline;
-
 struct DeviceDeleter {
   using pointer = VkDevice;
   void operator()(VkDevice deviceHandle) {
@@ -89,29 +80,42 @@ struct DeviceRequirements {
   std::vector<const char*> deviceExtensions;
 };
 class Device {
-  static constexpr uint32_t U32Max = ~(0ui32);
-
 public:
   Device() = delete;
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;
-  Device(VkInstance, DeviceRequirements);
+  Device(VkInstance, VkSurfaceKHR, DeviceRequirements);
   Device(Device&&) = default;
   Device& operator=(Device&&) = default;
   ~Device() = default;
+
   operator VkDevice() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  GraphicsPipeline* createGrapicsPipeline(const VkGraphicsPipelineCreateInfo&);
+  Swapchain* createSwapchain();
+  GraphicsPipeline* createGraphicsPipeline(const VkGraphicsPipelineCreateInfo&);
   ComputePipeline* createComputePipeline(const VkComputePipelineCreateInfo&);
   CommandPool* createCommandPool();
-  DescriptorPool* createDescriptorPool();
+  DescriptorPool* createDescriptorPool(
+      const std::vector<VkDescriptorPoolSize>& poolSizes,
+      uint32_t maxSets);
   DescriptorSetLayout* createSetLayout(
-      std::vector<VkDescriptorSetLayoutBinding> bindings);
+      const std::vector<VkDescriptorSetLayoutBinding>& bindings);
   ShaderModule* createShaderModule(std::string shaderPath);
+
+  VkResult presentImage(uint32_t imageIndex, VkSemaphore waitSemaphore);
+  void queueSubmit(
+      const std::vector<VkSemaphore>& waitSemaphores,
+      const std::vector<VkCommandBuffer>& commandBuffers,
+      const std::vector<VkSemaphore>& signalSemaphores);
+
+  void waitIdle();
+
+  VkSurfaceCapabilitiesKHR getSurfaceCapabilities();
 
 private:
   VkInstance instance;
+  VkSurfaceKHR surface;
   DeviceRequirements requirements;
   std::shared_ptr<spdlog::logger> multilogger;
   std::vector<VkPhysicalDevice> physicalDevices;
@@ -124,11 +128,13 @@ private:
   DeviceOwner deviceOwner;
   VmaAllocator allocator;
   AllocatorOwner allocatorOwner;
-  uint32_t graphicsQueueIndex = U32Max;
+  uint32_t graphicsQueueIndex = UINT32_MAX;
   VkDeviceQueueCreateInfo queueCreateInfo = {
       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
   VkQueue graphicsQueue;
 
+  std::unique_ptr<Swapchain> swapchain;
+  std::unique_ptr<PipelineCache> pipelineCache;
   std::vector<std::unique_ptr<GraphicsPipeline>> graphicsPipelines;
   std::vector<std::unique_ptr<ComputePipeline>> computePipelines;
   std::vector<std::unique_ptr<CommandPool>> commandPools;

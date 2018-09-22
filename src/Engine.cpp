@@ -81,16 +81,15 @@ void Engine::renderThreadFunc() {
 }
 
 void Engine::initInputCallbacks() {
-  auto windowHandle = instance->getSurface()->getWindowHandle();
-  glfwSetMouseButtonCallback(windowHandle, mouseButtonCallback);
-  glfwSetKeyCallback(windowHandle, keyCallback);
-  glfwSetCursorPosCallback(windowHandle, cursorPositionCallback);
+  auto surface = instance->getSurface();
+  glfwSetMouseButtonCallback(*surface, mouseButtonCallback);
+  glfwSetKeyCallback(*surface, keyCallback);
+  glfwSetCursorPosCallback(*surface, cursorPositionCallback);
 }
 
 void Engine::handleOSMessages() {
-  auto windowHandle = instance->getSurface()->getWindowHandle();
   glfwPollEvents();
-  if (glfwWindowShouldClose(windowHandle)) {
+  if (glfwWindowShouldClose(*instance->getSurface())) {
     continueUpdating = false;
     continueRendering = false;
   }

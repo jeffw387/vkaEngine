@@ -62,6 +62,20 @@ Swapchain::Swapchain(
       device, swapchainHandle, &swapImageCount, swapImages.data());
 }
 
+Swapchain::operator VkSwapchainKHR() { return swapchainHandle; }
+Swapchain::operator VkSwapchainKHR*() { return &swapchainHandle; }
+
+outcome::result<uint32_t, VkResult> Swapchain::acquireImage(
+    VkSemaphore semaphore) {
+  uint32_t imageIndex{};
+  auto result = vkAcquireNextImageKHR(
+      device, swapchainHandle, UINT64_MAX, semaphore, 0, &imageIndex);
+  if (result != VK_SUCCESS) {
+    return outcome::failure(result);
+  }
+  return outcome::success(imageIndex);
+}
+
 Swapchain::~Swapchain() {
   vkDestroySwapchainKHR(device, swapchainHandle, nullptr);
 }

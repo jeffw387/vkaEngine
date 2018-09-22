@@ -5,7 +5,8 @@ namespace vka {
 PipelineLayout::PipelineLayout(
     VkDevice device,
     const std::vector<VkPushConstantRange>& pushRanges,
-    const std::vector<VkDescriptorSetLayout>& setLayouts) {
+    const std::vector<VkDescriptorSetLayout>& setLayouts)
+    : device(device) {
   VkPipelineLayoutCreateInfo createInfo{
       VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
   createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushRanges.size());

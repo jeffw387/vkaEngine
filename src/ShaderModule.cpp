@@ -4,12 +4,14 @@
 #include <vector>
 
 namespace vka {
-ShaderModule::ShaderModule(VkDevice device, std::vector<char>& shaderBytes)
+ShaderModule::ShaderModule(
+    VkDevice device,
+    const std::vector<uint32_t>& shaderBytes)
     : device(device) {
   VkShaderModuleCreateInfo createInfo{
       VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
-  createInfo.codeSize = shaderBytes.size();
-  createInfo.pCode = reinterpret_cast<uint32_t*>(shaderBytes.data());
+  createInfo.codeSize = shaderBytes.size() * sizeof(uint32_t);
+  createInfo.pCode = shaderBytes.data();
   vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
 }
 

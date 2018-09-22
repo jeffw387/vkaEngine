@@ -35,8 +35,8 @@ struct SurfaceCreateInfo {
 
 class Surface {
 public:
-  VkSurfaceKHR getSurfaceHandle() { return surfaceHandle; }
-  GLFWwindow* getWindowHandle() { return windowHandle; }
+  operator VkSurfaceKHR() { return surfaceHandle; }
+  operator GLFWwindow*() { return windowHandle; }
   Surface() = delete;
   Surface(VkInstance, SurfaceCreateInfo);
   Surface(Surface&&) = default;

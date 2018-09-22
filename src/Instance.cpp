@@ -106,7 +106,7 @@ Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
 }
 
 Device* Instance::createDevice(DeviceRequirements requirements) {
-  device = std::make_unique<Device>(instanceHandle, requirements);
+  device = std::make_unique<Device>(instanceHandle, *surface, requirements);
   return device.get();
 }
 
