@@ -28,3 +28,6 @@
 [submodule "external/outcome"]
 	path = external/outcome
 	url = c:/libraries/outcome
+[submodule "external/range-v3"]
+	path = external/range-v3
+	url = c:/libraries/ericniebler/range-v3
