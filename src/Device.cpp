@@ -16,7 +16,7 @@ Device::Device(
     VkInstance instance,
     VkSurfaceKHR surface,
     DeviceRequirements requirements)
-    : instance(instance), surface(surface), requirements(requirements) {
+    : surface(surface), requirements(requirements) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating device.");
 

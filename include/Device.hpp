@@ -112,9 +112,10 @@ public:
   void waitIdle();
 
   VkSurfaceCapabilitiesKHR getSurfaceCapabilities();
+  void updateDescriptorSets(
+      const std::vector<VkWriteDescriptorSet>& descriptorWrites);
 
 private:
-  VkInstance instance;
   VkSurfaceKHR surface;
   DeviceRequirements requirements;
   std::shared_ptr<spdlog::logger> multilogger;

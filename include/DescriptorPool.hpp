@@ -3,7 +3,33 @@
 #include "VulkanFunctionLoader.hpp"
 
 namespace vka {
-class Device;
+class DescriptorSetLayout;
+
+class DescriptorSet {
+public:
+  DescriptorSet() = default;
+  DescriptorSet(VkDescriptorSet set, DescriptorSetLayout* layout);
+  DescriptorSet(DescriptorSet&&) = default;
+  DescriptorSet(const DescriptorSet&) = default;
+  DescriptorSet& operator=(DescriptorSet&&) = default;
+  DescriptorSet& operator=(const DescriptorSet&) = default;
+  ~DescriptorSet() = default;
+  operator VkDescriptorSet();
+
+  VkWriteDescriptorSet createImageDescriptorWrite(
+      uint32_t binding,
+      uint32_t arrayElement,
+      const std::vector<VkDescriptorImageInfo>& imageInfos);
+
+  VkWriteDescriptorSet createBufferDescriptorWrite(
+      uint32_t binding,
+      uint32_t arrayElement,
+      const std::vector<VkDescriptorBufferInfo>& bufferInfos);
+
+private:
+  VkDescriptorSet set;
+  DescriptorSetLayout* layout;
+};
 
 class DescriptorPool {
 public:
@@ -19,7 +45,7 @@ public:
   ~DescriptorPool();
   operator VkDescriptorPool() { return poolHandle; }
 
-  auto allocateDescriptorSets(std::vector<VkDescriptorSetLayout> layouts);
+  auto allocateDescriptorSets(const std::vector<DescriptorSetLayout*>& layouts);
   void reset();
 
 private:

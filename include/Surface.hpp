@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VulkanFunctionLoader.hpp"
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <memory>
 #include <vector>
 #include "spdlog/spdlog.h"

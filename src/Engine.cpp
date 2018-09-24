@@ -53,15 +53,30 @@ Engine::Engine(EngineCreateInfo engineCreateInfo)
   multilogger->info("Creating Engine.");
 }
 
-const aiScene* Engine::LoadAsset(const std::string& assetPath) {
-  if (running) {
-    multilogger->warn(
-        "Cannot load asset {} once the engine is running.", assetPath);
-    return nullptr;
-  }
+size_t Engine::LoadAsset(const std::string& assetPath) {
+  assetBuffer.invalidate();
   auto asset = assetImporter.ReadFile(assetPath, assetImportFlags);
-  // TODO: save asset pointer, etc.
-  return asset;
+  std::vector<Mesh> assetMeshes;
+  std::vector<size_t> assetMaterials;
+  for (auto m = 0U; m < asset->mNumMeshes; ++m) {
+    assetMeshes.emplace_back();
+    auto currentMesh = asset->mMeshes[m];
+    for (auto v = 0U; v < currentMesh->mNumVertices; ++v) {
+      auto cv = currentMesh->mVertices[v];
+      auto cn = currentMesh->mNormals[v];
+      assetMeshes.back().vertices.emplace_back(
+          Vertex{{cv.x, cv.y, cv.z}, {cn.x, cn.y, cn.z}});
+    }
+    for (auto f = 0U; f < currentMesh->mNumFaces; ++f) {
+      auto& currentFace = currentMesh->mFaces[f];
+      for (auto i = 0U; i < currentFace.mNumIndices; ++i) {
+        assetMeshes.back().indices.push_back(currentFace.mIndices[i]);
+      }
+    }
+    // TODO: fix material loading and/or linking
+    assetMaterials.push_back(0);
+  }
+  return assetBuffer.addAsset(assetMeshes, assetMaterials);
 }
 
 Instance* Engine::createInstance(InstanceCreateInfo instanceCreateInfo) {

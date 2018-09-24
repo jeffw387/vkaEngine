@@ -14,6 +14,7 @@
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
+#include "Asset.hpp"
 
 namespace vka {
 static constexpr auto BufferCount = 3U;
@@ -31,13 +32,6 @@ struct EngineCreateInfo {
   UpdateCallback updateCallback;
 };
 
-struct Asset {};
-
-struct AssetData {
-  std::vector<const aiScene*> importedAssets;
-  std::unordered_map<const aiScene*, Asset> assets;
-};
-
 class Engine {
 public:
   Engine() = delete;
@@ -51,7 +45,7 @@ public:
   Instance* createInstance(InstanceCreateInfo);
   void run();
   void setUpdatesPerSecond(uint32_t count) { updatesPerSecond = count; }
-  const aiScene* LoadAsset(const std::string& assetPath);
+  size_t LoadAsset(const std::string& assetPath);
 
 private:
   void initInputCallbacks();
@@ -65,6 +59,7 @@ private:
   EngineCreateInfo engineCreateInfo;
   unsigned int assetImportFlags;
   Assimp::Importer assetImporter;
+  AssetBuffer assetBuffer;
   std::unique_ptr<Instance> instance;
   std::mutex stateMutex;
   bool running = false;
