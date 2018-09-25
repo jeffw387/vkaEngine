@@ -3,6 +3,11 @@ set(BUILD_SHARED_LIBS OFF)
 add_executable(testmain "testmain.cpp")
 target_link_libraries(testmain PRIVATE vkaEngine)
 
+add_custom_command(
+  TARGET testmain
+  POST_BUILD
+  COMMAND clang-format -i -style=file "${CMAKE_CURRENT_SOURCE_DIR}/testmain.cpp")
+
 macro(process_shader shaderName inputDir outputDir)
   set(inputShader "${inputDir}/${shaderName}")
   set(outputShader "${outputDir}/${shaderName}")

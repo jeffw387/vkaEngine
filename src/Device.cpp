@@ -133,6 +133,35 @@ VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {
   return capabilities;
 }
 
+AllocatedBuffer Device::createAllocatedBuffer(
+    VkDeviceSize size,
+    VkBufferUsageFlags usage,
+    VmaAllocationCreateFlags allocFlags,
+    VmaMemoryUsage memoryUsage) {
+  AllocatedBuffer result{};
+  VkBufferCreateInfo bufferCreateInfo{};
+  bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferCreateInfo.usage = usage;
+  bufferCreateInfo.queueFamilyIndexCount = 1;
+  bufferCreateInfo.pQueueFamilyIndices = &graphicsQueueIndex;
+  bufferCreateInfo.size = size;
+
+  VmaAllocationCreateInfo allocationCreateInfo{};
+  allocationCreateInfo.flags = allocFlags;
+  allocationCreateInfo.usage = memoryUsage;
+  vmaCreateBuffer(
+      allocator,
+      &bufferCreateInfo,
+      &allocationCreateInfo,
+      &result.buffer,
+      &result.allocation,
+      &result.allocInfo);
+  auto bufferUnique =
+      UniqueAllocatedBuffer(result, AllocatedBufferDeleter(allocator));
+  allocatedBuffers.push_back(std::move(bufferUnique));
+  return result;
+}
+
 Swapchain* Device::createSwapchain() {
   auto capabilities = getSurfaceCapabilities();
 
@@ -180,6 +209,14 @@ DescriptorSetLayout* Device::createSetLayout(
   return descriptorSetLayouts.back().get();
 }
 
+PipelineLayout* Device::createPipelineLayout(
+    const std::vector<VkPushConstantRange>& pushRanges,
+    const std::vector<VkDescriptorSetLayout>& setLayouts) {
+  pipelineLayouts.push_back(
+      std::make_unique<PipelineLayout>(deviceHandle, pushRanges, setLayouts));
+  return pipelineLayouts.back().get();
+}
+
 ShaderModule* Device::createShaderModule(std::string shaderPath) {
   std::vector<uint32_t> binaryData;
   std::basic_ifstream<uint32_t> shaderFile(
@@ -218,6 +255,12 @@ void Device::queueSubmit(
       static_cast<uint32_t>(signalSemaphores.size());
   submitInfo.pSignalSemaphores = signalSemaphores.data();
   vkQueueSubmit(graphicsQueue, 1, &submitInfo, 0);
+}
+
+RenderPass* Device::createRenderPass(const VkRenderPassCreateInfo& createInfo) {
+  renderPasses.push_back(
+      std::make_unique<RenderPass>(deviceHandle, createInfo));
+  return renderPasses.back().get();
 }
 
 void Device::waitIdle() { vkDeviceWaitIdle(deviceHandle); }

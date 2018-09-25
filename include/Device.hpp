@@ -10,46 +10,13 @@
 #include "CommandPool.hpp"
 #include "DescriptorPool.hpp"
 #include "DescriptorSetLayout.hpp"
+#include "RenderPass.hpp"
+#include "PipelineLayout.hpp"
 #include "Pipeline.hpp"
 #include "Swapchain.hpp"
 #include "outcome.hpp"
 
 namespace vka {
-namespace outcome = OUTCOME_V2_NAMESPACE;
-
-// A frame is tied to a set of resources:
-// A command buffer is recorded, and for
-//   rendering this requires one or more:
-// Render passes, which can have multiple:
-// Pipelines (and Shaders) which can render one or more:
-// Materials, which can be applied to different:
-// Meshes/Geometries, of which there can be multiple:
-// Instances, each of which has its own transformation matrix
-
-// steps to update
-// 1. player input handling
-// 2. physics update
-// 3. world update (game logic)
-// 4. sort instance data to optimal render order (least state changes)
-//    (perhaps should store instances together so sorting isn't required)
-// 5. stage data if not on unified memory
-// 6. begin command buffer for copy
-// 7. upload any data to device as needed
-//    (transforms, other uniform data, etc.)
-// 8. create pipeline barrier so that rendering occurs after data copy:
-//    buffer barrier on the uniform buffers
-//    source stage: transfer
-//    dest stage: vertex shader
-//    source access: transfer write
-//    dest access: shader read
-// 9. end command buffer
-
-// steps to rendering a frame:
-// 1. acquire swap image
-// 2. acquire the most updated set of resources
-// 3. begin command buffer recording
-//    (should I use a command buffer per
-//    world region as well as per frame?)
 
 enum class PhysicalDeviceFeatures {
   robustBufferAccess,
@@ -75,6 +42,31 @@ struct AllocatorDeleter {
 };
 using AllocatorOwner = std::unique_ptr<VmaAllocator, AllocatorDeleter>;
 
+struct AllocatedBuffer {
+  VkBuffer buffer;
+  VmaAllocation allocation;
+  VmaAllocationInfo allocInfo;
+
+  bool operator!=(const AllocatedBuffer& other) {
+    return buffer != other.buffer || allocation != other.allocation;
+  }
+};
+
+struct AllocatedBufferDeleter {
+  using pointer = AllocatedBuffer;
+
+  AllocatedBufferDeleter() = default;
+  AllocatedBufferDeleter(VmaAllocator allocator) : allocator(allocator) {}
+
+  void operator()(AllocatedBuffer allocBuffer) {
+    vmaDestroyBuffer(allocator, allocBuffer.buffer, allocBuffer.allocation);
+  }
+
+  VmaAllocator allocator;
+};
+using UniqueAllocatedBuffer =
+    std::unique_ptr<AllocatedBuffer, AllocatedBufferDeleter>;
+
 struct DeviceRequirements {
   std::vector<PhysicalDeviceFeatures> requiredFeatures;
   std::vector<const char*> deviceExtensions;
@@ -92,7 +84,13 @@ public:
   operator VkDevice() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
+  AllocatedBuffer createAllocatedBuffer(
+      VkDeviceSize,
+      VkBufferUsageFlags,
+      VmaAllocationCreateFlags,
+      VmaMemoryUsage);
   Swapchain* createSwapchain();
+  RenderPass* createRenderPass(const VkRenderPassCreateInfo&);
   GraphicsPipeline* createGraphicsPipeline(const VkGraphicsPipelineCreateInfo&);
   ComputePipeline* createComputePipeline(const VkComputePipelineCreateInfo&);
   CommandPool* createCommandPool();
@@ -101,6 +99,9 @@ public:
       uint32_t maxSets);
   DescriptorSetLayout* createSetLayout(
       const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+  PipelineLayout* createPipelineLayout(
+      const std::vector<VkPushConstantRange>&,
+      const std::vector<VkDescriptorSetLayout>&);
   ShaderModule* createShaderModule(std::string shaderPath);
 
   VkResult presentImage(uint32_t imageIndex, VkSemaphore waitSemaphore);
@@ -136,6 +137,9 @@ private:
 
   std::unique_ptr<Swapchain> swapchain;
   std::unique_ptr<PipelineCache> pipelineCache;
+  std::vector<UniqueAllocatedBuffer> allocatedBuffers;
+  std::vector<std::unique_ptr<RenderPass>> renderPasses;
+  std::vector<std::unique_ptr<PipelineLayout>> pipelineLayouts;
   std::vector<std::unique_ptr<GraphicsPipeline>> graphicsPipelines;
   std::vector<std::unique_ptr<ComputePipeline>> computePipelines;
   std::vector<std::unique_ptr<CommandPool>> commandPools;

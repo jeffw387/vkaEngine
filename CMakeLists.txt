@@ -26,6 +26,7 @@ file(GENERATE OUTPUT "${includeDir}/Config.hpp"
 
 list(APPEND vkaEngineSources 
   "${srcDir}/Engine.cpp"
+  "${srcDir}/Camera.cpp"
   "${srcDir}/Instance.cpp"
   "${srcDir}/Surface.cpp"
   "${srcDir}/RenderPass.cpp"
@@ -41,6 +42,7 @@ list(APPEND vkaEngineSources
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
   "${includeDir}/Config.hpp"
+  "${includeDir}/Camera.hpp"
   "${includeDir}/Engine.hpp"
   "${includeDir}/Asset.hpp"
   "${includeDir}/RenderPass.hpp"
