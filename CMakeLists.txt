@@ -68,10 +68,6 @@ add_custom_command(
   POST_BUILD
   COMMAND clang-format -i -style=file ${vkaEngineSources} ${vkaEngineIncludes})
 
-add_library(NanoRange INTERFACE)
-target_include_directories(NanoRange INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/external/NanoRange/include")
-target_link_libraries(vkaEngine PUBLIC NanoRange)
-
 add_library(outcome INTERFACE)
 target_include_directories(outcome INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/external/outcome/single-header")

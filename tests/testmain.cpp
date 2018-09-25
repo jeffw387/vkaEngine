@@ -31,7 +31,7 @@ int main()
   vka::EngineCreateInfo engineCreateInfo{};
   engineCreateInfo.updateCallback = [&](auto engine) {};
   auto engine = std::make_unique<vka::Engine>(engineCreateInfo);
-  auto triangleAsset = engine->LoadAsset("Triangle.blend");
+  auto triangleAsset = engine->LoadAsset("content/models/triangle.blend");
 
   auto instance = engine->createInstance(instanceCreateInfo);
   auto surface = instance->createSurface(surfaceCreateInfo);
@@ -39,8 +39,8 @@ int main()
   vka::DeviceRequirements deviceRequirements{};
   deviceRequirements.deviceExtensions.push_back("VK_KHR_swapchain");
   auto device = instance->createDevice(deviceRequirements);
-  auto vertexShader = device->createShaderModule("vert.spv");
-  auto fragmentShader = device->createShaderModule("frag.spv");
+  auto vertexShader = device->createShaderModule("content/shaders/vert.spv");
+  auto fragmentShader = device->createShaderModule("content/shaders/frag.spv");
   auto swapchain = device->createSwapchain();
   auto commandPool = device->createCommandPool();
   auto cmd = 
