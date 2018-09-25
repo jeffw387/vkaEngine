@@ -111,6 +111,7 @@ foreach(component ${RequiredBulletComponents})
   if(NOT TARGET ${component})
     message(FATAL_ERROR "${component} target from BulletPhysics not found")
   endif()
+  target_link_libraries(vkaEngine PUBLIC ${RequiredBulletComponents})
 endforeach()
 
 #add_subdirectory(external/tbb)
