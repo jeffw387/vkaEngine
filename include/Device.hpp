@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanFunctionLoader.hpp"
+#include <vulkan/vulkan.h>
 #include "vk_mem_alloc.h"
 #include <memory>
 #include <vector>
@@ -47,6 +47,7 @@ struct AllocatedBuffer {
   VmaAllocation allocation;
   VmaAllocationInfo allocInfo;
 
+  bool operator!=(std::nullptr_t) { return buffer != 0 || allocation != 0; }
   bool operator!=(const AllocatedBuffer& other) {
     return buffer != other.buffer || allocation != other.allocation;
   }
@@ -56,6 +57,7 @@ struct AllocatedBufferDeleter {
   using pointer = AllocatedBuffer;
 
   AllocatedBufferDeleter() = default;
+  AllocatedBufferDeleter(std::nullptr_t) : allocator(0){};
   AllocatedBufferDeleter(VmaAllocator allocator) : allocator(allocator) {}
 
   void operator()(AllocatedBuffer allocBuffer) {

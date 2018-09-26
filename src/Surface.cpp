@@ -1,7 +1,7 @@
 #include "Surface.hpp"
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 #include "Instance.hpp"
-#include "VulkanFunctionLoader.hpp"
+#include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
 #include "Engine.hpp"
 

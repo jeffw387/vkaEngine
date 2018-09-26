@@ -1,11 +1,11 @@
 #pragma once
 
-#include "VulkanFunctionLoader.hpp"
+#include <vulkan/vulkan.h>
+#include <GLFW/glfw3.h>
 #include <memory>
 #include <vector>
 #include "version.hpp"
 #include "spdlog/spdlog.h"
-#include <GLFW/glfw3.h>
 
 namespace vka {
 
@@ -32,10 +32,11 @@ struct DebugMessengerDeleter {
   using pointer = VkDebugUtilsMessengerEXT;
   VkInstance instanceHandle;
   DebugMessengerDeleter() = default;
+  DebugMessengerDeleter(std::nullptr_t) : instanceHandle(0) {}
   DebugMessengerDeleter(VkInstance instanceHandle)
       : instanceHandle(instanceHandle) {}
   void operator()(VkDebugUtilsMessengerEXT messenger) {
-    if (vkDestroyDebugUtilsMessengerEXT) {
+    if (&vkDestroyDebugUtilsMessengerEXT != nullptr) {
       vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
     }
   }
@@ -77,7 +78,7 @@ private:
   Engine* engine;
   GLFWOwner glfwOwner;
   InstanceCreateInfo instanceCreateInfo;
-  LibraryHandle vulkanLibrary;
+  // LibraryHandle vulkanLibrary;
   VkInstance instanceHandle;
   InstanceOwner instanceOwner;
   VkDebugUtilsMessengerEXT debugMessenger;

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "VulkanFunctionLoader.hpp"
+#include <vulkan/vulkan.h>
+//#include <GLFW/glfw3.h>
 #include <vector>
 
 namespace vka {

@@ -63,7 +63,7 @@ target_include_directories(vkaEngine PUBLIC
 set_target_properties(vkaEngine PROPERTIES
   CXX_STANDARD 17)
 
-target_compile_definitions(vkaEngine PUBLIC NOMINMAX VK_USE_PLATFORM_WIN32_KHR)
+target_compile_definitions(vkaEngine PUBLIC NOMINMAX)
 
 add_custom_command(
   TARGET vkaEngine
@@ -75,8 +75,15 @@ target_include_directories(outcome INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/external/outcome/single-header")
 target_link_libraries(vkaEngine PUBLIC outcome)
 
-add_subdirectory(external/VulkanFunctionLoader)
-target_link_libraries(vkaEngine PUBLIC VulkanFunctionLoader)
+find_package(Vulkan REQUIRED)
+if(VULKAN_FOUND)
+  message("Vulkan found.")
+endif()
+message("vk include: ${Vulkan_INCLUDE_DIRS}")
+target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
+#add_subdirectory(external/VulkanFunctionLoader)
+#target_link_libraries(vkaEngine PUBLIC VulkanFunctionLoader)
 
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator 

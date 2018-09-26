@@ -1,5 +1,6 @@
 #include "Pipeline.hpp"
-#include "VulkanFunctionLoader.hpp"
+#include <vulkan/vulkan.h>
+//#include <GLFW/glfw3.h>
 #include "Device.hpp"
 
 namespace vka {

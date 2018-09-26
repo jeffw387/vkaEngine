@@ -34,7 +34,7 @@ static VkBool32 vulkanDebugCallback(
   return VK_FALSE;
 }
 
-Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
+Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
     : engine(engine), instanceCreateInfo(instanceCreateInfo) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating instance.");
@@ -73,9 +73,9 @@ Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
   createInfo.ppEnabledLayerNames = instanceCreateInfo.layers.data();
   createInfo.pApplicationInfo = &appInfo;
 
-  vulkanLibrary = LoadVulkanLibrary();
-  LoadExportedEntryPoints(vulkanLibrary);
-  LoadGlobalLevelEntryPoints();
+  // vulkanLibrary = LoadVulkanLibrary();
+  // LoadExportedEntryPoints(vulkanLibrary);
+  // LoadGlobalLevelEntryPoints();
 
   auto instanceResult = vkCreateInstance(&createInfo, nullptr, &instanceHandle);
   if (instanceResult != VK_SUCCESS) {
@@ -83,7 +83,7 @@ Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
   }
   instanceOwner = InstanceOwner(instanceHandle);
 
-  LoadInstanceLevelEntryPoints(instanceHandle);
+  // LoadInstanceLevelEntryPoints(instanceHandle);
 
   VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
   messengerCreateInfo.sType =
@@ -98,7 +98,7 @@ Instance::Instance(Engine*, InstanceCreateInfo instanceCreateInfo)
       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
   messengerCreateInfo.pUserData = multilogger.get();
-  if (vkCreateDebugUtilsMessengerEXT) {
+  if (&vkCreateDebugUtilsMessengerEXT != nullptr) {
     vkCreateDebugUtilsMessengerEXT(
         instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
     debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);

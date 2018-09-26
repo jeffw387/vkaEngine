@@ -1,9 +1,10 @@
+#include "Device.hpp"
 #include "Instance.hpp"
-#include "VulkanFunctionLoader.hpp"
+#include <vulkan/vulkan.h>
+#include <GLFW/glfw3.h>
 #define VMA_STATIC_VULKAN_FUNCTIONS 1
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
-#include "Device.hpp"
 #include <memory>
 #include "Engine.hpp"
 #include "Config.hpp"
@@ -115,7 +116,7 @@ Device::Device(
   }
   deviceOwner = DeviceOwner(deviceHandle);
 
-  LoadDeviceLevelEntryPoints(deviceHandle);
+  // LoadDeviceLevelEntryPoints(deviceHandle);
 
   vkGetDeviceQueue(deviceHandle, graphicsQueueIndex, 0, &graphicsQueue);
 

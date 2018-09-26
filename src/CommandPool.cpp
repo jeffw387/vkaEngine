@@ -1,5 +1,5 @@
 #include "CommandPool.hpp"
-#include "VulkanFunctionLoader.hpp"
+#include <GLFW/glfw3.h>
 #include "Device.hpp"
 
 namespace vka {

@@ -1,6 +1,7 @@
 #include "RenderPass.hpp"
 #include "Device.hpp"
-#include "VulkanFunctionLoader.hpp"
+#include <vulkan/vulkan.h>
+//#include <GLFW/glfw3.h>
 
 namespace vka {
 RenderPassCreateInfo::operator const VkRenderPassCreateInfo&() {
