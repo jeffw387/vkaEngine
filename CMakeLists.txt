@@ -123,6 +123,7 @@ endforeach()
 #target_link_libraries(vkaEngine PUBLIC tbb_static)
 
 add_subdirectory(external/spdlog)
+add_library(spdlog::spdlog ALIAS spdlog)
 target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
 
 add_subdirectory(tests)
