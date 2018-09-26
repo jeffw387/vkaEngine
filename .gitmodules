@@ -24,10 +24,7 @@
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 [submodule "external/spdlog"]
 	path = external/spdlog
-	url = c:/libraries/spdlog
+	url = https://github.com/gabime/spdlog.git
 [submodule "external/outcome"]
 	path = external/outcome
-	url = c:/libraries/outcome
-[submodule "external/range-v3"]
-	path = external/range-v3
-	url = c:/libraries/ericniebler/range-v3
+	url = https://github.com/ned14/outcome.git
