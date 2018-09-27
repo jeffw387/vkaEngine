@@ -7,6 +7,9 @@
 #include "Engine.hpp"
 #include "spdlog/spdlog.h"
 
+PFN_vkCreateDebugUtilsMessengerEXT pfn_vkCreateDebugUtilsMessengerEXT;
+PFN_vkDestroyDebugUtilsMessengerEXT pfn_vkDestroyDebugUtilsMessengerEXT;
+
 namespace vka {
 static VkBool32 vulkanDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -32,6 +35,10 @@ static VkBool32 vulkanDebugCallback(
         pCallbackData->pMessage);
   }
   return VK_FALSE;
+}
+
+void DebugMessengerDeleter::operator()(VkDebugUtilsMessengerEXT messenger) {
+  pfn_vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
 }
 
 Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
@@ -84,6 +91,12 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
   instanceOwner = InstanceOwner(instanceHandle);
 
   // LoadInstanceLevelEntryPoints(instanceHandle);
+  pfn_vkCreateDebugUtilsMessengerEXT =
+      (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
+          instanceHandle, "vkCreateDebugUtilsMessengerEXT");
+  pfn_vkDestroyDebugUtilsMessengerEXT =
+      (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
+          instanceHandle, "vkDestroyDebugUtilsMessengerEXT");
 
   VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
   messengerCreateInfo.sType =
@@ -98,11 +111,9 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
   messengerCreateInfo.pUserData = multilogger.get();
-  if (&vkCreateDebugUtilsMessengerEXT != nullptr) {
-    vkCreateDebugUtilsMessengerEXT(
-        instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
-    debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);
-  }
+  pfn_vkCreateDebugUtilsMessengerEXT(
+      instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
+  debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);
 }
 
 Device* Instance::createDevice(DeviceRequirements requirements) {

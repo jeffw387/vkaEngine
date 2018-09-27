@@ -35,11 +35,7 @@ struct DebugMessengerDeleter {
   DebugMessengerDeleter(std::nullptr_t) : instanceHandle(0) {}
   DebugMessengerDeleter(VkInstance instanceHandle)
       : instanceHandle(instanceHandle) {}
-  void operator()(VkDebugUtilsMessengerEXT messenger) {
-    if (&vkDestroyDebugUtilsMessengerEXT != nullptr) {
-      vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
-    }
-  }
+  void operator()(VkDebugUtilsMessengerEXT messenger);
 };
 using DebugMessengerOwner =
     std::unique_ptr<VkDebugUtilsMessengerEXT, DebugMessengerDeleter>;
