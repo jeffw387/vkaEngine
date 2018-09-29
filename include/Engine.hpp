@@ -28,8 +28,10 @@ class Instance;
 struct InstanceCreateInfo;
 
 using UpdateCallback = std::function<void(Engine*)>;
+using RenderCallback = std::function<void(Engine*)>;
 struct EngineCreateInfo {
   UpdateCallback updateCallback;
+  RenderCallback renderCallback;
 };
 
 class Engine {
@@ -57,7 +59,6 @@ private:
   void acquireRenderSlot();
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
-  EngineCreateInfo engineCreateInfo;
   unsigned int assetImportFlags;
   Assimp::Importer assetImporter;
   AssetBuffer assetBuffer;
@@ -73,6 +74,7 @@ private:
   Clock::time_point startTime;
   std::array<Clock::time_point, BufferCount> indexUpdateTime;
   UpdateCallback updateCallback;
+  RenderCallback renderCallback;
 
   std::shared_ptr<spdlog::sinks::sink> fileSink;
   std::shared_ptr<spdlog::sinks::sink> stdoutSink;

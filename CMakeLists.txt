@@ -57,7 +57,8 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Pipeline.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/Surface.hpp")
-add_library(vkaEngine ${vkaEngineSources})
+add_library(vkaEngine)
+target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
 target_include_directories(vkaEngine PUBLIC 
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(vkaEngine PROPERTIES
@@ -70,6 +71,7 @@ add_custom_command(
   POST_BUILD
   COMMAND clang-format -i -style=file ${vkaEngineSources} ${vkaEngineIncludes})
 
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
 target_include_directories(outcome INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/external/outcome/single-header")
@@ -79,7 +81,8 @@ find_package(Vulkan REQUIRED)
 if(VULKAN_FOUND)
   message("Vulkan found.")
 endif()
-message("vk include: ${Vulkan_INCLUDE_DIRS}")
+message("vk include dirs: ${Vulkan_INCLUDE_DIRS}")
+message("vk libs: ${Vulkan_LIBRARIES}")
 target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
 #add_subdirectory(external/VulkanFunctionLoader)

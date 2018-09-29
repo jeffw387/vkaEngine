@@ -11,6 +11,7 @@
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
 #include <memory>
+#include "Camera.hpp"
 
 struct Material {
   glm::vec4 diffuse;
@@ -85,10 +86,14 @@ struct FragmentPushConstants {
 };
 
 int main() {
+  const uint32_t defaultWidth = 900U;
+  const uint32_t defaultHeight = 900U;
   HostRenderState hostRenderState{};
   Materials materials;
   materials.data.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
   hostRenderState.materialState.hostData[0] = materials;
+  auto mainCamera = vka::OrthoCamera{};
+  mainCamera.setDimensions(900.f, 900.f);
   auto ecsRegistry = entt::DefaultRegistry{};
 
   vka::InstanceCreateInfo instanceCreateInfo{};
@@ -104,7 +109,8 @@ int main() {
   vka::EngineCreateInfo engineCreateInfo{};
   engineCreateInfo.updateCallback = [&](vka::Engine* engine) {
     auto updateIndex = engine->currentUpdateIndex();
-    // hostRenderState.cameraState[updateIndex].view = ;
+
+    // hostRenderState.cameraState.hostData[updateIndex].view = ;
   };
   auto engine = std::make_unique<vka::Engine>(engineCreateInfo);
   auto triangleAsset = engine->LoadAsset("content/models/triangle.blend");

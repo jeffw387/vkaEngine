@@ -1,4 +1,5 @@
 #include "Engine.hpp"
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <mutex>
 #include <stdexcept>
@@ -29,8 +30,8 @@ mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 }
 
 Engine::Engine(EngineCreateInfo engineCreateInfo)
-    : engineCreateInfo(engineCreateInfo),
-      updateCallback(engineCreateInfo.updateCallback) {
+    : updateCallback(engineCreateInfo.updateCallback),
+      renderCallback(engineCreateInfo.renderCallback) {
   assetImportFlags = 0;
   assetImportFlags |= aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
                       aiProcess_PreTransformVertices;
