@@ -1,14 +1,33 @@
 #pragma once
 #include <vulkan/vulkan.h>
-//#include <GLFW/glfw3.h>
 #include <vector>
+#include <map>
 
 namespace vka {
 class Device;
 
+class Subpass {
+public:
+  Subpass(VkPipelineBindPoint);
+  void addInputRef(VkAttachmentReference);
+  void addColorRef(VkAttachmentReference);
+  void addResolveRef(VkAttachmentReference);
+  void setDepthRef(VkAttachmentReference);
+  void addPreserveRef(uint32_t);
+  operator VkSubpassDescription();
+
+private:
+  VkPipelineBindPoint bindPoint;
+  std::vector<VkAttachmentReference> inputRefs;
+  std::vector<VkAttachmentReference> colorRefs;
+  std::vector<VkAttachmentReference> resolveRefs;
+  VkAttachmentReference depthRef;
+  std::vector<uint32_t> preserveRefs;
+};
+
 class RenderPassCreateInfo {
 public:
-  void addAttachmentDescription(
+  uint32_t addAttachmentDescription(
       VkAttachmentDescriptionFlags flags,
       VkFormat format,
       VkSampleCountFlagBits samples,
@@ -19,13 +38,10 @@ public:
       VkImageLayout initialLayout,
       VkImageLayout finalLayout);
 
-  void addSubpassDescription(
-      VkPipelineBindPoint bindPoint,
-      std::vector<VkAttachmentReference> inputAttachments,
-      std::vector<VkAttachmentReference> colorAttachments,
-      std::vector<VkAttachmentReference> resolveAttachments,
-      VkAttachmentReference depthAttachment,
-      std::vector<uint32_t> preserveAttachments);
+  Subpass* addGraphicsSubpass();
+  Subpass* addComputeSubpass();
+
+  size_t addSubpass(VkPipelineBindPoint bindPoint);
 
   void addSubpassDependency(
       uint32_t srcSubpass,
@@ -40,7 +56,8 @@ public:
 
 private:
   std::vector<VkAttachmentDescription> attachments;
-  std::vector<VkSubpassDescription> subpasses;
+  std::vector<Subpass> subpasses;
+  std::vector<VkSubpassDescription> subpassDescriptions;
   std::vector<VkSubpassDependency> dependencies;
   VkRenderPassCreateInfo createInfo;
 };

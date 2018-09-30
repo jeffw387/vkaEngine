@@ -49,6 +49,7 @@ public:
   void setUpdatesPerSecond(uint32_t count) { updatesPerSecond = count; }
   size_t LoadAsset(const std::string& assetPath);
   int32_t currentUpdateIndex() { return updateIndex; }
+  int32_t currentRenderIndex() { return renderIndex; }
 
 private:
   void initInputCallbacks();

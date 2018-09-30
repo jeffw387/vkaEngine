@@ -109,8 +109,14 @@ int main() {
   vka::EngineCreateInfo engineCreateInfo{};
   engineCreateInfo.updateCallback = [&](vka::Engine* engine) {
     auto updateIndex = engine->currentUpdateIndex();
-
-    // hostRenderState.cameraState.hostData[updateIndex].view = ;
+  };
+  engineCreateInfo.renderCallback = [&](vka::Engine* engine) {
+    auto renderIndex = engine->currentRenderIndex();
+    hostRenderState.cameraState.hostData[renderIndex].view =
+        mainCamera.getView();
+    hostRenderState.cameraState.hostData[renderIndex].projection =
+        mainCamera.getProjection();
+    // hostRenderState.cameraState.allocatedBuffers[renderIndex]
   };
   auto engine = std::make_unique<vka::Engine>(engineCreateInfo);
   auto triangleAsset = engine->LoadAsset("content/models/triangle.blend");
@@ -168,6 +174,34 @@ int main() {
   auto pipeline3Dlayout = device->createPipelineLayout(pushRanges, setLayouts);
 
   vka::RenderPassCreateInfo renderPassCreateInfo;
+  auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
+      0,
+      VK_FORMAT_B8G8R8A8_UNORM,
+      VK_SAMPLE_COUNT_1_BIT,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+  auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
+      0,
+      VK_FORMAT_D32_SFLOAT,
+      VK_SAMPLE_COUNT_1_BIT,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+  auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
+  subpass3D->addColorRef(
+      {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+  subpass3D->setDepthRef(
+      {depthAttachmentDesc,
+       VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL_KHR});
+
   auto renderPass3D = device->createRenderPass(renderPassCreateInfo);
   auto pipeline3DInfo =
       vka::GraphicsPipelineCreateInfo(*pipeline3Dlayout, *renderPass3D, 0);
@@ -193,7 +227,13 @@ int main() {
       "main");
   auto pipeline3D = device->createGraphicsPipeline(pipeline3DInfo);
 
-  // device->createAllocatedBuffer()
+  for (auto& allocBuffer : hostRenderState.cameraState.allocatedBuffers) {
+    allocBuffer = device->createAllocatedBuffer(
+        sizeof(Camera),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        VMA_MEMORY_USAGE_CPU_TO_GPU);
+  }
 
   engine->run();
   return 0;
