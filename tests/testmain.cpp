@@ -48,7 +48,7 @@ struct InstanceData {
 template <typename T, size_t N>
 struct BufferedType {
   std::array<T, N> hostData;
-  std::array<vka::AllocatedBuffer, N> allocatedBuffers;
+  std::array<vka::UniqueAllocatedBuffer, N> allocatedBuffers;
 };
 
 struct HostRenderState {
@@ -56,6 +56,8 @@ struct HostRenderState {
   BufferedType<LightData, 3> lightState;
   BufferedType<Camera, 3> cameraState;
   BufferedType<InstanceData, 3> instanceState;
+  std::array<vka::DescriptorPool, 3> descriptorPools;
+  std::array<vka::DescriptorSet, 3> descriptorSets;
 };
 
 // 0: prior update (data already uploaded to gpu)
@@ -85,15 +87,28 @@ struct FragmentPushConstants {
   uint32_t materialIndex;
 };
 
+struct PolySize {
+  const size_t size;
+  template <typename T>
+  operator T() {
+    return static_cast<T>(size);
+  }
+};
+
 int main() {
-  const uint32_t defaultWidth = 900U;
-  const uint32_t defaultHeight = 900U;
-  HostRenderState hostRenderState{};
-  Materials materials;
+  PolySize defaultWidth{900U};
+  PolySize defaultHeight{900U};
+  Materials materials{};
   materials.data.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
+
+  LightData lightData{};
+  lightData.lights.resize(1);
+  lightData.ambient = {1.f, 1.f, 1.f, 0.3f};
+
+  HostRenderState hostRenderState{};
   hostRenderState.materialState.hostData[0] = materials;
   auto mainCamera = vka::OrthoCamera{};
-  mainCamera.setDimensions(900.f, 900.f);
+  mainCamera.setDimensions(defaultWidth, defaultHeight);
   auto ecsRegistry = entt::DefaultRegistry{};
 
   vka::InstanceCreateInfo instanceCreateInfo{};
@@ -104,7 +119,7 @@ int main() {
   instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_standard_validation");
   vka::SurfaceCreateInfo surfaceCreateInfo{};
   surfaceCreateInfo.windowTitle = "testmain window";
-  surfaceCreateInfo.width = 900;
+  surfaceCreateInfo.width = defaultWidth;
   surfaceCreateInfo.height = 900;
   vka::EngineCreateInfo engineCreateInfo{};
   engineCreateInfo.updateCallback = [&](vka::Engine* engine) {
@@ -119,7 +134,7 @@ int main() {
     // hostRenderState.cameraState.allocatedBuffers[renderIndex]
   };
   auto engine = std::make_unique<vka::Engine>(engineCreateInfo);
-  auto triangleAsset = engine->LoadAsset("content/models/triangle.blend");
+  auto triangleAsset = engine->LoadAsset("content/models/triangle.glb");
 
   auto instance = engine->createInstance(instanceCreateInfo);
   auto surface = instance->createSurface(surfaceCreateInfo);
@@ -131,8 +146,8 @@ int main() {
   auto fragmentShader = device->createShaderModule("content/shaders/frag.spv");
   auto swapchain = device->createSwapchain();
   auto commandPool = device->createCommandPool();
-  auto cmd = commandPool->allocateCommandBuffers(
-      1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)[0];
+  auto cmd =
+      commandPool.allocateCommandBuffers(1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)[0];
 
   std::vector<VkDescriptorSetLayoutBinding> set3Dbindings;
   VkDescriptorSetLayoutBinding materialBinding = {
@@ -170,7 +185,7 @@ int main() {
   auto setPool = device->createDescriptorPool(poolSizes, 3);
   std::vector<VkPushConstantRange> pushRanges = {
       {VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}};
-  std::vector<VkDescriptorSetLayout> setLayouts = {*setLayout3D};
+  std::vector<VkDescriptorSetLayout> setLayouts = {setLayout3D};
   auto pipeline3Dlayout = device->createPipelineLayout(pushRanges, setLayouts);
 
   vka::RenderPassCreateInfo renderPassCreateInfo;
@@ -204,7 +219,7 @@ int main() {
 
   auto renderPass3D = device->createRenderPass(renderPassCreateInfo);
   auto pipeline3DInfo =
-      vka::GraphicsPipelineCreateInfo(*pipeline3Dlayout, *renderPass3D, 0);
+      vka::GraphicsPipelineCreateInfo(pipeline3Dlayout, renderPass3D, 0);
   pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
   pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
   std::vector<VkSpecializationMapEntry> vertexMapEntries;
@@ -213,7 +228,7 @@ int main() {
       vertexMapEntries,
       0,
       nullptr,
-      *vertexShader,
+      vertexShader,
       "main");
   std::vector<VkSpecializationMapEntry> fragmentMapEntries = {{0, 0, 4},
                                                               {1, 4, 4}};
@@ -223,13 +238,40 @@ int main() {
       fragmentMapEntries,
       sizeof(FragmentSpecData),
       &fragmentSpecData,
-      *fragmentShader,
+      fragmentShader,
       "main");
-  auto pipeline3D = device->createGraphicsPipeline(pipeline3DInfo);
+
+  auto pipelineCache = device->createPipelineCache();
+  auto pipeline3D =
+      device->createGraphicsPipeline(pipelineCache, pipeline3DInfo);
+
+  for (auto& allocBuffer : hostRenderState.materialState.allocatedBuffers) {
+    allocBuffer = device->createAllocatedBuffer(
+        sizeof(Material) * materials.data.size(),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        0,
+        VMA_MEMORY_USAGE_GPU_ONLY);
+  }
+
+  for (auto& allocBuffer : hostRenderState.lightState.allocatedBuffers) {
+    allocBuffer = device->createAllocatedBuffer(
+        sizeof(Light) * lightData.lights.size(),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        VMA_MEMORY_USAGE_CPU_TO_GPU);
+  }
 
   for (auto& allocBuffer : hostRenderState.cameraState.allocatedBuffers) {
     allocBuffer = device->createAllocatedBuffer(
         sizeof(Camera),
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        VMA_MEMORY_USAGE_CPU_TO_GPU);
+  }
+
+  for (auto& allocBuffer : hostRenderState.instanceState.allocatedBuffers) {
+    allocBuffer = device->createAllocatedBuffer(
+        sizeof(Instance),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_ALLOCATION_CREATE_MAPPED_BIT,
         VMA_MEMORY_USAGE_CPU_TO_GPU);

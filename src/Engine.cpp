@@ -1,12 +1,14 @@
-#include "Engine.hpp"
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <mutex>
 #include <stdexcept>
 #include <thread>
-#include "Instance.hpp"
 #include <memory>
 #include <cstdlib>
+#include <string>
+#include <fstream>
+#include "Engine.hpp"
+#include "Instance.hpp"
 #include "Device.hpp"
 #include "spdlog/spdlog.h"
 #include "Surface.hpp"
@@ -55,8 +57,19 @@ Engine::Engine(EngineCreateInfo engineCreateInfo)
 }
 
 size_t Engine::LoadAsset(const std::string& assetPath) {
+  multilogger->info("Loading asset {}.", assetPath);
+  {
+    std::fstream assetFile{assetPath};
+    if (!assetFile.is_open()) {
+      multilogger->error("Unable to open file {}", assetPath);
+    }
+  }
   assetBuffer.invalidate();
   auto asset = assetImporter.ReadFile(assetPath, assetImportFlags);
+  std::string errString{assetImporter.GetErrorString()};
+  if (!errString.compare(std::string{""})) {
+    multilogger->critical("Failed to load asset: {}", errString);
+  }
   std::vector<Mesh> assetMeshes;
   std::vector<size_t> assetMaterials;
   for (auto m = 0U; m < asset->mNumMeshes; ++m) {

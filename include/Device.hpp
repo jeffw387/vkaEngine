@@ -56,10 +56,6 @@ struct AllocatedBuffer {
 struct AllocatedBufferDeleter {
   using pointer = AllocatedBuffer;
 
-  AllocatedBufferDeleter() = default;
-  AllocatedBufferDeleter(std::nullptr_t) : allocator(0){};
-  AllocatedBufferDeleter(VmaAllocator allocator) : allocator(allocator) {}
-
   void operator()(AllocatedBuffer allocBuffer) {
     vmaDestroyBuffer(allocator, allocBuffer.buffer, allocBuffer.allocation);
   }
@@ -68,6 +64,50 @@ struct AllocatedBufferDeleter {
 };
 using UniqueAllocatedBuffer =
     std::unique_ptr<AllocatedBuffer, AllocatedBufferDeleter>;
+
+struct AllocatedImage {
+  VkImage image;
+  VmaAllocation allocation;
+  VmaAllocationInfo allocInfo;
+
+  bool operator!=(std::nullptr_t) { return image != 0 || allocation != 0; }
+  bool operator!=(const AllocatedImage& other) {
+    return image != other.image || allocation != other.allocation;
+  }
+};
+
+struct AllocatedImageDeleter {
+  using pointer = AllocatedImage;
+
+  void operator()(AllocatedImage allocImage) {
+    vmaDestroyImage(allocator, allocImage.image, allocImage.allocation);
+  }
+  VmaAllocator allocator;
+};
+using UniqueAllocatedImage =
+    std::unique_ptr<AllocatedImage, AllocatedImageDeleter>;
+
+struct ImageViewDeleter {
+  using pointer = VkImageView;
+
+  void operator()(VkImageView view) {
+    vkDestroyImageView(device, view, nullptr);
+  }
+
+  VkDevice device;
+};
+using UniqueImageView = std::unique_ptr<VkImageView, ImageViewDeleter>;
+
+struct FramebufferDeleter {
+  using pointer = VkFramebuffer;
+
+  void operator()(VkFramebuffer framebuffer) {
+    vkDestroyFramebuffer(device, framebuffer, nullptr);
+  }
+
+  VkDevice device;
+};
+using UniqueFramebuffer = std::unique_ptr<VkFramebuffer, FramebufferDeleter>;
 
 struct DeviceRequirements {
   std::vector<PhysicalDeviceFeatures> requiredFeatures;
@@ -86,27 +126,43 @@ public:
   operator VkDevice() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  AllocatedBuffer createAllocatedBuffer(
+  UniqueAllocatedBuffer createAllocatedBuffer(
       VkDeviceSize,
       VkBufferUsageFlags,
       VmaAllocationCreateFlags,
       VmaMemoryUsage);
-  Swapchain* createSwapchain();
-  RenderPass* createRenderPass(const VkRenderPassCreateInfo&);
-  GraphicsPipeline* createGraphicsPipeline(const VkGraphicsPipelineCreateInfo&);
-  ComputePipeline* createComputePipeline(const VkComputePipelineCreateInfo&);
-  CommandPool* createCommandPool();
-  DescriptorPool* createDescriptorPool(
+  Swapchain createSwapchain();
+  RenderPass createRenderPass(const VkRenderPassCreateInfo&);
+  PipelineCache createPipelineCache() { return PipelineCache(deviceHandle); }
+  PipelineCache createPipelineCache(const std::vector<char> initialData) {
+    return PipelineCache(deviceHandle, initialData);
+  }
+  GraphicsPipeline createGraphicsPipeline(
+      VkPipelineCache pipelineCache,
+      const VkGraphicsPipelineCreateInfo&);
+  ComputePipeline createComputePipeline(
+      VkPipelineCache pipelineCache,
+      const VkComputePipelineCreateInfo&);
+  CommandPool createCommandPool();
+  DescriptorPool createDescriptorPool(
       const std::vector<VkDescriptorPoolSize>& poolSizes,
       uint32_t maxSets);
-  DescriptorSetLayout* createSetLayout(
+  DescriptorSetLayout createSetLayout(
       const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-  PipelineLayout* createPipelineLayout(
+  PipelineLayout createPipelineLayout(
       const std::vector<VkPushConstantRange>&,
       const std::vector<VkDescriptorSetLayout>&);
-  ShaderModule* createShaderModule(std::string shaderPath);
+  ShaderModule createShaderModule(std::string shaderPath);
+  UniqueFramebuffer createFramebuffer(
+      std::vector<VkImageView> attachments,
+      VkRenderPass renderPass,
+      uint32_t width,
+      uint32_t height);
 
-  VkResult presentImage(uint32_t imageIndex, VkSemaphore waitSemaphore);
+  VkResult presentImage(
+      VkSwapchainKHR swapchain,
+      uint32_t imageIndex,
+      VkSemaphore waitSemaphore);
   void queueSubmit(
       const std::vector<VkSemaphore>& waitSemaphores,
       const std::vector<VkCommandBuffer>& commandBuffers,
@@ -136,18 +192,6 @@ private:
   VkDeviceQueueCreateInfo queueCreateInfo = {
       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
   VkQueue graphicsQueue;
-
-  std::unique_ptr<Swapchain> swapchain;
-  std::unique_ptr<PipelineCache> pipelineCache;
-  std::vector<UniqueAllocatedBuffer> allocatedBuffers;
-  std::vector<std::unique_ptr<RenderPass>> renderPasses;
-  std::vector<std::unique_ptr<PipelineLayout>> pipelineLayouts;
-  std::vector<std::unique_ptr<GraphicsPipeline>> graphicsPipelines;
-  std::vector<std::unique_ptr<ComputePipeline>> computePipelines;
-  std::vector<std::unique_ptr<CommandPool>> commandPools;
-  std::vector<std::unique_ptr<DescriptorPool>> descriptorPools;
-  std::vector<std::unique_ptr<DescriptorSetLayout>> descriptorSetLayouts;
-  std::vector<std::unique_ptr<ShaderModule>> shaderModules;
 };
 
 }  // namespace vka

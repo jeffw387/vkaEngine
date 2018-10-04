@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
-// #include <GLFW/glfw3.h>
 
 namespace vka {
 class DescriptorSetLayout;
@@ -34,7 +33,7 @@ private:
 
 class DescriptorPool {
 public:
-  DescriptorPool() = delete;
+  DescriptorPool() = default;
   DescriptorPool(
       VkDevice device,
       const std::vector<VkDescriptorPoolSize>& poolSizes,
@@ -48,9 +47,10 @@ public:
 
   auto allocateDescriptorSets(const std::vector<DescriptorSetLayout*>& layouts);
   void reset();
+  void destroy();
 
 private:
-  VkDevice device;
-  VkDescriptorPool poolHandle;
+  VkDevice device = VK_NULL_HANDLE;
+  VkDescriptorPool poolHandle = VK_NULL_HANDLE;
 };
 }  // namespace vka

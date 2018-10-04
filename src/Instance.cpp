@@ -42,7 +42,7 @@ void DebugMessengerDeleter::operator()(VkDebugUtilsMessengerEXT messenger) {
 }
 
 Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
-    : engine(engine), instanceCreateInfo(instanceCreateInfo) {
+    : engine(engine) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating instance.");
   glfwSetErrorCallback([](int error, const char* desc) {

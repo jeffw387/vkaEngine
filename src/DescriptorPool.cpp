@@ -73,8 +73,11 @@ auto DescriptorPool::allocateDescriptorSets(
 }
 
 void DescriptorPool::reset() { vkResetDescriptorPool(device, poolHandle, 0); }
-
-DescriptorPool::~DescriptorPool() {
+void DescriptorPool::destroy() {
   vkDestroyDescriptorPool(device, poolHandle, nullptr);
+  device = VK_NULL_HANDLE;
+  poolHandle = VK_NULL_HANDLE;
 }
+
+DescriptorPool::~DescriptorPool() { destroy(); }
 }  // namespace vka

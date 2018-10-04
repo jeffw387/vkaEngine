@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <map>
+#include <memory>
 
 namespace vka {
 class Device;
@@ -41,11 +42,9 @@ public:
   Subpass* addGraphicsSubpass();
   Subpass* addComputeSubpass();
 
-  size_t addSubpass(VkPipelineBindPoint bindPoint);
-
   void addSubpassDependency(
-      uint32_t srcSubpass,
-      uint32_t dstSubpass,
+      Subpass* srcSubpass,
+      Subpass* dstSubpass,
       VkPipelineStageFlags srcStageMask,
       VkPipelineStageFlags dstStageMask,
       VkAccessFlags srcAccessMask,
@@ -56,7 +55,7 @@ public:
 
 private:
   std::vector<VkAttachmentDescription> attachments;
-  std::vector<Subpass> subpasses;
+  std::vector<std::unique_ptr<Subpass>> subpasses;
   std::vector<VkSubpassDescription> subpassDescriptions;
   std::vector<VkSubpassDependency> dependencies;
   VkRenderPassCreateInfo createInfo;

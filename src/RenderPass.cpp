@@ -1,6 +1,8 @@
 #include "RenderPass.hpp"
 #include "Device.hpp"
 #include <vulkan/vulkan.h>
+#include <spdlog/spdlog.h>
+#include "Engine.hpp"
 
 namespace vka {
 Subpass::Subpass(VkPipelineBindPoint bindPoint) : bindPoint(bindPoint){};
@@ -42,7 +44,7 @@ Subpass::operator VkSubpassDescription() {
 RenderPassCreateInfo::operator const VkRenderPassCreateInfo&() {
   subpassDescriptions.resize(subpasses.size());
   for (auto i = 0U; i < subpasses.size(); ++i) {
-    subpassDescriptions[i] = subpasses[i];
+    subpassDescriptions[i] = *subpasses[i];
   }
   createInfo =
       VkRenderPassCreateInfo{VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
@@ -79,6 +81,36 @@ uint32_t RenderPassCreateInfo::addAttachmentDescription(
   return result;
 }
 
+void RenderPassCreateInfo::addSubpassDependency(
+    Subpass* srcSubpass,
+    Subpass* dstSubpass,
+    VkPipelineStageFlags srcStageMask,
+    VkPipelineStageFlags dstStageMask,
+    VkAccessFlags srcAccessMask,
+    VkAccessFlags dstAccessMask,
+    VkDependencyFlags dependencyFlags) {
+  auto getSubpassIndex = [&](Subpass* subpass) {
+    uint32_t index = 0;
+    for (; index < subpasses.size(); ++index) {
+      if (subpasses[index].get() == subpass) {
+        return index;
+      }
+    }
+    auto multilogger = spdlog::get(LoggerName);
+    multilogger->error(
+        "Could not select subpass for dependency! {} {}", __FILE__, __LINE__);
+    return index;
+  };
+  auto& dep = dependencies.emplace_back();
+  dep.srcSubpass = getSubpassIndex(srcSubpass);
+  dep.dstSubpass = getSubpassIndex(dstSubpass);
+  dep.srcStageMask = srcStageMask;
+  dep.dstStageMask = dstStageMask;
+  dep.srcAccessMask = srcAccessMask;
+  dep.dstAccessMask = dstAccessMask;
+  dep.dependencyFlags = dependencyFlags;
+}
+
 RenderPass::RenderPass(
     VkDevice device,
     const VkRenderPassCreateInfo& createInfo)
@@ -87,13 +119,15 @@ RenderPass::RenderPass(
 }
 
 Subpass* RenderPassCreateInfo::addGraphicsSubpass() {
-  auto& subpass = subpasses.emplace_back(VK_PIPELINE_BIND_POINT_GRAPHICS);
-  return &subpass;
+  subpasses.push_back(
+      std::make_unique<Subpass>(VK_PIPELINE_BIND_POINT_GRAPHICS));
+  return subpasses.back().get();
 }
 
 Subpass* RenderPassCreateInfo::addComputeSubpass() {
-  auto& subpass = subpasses.emplace_back(VK_PIPELINE_BIND_POINT_COMPUTE);
-  return &subpass;
+  subpasses.push_back(
+      std::make_unique<Subpass>(VK_PIPELINE_BIND_POINT_COMPUTE));
+  return subpasses.back().get();
 }
 
 RenderPass::~RenderPass() {

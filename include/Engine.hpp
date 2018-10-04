@@ -61,7 +61,7 @@ private:
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
   unsigned int assetImportFlags;
-  Assimp::Importer assetImporter;
+  AssetImporter assetImporter;
   AssetBuffer assetBuffer;
   std::unique_ptr<Instance> instance;
   std::mutex stateMutex;

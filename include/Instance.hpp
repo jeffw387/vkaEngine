@@ -73,8 +73,6 @@ public:
 private:
   Engine* engine;
   GLFWOwner glfwOwner;
-  InstanceCreateInfo instanceCreateInfo;
-  // LibraryHandle vulkanLibrary;
   VkInstance instanceHandle;
   InstanceOwner instanceOwner;
   VkDebugUtilsMessengerEXT debugMessenger;
