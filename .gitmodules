@@ -28,3 +28,6 @@
 [submodule "external/outcome"]
 	path = external/outcome
 	url = https://github.com/ned14/outcome.git
+[submodule "external/json"]
+	path = external/json
+	url = https://github.com/nlohmann/json.git
