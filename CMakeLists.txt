@@ -105,6 +105,13 @@ if(NOT TARGET gli)
 endif()
 target_link_libraries(vkaEngine PUBLIC gli)
 
+add_library(json_nlohmann INTERFACE)
+target_include_directories(
+  json_nlohmann
+  INTERFACE
+  external/json/single_include)
+target_link_libraries(vkaEngine PUBLIC json_nlohmann)
+
 #add_subdirectory(external/assimp)
 #if(NOT TARGET assimp)
 #  message(FATAL_ERROR "assimp target not found")

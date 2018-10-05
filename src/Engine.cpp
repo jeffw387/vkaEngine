@@ -34,10 +34,6 @@ mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 Engine::Engine(EngineCreateInfo engineCreateInfo)
     : updateCallback(engineCreateInfo.updateCallback),
       renderCallback(engineCreateInfo.renderCallback) {
-  assetImportFlags = 0;
-  assetImportFlags |= aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
-                      aiProcess_PreTransformVertices;
-
   // sometimes valve's overlay causes problems, this next line will disable it
   // on windows
   // _putenv("DISABLE_VK_LAYER_VALVE_steam_overlay_1=1");
@@ -57,40 +53,40 @@ Engine::Engine(EngineCreateInfo engineCreateInfo)
 }
 
 size_t Engine::LoadAsset(const std::string& assetPath) {
-  multilogger->info("Loading asset {}.", assetPath);
-  {
-    std::fstream assetFile{assetPath};
-    if (!assetFile.is_open()) {
-      multilogger->error("Unable to open file {}", assetPath);
-    }
-  }
-  assetBuffer.invalidate();
-  auto asset = assetImporter.ReadFile(assetPath, assetImportFlags);
-  std::string errString{assetImporter.GetErrorString()};
-  if (!errString.compare(std::string{""})) {
-    multilogger->critical("Failed to load asset: {}", errString);
-  }
-  std::vector<Mesh> assetMeshes;
-  std::vector<size_t> assetMaterials;
-  for (auto m = 0U; m < asset->mNumMeshes; ++m) {
-    assetMeshes.emplace_back();
-    auto currentMesh = asset->mMeshes[m];
-    for (auto v = 0U; v < currentMesh->mNumVertices; ++v) {
-      auto cv = currentMesh->mVertices[v];
-      auto cn = currentMesh->mNormals[v];
-      assetMeshes.back().vertices.emplace_back(
-          Vertex{{cv.x, cv.y, cv.z}, {cn.x, cn.y, cn.z}});
-    }
-    for (auto f = 0U; f < currentMesh->mNumFaces; ++f) {
-      auto& currentFace = currentMesh->mFaces[f];
-      for (auto i = 0U; i < currentFace.mNumIndices; ++i) {
-        assetMeshes.back().indices.push_back(currentFace.mIndices[i]);
-      }
-    }
-    // TODO: fix material loading and/or linking
-    assetMaterials.push_back(0);
-  }
-  return assetBuffer.addAsset(assetMeshes, assetMaterials);
+  // multilogger->info("Loading asset {}.", assetPath);
+  // {
+  //   std::fstream assetFile{assetPath};
+  //   if (!assetFile.is_open()) {
+  //     multilogger->error("Unable to open file {}", assetPath);
+  //   }
+  // }
+  // assetBuffer.invalidate();
+  // auto asset = assetImporter.ReadFile(assetPath, assetImportFlags);
+  // std::string errString{assetImporter.GetErrorString()};
+  // if (!errString.compare(std::string{""})) {
+  //   multilogger->critical("Failed to load asset: {}", errString);
+  // }
+  // std::vector<Mesh> assetMeshes;
+  // std::vector<size_t> assetMaterials;
+  // for (auto m = 0U; m < asset->mNumMeshes; ++m) {
+  //   assetMeshes.emplace_back();
+  //   auto currentMesh = asset->mMeshes[m];
+  //   for (auto v = 0U; v < currentMesh->mNumVertices; ++v) {
+  //     auto cv = currentMesh->mVertices[v];
+  //     auto cn = currentMesh->mNormals[v];
+  //     assetMeshes.back().vertices.emplace_back(
+  //         Vertex{{cv.x, cv.y, cv.z}, {cn.x, cn.y, cn.z}});
+  //   }
+  //   for (auto f = 0U; f < currentMesh->mNumFaces; ++f) {
+  //     auto& currentFace = currentMesh->mFaces[f];
+  //     for (auto i = 0U; i < currentFace.mNumIndices; ++i) {
+  //       assetMeshes.back().indices.push_back(currentFace.mIndices[i]);
+  //     }
+  //   }
+  //   // TODO: fix material loading and/or linking
+  //   assetMaterials.push_back(0);
+  // }
+  // return assetBuffer.addAsset(assetMeshes, assetMaterials);
 }
 
 Instance* Engine::createInstance(InstanceCreateInfo instanceCreateInfo) {

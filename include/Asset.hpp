@@ -3,105 +3,205 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
+#include <nlohmann/json.hpp>
+#include <experimental/filesystem>
+#include <fstream>
+#include <stdexcept>
+#include <memory>
 
 namespace vka {
-
-struct Mesh {
-  std::vector<glm::vec3> positions;
-  std::vector<glm::vec3> normals;
-  std::vector<uint32_t> indices;
-};
-
-struct MeshReference {
-  size_t firstIndex;
-  size_t vertexOffset;
-  size_t indexCount;
-};
-
 namespace gltf {
-  struct Node {
-    size_t meshIndex;
-    std::string name;
-  };
-  struct Scene {
-    std::vector<size_t> nodeIndices;
-  };
-  struct Primitive {
-    size_t positionAccessorIndex;
-    size_t normalAccessorIndex;
-    size_t indexAccesorIndex;
-  };
-  struct Mesh {
-    std::string name;
-    std::vector<Primitive> primitives;
-  };
-  struct BufferView {
-    size_t bufferIndex;
-    size_t byteLength;
-    size_t byteOffset;
-  };
-  struct Accessor {
-    size_t bufferViewIndex;
-    size_t componentSize;
-    bool componentSigned;
-    size_t componentsPerElement;
-    size_t elementCount;
-  };
-  struct AssetJson {
-    std::vector<Scene> scenes;
-    size_t defaultScene;
-    std::vector<Node> nodes;
-    std::vector<Mesh> meshes;
-    std::vector<VkBuffer> buffers;
-    std::vector<BufferView> bufferViews;
-    std::vector<Accessor> accessors;
-  };
+namespace fs = std::experimental::filesystem;
+using json = nlohmann::json;
+struct Node {
+  size_t meshIndex;
+  std::string name;
+};
+inline void from_json(const json& j, Node& node) {
+  j.at("mesh").get_to(node.meshIndex);
+  j.at("name").get_to(node.name);
+}
+struct Scene {
+  std::string name;
+  std::vector<size_t> nodeIndices;
+};
+inline void from_json(const json& j, Scene& scene) {
+  j.at("name").get_to(scene.name);
+  j.at("nodes").get_to(scene.nodeIndices);
+}
+struct Primitive {
+  size_t positionAccessorIndex;
+  size_t normalAccessorIndex;
+  size_t indexAccessorIndex;
+};
+inline void from_json(const json& j, Primitive& primitive) {
+  auto attributes = j.at("attributes");
+  attributes.at("POSITION").get_to(primitive.positionAccessorIndex);
+  attributes.at("NORMAL").get_to(primitive.normalAccessorIndex);
+  j.at("indices").get_to(primitive.indexAccessorIndex);
+}
+struct Mesh {
+  std::string name;
+  std::vector<Primitive> primitives;
+};
+inline void from_json(const json& j, Mesh& mesh) {
+  j.at("name").get_to(mesh.name);
+  j.at("primitives").get_to(mesh.primitives);
+}
+struct Buffer {
+  VkBuffer vulkanBuffer;
+  fs::path uri;
+  size_t byteLength;
+  std::unique_ptr<char[]> bufferData;
+  operator VkBuffer() const { return vulkanBuffer; }
+};
+inline void from_json(const json& j, Buffer& buffer) {
+  j.at("byteLength").get_to(buffer.byteLength);
+  j.at("uri").get_to(buffer.uri);
+}
+struct BufferView {
+  size_t bufferIndex;
+  size_t byteLength;
+  size_t byteOffset;
+};
+inline void from_json(const json& j, BufferView& view) {
+  j.at("buffer").get_to(view.bufferIndex);
+  j.at("byteLength").get_to(view.byteLength);
+  j.at("byteOffset").get_to(view.byteOffset);
+}
+struct ComponentType {
+  size_t typeCode;
+
+  size_t size() const {
+    switch (typeCode) {
+      case 5120:
+      case 5121:
+        return 1;
+      case 5122:
+      case 5123:
+        return 2;
+      case 5125:
+      case 5126:
+        return 4;
+      default:
+        throw std::logic_error{"Component type code isn't valid!"};
+    }
+  }
+  operator VkIndexType() const {
+    switch (typeCode) {
+      case 5123:
+        return VK_INDEX_TYPE_UINT16;
+      case 5125:
+        return VK_INDEX_TYPE_UINT32;
+      default:
+        throw std::logic_error{"Component type code isn't valid!"};
+    }
+  }
+};
+inline void from_json(const json& j, ComponentType& componentType) {
+  j.get_to(componentType.typeCode);
+}
+struct ElementType {
+  size_t count;
+};
+inline void from_json(const json& j, ElementType& elementType) {
+  std::string typeString = j.get<std::string>();
+  if (typeString.compare("SCALAR")) {
+    elementType.count = 1;
+  } else if (typeString.compare("VEC2")) {
+    elementType.count = 2;
+  } else if (typeString.compare("VEC3")) {
+    elementType.count = 3;
+  } else if (typeString.compare("VEC4")) {
+    elementType.count = 4;
+  } else {
+    throw std::logic_error("Element type not valid!");
+  }
 }
 
+struct Accessor {
+  size_t bufferViewIndex;
+  ComponentType componentType;
+  ElementType elementType;
+  size_t elementCount;
+};
+inline void from_json(const json& j, Accessor& accessor) {
+  j.at("bufferView").get_to(accessor.bufferViewIndex);
+  j.at("componentType").get_to(accessor.componentType);
+  j.at("count").get_to(accessor.elementCount);
+  j.at("type").get_to(accessor.elementType);
+}
 struct Asset {
-  std::vector<MeshReference> meshRefs;
+  std::vector<Scene> scenes;
+  size_t defaultScene;
+  std::vector<Node> nodes;
+  std::vector<Mesh> meshes;
+  std::vector<Buffer> buffers;
+  std::vector<BufferView> bufferViews;
+  std::vector<Accessor> accessors;
 };
-
-
-class AssetBuffer {
-public:
-  size_t addAsset(
-      const std::vector<Mesh>& assetMeshes) {
-    Asset asset{};
-    for (auto i = 0U; i < assetMeshes.size(); ++i) {
-      auto& assetMesh = assetMeshes[i];
-      auto& materialIndex = materialIndices[i];
-      MeshReference meshRef{};
-      meshRef.firstIndex = mesh.indices.size();
-      meshRef.vertexOffset = mesh.vertices.size();
-      meshRef.indexCount = assetMesh.indices.size();
-      meshRef.materialIndex = materialIndex;
-      asset.meshRefs.push_back(meshRef);
-      mesh.vertices.insert(
-          mesh.vertices.end(),
-          assetMesh.vertices.begin(),
-          assetMesh.vertices.end());
-      mesh.indices.insert(
-          mesh.indices.end(),
-          assetMesh.indices.begin(),
-          assetMesh.indices.end());
-    }
-    assets.push_back(asset);
-    return assets.size();
+inline void from_json(const json& j, Asset& asset) {
+  j.at("scenes").get_to(asset.scenes);
+  j.at("scene").get_to(asset.defaultScene);
+  j.at("nodes").get_to(asset.nodes);
+  j.at("meshes").get_to(asset.meshes);
+  j.at("buffers").get_to(asset.buffers);
+  j.at("bufferViews").get_to(asset.bufferViews);
+  j.at("accessors").get_to(asset.accessors);
+}
+inline Asset loadGLTF(fs::path assetPath) {
+  std::ifstream assetFile{assetPath};
+  json j;
+  assetFile >> j;
+  Asset asset{j};
+  for (auto& buffer : asset.buffers) {
+    auto binPath = assetPath;
+    binPath.replace_filename(buffer.uri);
+    std::ifstream binFile{binPath, std::ios_base::in | std::ios_base::binary};
+    buffer.bufferData = std::make_unique<char[]>(buffer.byteLength);
+    binFile.read(buffer.bufferData.get(), buffer.byteLength);
   }
+  return asset;
+}
 
-  constexpr void invalidate() { validBuffer = false; }
-  constexpr void validate() { validBuffer = true; }
-  bool isValid() { return validBuffer; }
-  const Asset& getAsset(size_t assetIndex) { return assets[assetIndex]; }
+static void theoreticalTestCase(Asset asset) {
+  VkCommandBuffer cmd{};
+  for (const auto& node : asset.nodes) {
+    for (const auto& primitive : asset.meshes[node.meshIndex].primitives) {
+      const auto& indexAccessor = asset.accessors[primitive.indexAccessorIndex];
+      const auto& indexBufferView =
+          asset.bufferViews[indexAccessor.bufferViewIndex];
+      const auto& indexBuffer = asset.buffers[indexBufferView.bufferIndex];
+      vkCmdBindIndexBuffer(
+          cmd,
+          indexBuffer,
+          indexBufferView.byteOffset,
+          indexAccessor.componentType);
 
-  VkBuffer data;
-
-private:
-  Mesh mesh;
-  std::vector<Asset> assets;
-  bool validBuffer;
-};
-
+      const auto& positionAccessor =
+          asset.accessors[primitive.positionAccessorIndex];
+      const auto& positionBufferView =
+          asset.bufferViews[positionAccessor.bufferViewIndex];
+      const auto& normalAccessor =
+          asset.accessors[primitive.normalAccessorIndex];
+      const auto& normalBufferView =
+          asset.bufferViews[normalAccessor.bufferViewIndex];
+      std::vector<VkBuffer> vertexBuffers = {
+          asset.buffers[positionBufferView.bufferIndex],
+          asset.buffers[normalBufferView.bufferIndex]};
+      std::vector<VkDeviceSize> offsets = {positionBufferView.byteOffset,
+                                           normalBufferView.byteOffset};
+      vkCmdBindVertexBuffers(
+          cmd,
+          0,
+          static_cast<uint32_t>(vertexBuffers.size()),
+          vertexBuffers.data(),
+          offsets.data());
+      vkCmdDrawIndexed(cmd, indexAccessor.elementCount, 1, 0, 0, 0);
+    }
+  }
+  // vkCmdDrawIndexed(cmd, )
+}
+}  // namespace gltf
 
 }  // namespace vka

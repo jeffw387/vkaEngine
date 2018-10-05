@@ -19,7 +19,8 @@ macro(process_shader fileNames inputDir outputDir)
     set(outputShader "${outputDir}/${fileName}")
     add_custom_command(
       OUTPUT ${outputShader}
-      COMMAND "$ENV{VULKAN_SDK}/bin/glslangValidator -V ${inputShader} -o ${outputShader}"
+      VERBATIM
+      COMMAND glslangValidator -V ${inputShader} -o ${outputShader}
       DEPENDS ${inputShader})
     add_custom_target("${fileName}"
       DEPENDS ${outputShader}

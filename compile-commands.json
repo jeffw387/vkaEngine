@@ -1,79 +1,79 @@
 [
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Engine.cpp.o -c /home/jeff/Development/vkaEngine/src/Engine.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Engine.cpp.o -c /home/jeff/Development/vkaEngine/src/Engine.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Engine.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Camera.cpp.o -c /home/jeff/Development/vkaEngine/src/Camera.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Camera.cpp.o -c /home/jeff/Development/vkaEngine/src/Camera.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Camera.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Instance.cpp.o -c /home/jeff/Development/vkaEngine/src/Instance.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Instance.cpp.o -c /home/jeff/Development/vkaEngine/src/Instance.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Instance.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Surface.cpp.o -c /home/jeff/Development/vkaEngine/src/Surface.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Surface.cpp.o -c /home/jeff/Development/vkaEngine/src/Surface.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Surface.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/RenderPass.cpp.o -c /home/jeff/Development/vkaEngine/src/RenderPass.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/RenderPass.cpp.o -c /home/jeff/Development/vkaEngine/src/RenderPass.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/RenderPass.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/CommandPool.cpp.o -c /home/jeff/Development/vkaEngine/src/CommandPool.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/CommandPool.cpp.o -c /home/jeff/Development/vkaEngine/src/CommandPool.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/CommandPool.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/DescriptorPool.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorPool.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/DescriptorPool.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorPool.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/DescriptorPool.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/DescriptorSetLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorSetLayout.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/DescriptorSetLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorSetLayout.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/DescriptorSetLayout.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Swapchain.cpp.o -c /home/jeff/Development/vkaEngine/src/Swapchain.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Swapchain.cpp.o -c /home/jeff/Development/vkaEngine/src/Swapchain.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Swapchain.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/ShaderModule.cpp.o -c /home/jeff/Development/vkaEngine/src/ShaderModule.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/ShaderModule.cpp.o -c /home/jeff/Development/vkaEngine/src/ShaderModule.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/ShaderModule.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/PipelineLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/PipelineLayout.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/PipelineLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/PipelineLayout.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/PipelineLayout.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Pipeline.cpp.o -c /home/jeff/Development/vkaEngine/src/Pipeline.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Pipeline.cpp.o -c /home/jeff/Development/vkaEngine/src/Pipeline.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Pipeline.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o CMakeFiles/vkaEngine.dir/src/Device.cpp.o -c /home/jeff/Development/vkaEngine/src/Device.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o CMakeFiles/vkaEngine.dir/src/Device.cpp.o -c /home/jeff/Development/vkaEngine/src/Device.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Device.cpp"
 },
 
@@ -2515,85 +2515,85 @@
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/testmain.cpp.o -c /home/jeff/Development/vkaEngine/tests/testmain.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/testmain.cpp.o -c /home/jeff/Development/vkaEngine/tests/testmain.cpp",
   "file": "/home/jeff/Development/vkaEngine/tests/testmain.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Engine.cpp.o -c /home/jeff/Development/vkaEngine/src/Engine.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Engine.cpp.o -c /home/jeff/Development/vkaEngine/src/Engine.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Engine.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Camera.cpp.o -c /home/jeff/Development/vkaEngine/src/Camera.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Camera.cpp.o -c /home/jeff/Development/vkaEngine/src/Camera.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Camera.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Instance.cpp.o -c /home/jeff/Development/vkaEngine/src/Instance.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Instance.cpp.o -c /home/jeff/Development/vkaEngine/src/Instance.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Instance.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Surface.cpp.o -c /home/jeff/Development/vkaEngine/src/Surface.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Surface.cpp.o -c /home/jeff/Development/vkaEngine/src/Surface.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Surface.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/RenderPass.cpp.o -c /home/jeff/Development/vkaEngine/src/RenderPass.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/RenderPass.cpp.o -c /home/jeff/Development/vkaEngine/src/RenderPass.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/RenderPass.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/CommandPool.cpp.o -c /home/jeff/Development/vkaEngine/src/CommandPool.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/CommandPool.cpp.o -c /home/jeff/Development/vkaEngine/src/CommandPool.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/CommandPool.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/DescriptorPool.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorPool.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/DescriptorPool.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorPool.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/DescriptorPool.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/DescriptorSetLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorSetLayout.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/DescriptorSetLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/DescriptorSetLayout.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/DescriptorSetLayout.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Swapchain.cpp.o -c /home/jeff/Development/vkaEngine/src/Swapchain.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Swapchain.cpp.o -c /home/jeff/Development/vkaEngine/src/Swapchain.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Swapchain.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/ShaderModule.cpp.o -c /home/jeff/Development/vkaEngine/src/ShaderModule.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/ShaderModule.cpp.o -c /home/jeff/Development/vkaEngine/src/ShaderModule.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/ShaderModule.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/PipelineLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/PipelineLayout.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/PipelineLayout.cpp.o -c /home/jeff/Development/vkaEngine/src/PipelineLayout.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/PipelineLayout.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Pipeline.cpp.o -c /home/jeff/Development/vkaEngine/src/Pipeline.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Pipeline.cpp.o -c /home/jeff/Development/vkaEngine/src/Pipeline.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Pipeline.cpp"
 },
 
 {
   "directory": "/home/jeff/Development/vkaEngine/build",
-  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++1z -o tests/CMakeFiles/testmain.dir/__/src/Device.cpp.o -c /home/jeff/Development/vkaEngine/src/Device.cpp",
+  "command": "/usr/bin/clang++-6.0  -DNOMINMAX -I../include -I/home/jeff/Development/vulkan/1.1.82.1/x86_64/include -I../external/outcome/single-header -I../external/VulkanMemoryAllocator/src -I../external/glm -I../external/gli -I../external/gli/external -I../external/json/single_include -I../external/glfw/include -I../external/bullet3/src -I../external/spdlog/include  -g   -std=gnu++17 -o tests/CMakeFiles/testmain.dir/__/src/Device.cpp.o -c /home/jeff/Development/vkaEngine/src/Device.cpp",
   "file": "/home/jeff/Development/vkaEngine/src/Device.cpp"
 }
 ]

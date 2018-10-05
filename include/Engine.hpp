@@ -11,9 +11,6 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
 #include "Asset.hpp"
 
 namespace vka {
@@ -60,9 +57,6 @@ private:
   void acquireRenderSlot();
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
-  unsigned int assetImportFlags;
-  AssetImporter assetImporter;
-  AssetBuffer assetBuffer;
   std::unique_ptr<Instance> instance;
   std::mutex stateMutex;
   bool running = false;
