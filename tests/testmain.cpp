@@ -12,6 +12,7 @@
 #include "btBulletDynamicsCommon.h"
 #include <memory>
 #include "Camera.hpp"
+#include "Asset.hpp"
 
 struct Material {
   glm::vec4 diffuse;
@@ -134,18 +135,29 @@ int main() {
     // hostRenderState.cameraState.allocatedBuffers[renderIndex]
   };
   auto engine = std::make_unique<vka::Engine>(engineCreateInfo);
-  auto triangleAsset = engine->LoadAsset("content/models/triangle.glb");
+  auto multilogger = spdlog::get(vka::LoggerName);
+  multilogger->info("loading shapes.gltf");
+  auto shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
 
+  multilogger->info("creating instance");
   auto instance = engine->createInstance(instanceCreateInfo);
+  multilogger->info("creating surface");
   auto surface = instance->createSurface(surfaceCreateInfo);
 
   vka::DeviceRequirements deviceRequirements{};
   deviceRequirements.deviceExtensions.push_back("VK_KHR_swapchain");
+  multilogger->info("creating device");
   auto device = instance->createDevice(deviceRequirements);
-  auto vertexShader = device->createShaderModule("content/shaders/vert.spv");
-  auto fragmentShader = device->createShaderModule("content/shaders/frag.spv");
+  multilogger->info("creating vertex shader");
+  auto vertexShader = device->createShaderModule("content/shaders/shader.vert");
+  multilogger->info("creating fragment shader");
+  auto fragmentShader =
+      device->createShaderModule("content/shaders/shader.frag");
+  multilogger->info("creating swapchain");
   auto swapchain = device->createSwapchain();
+  multilogger->info("creating command pool");
   auto commandPool = device->createCommandPool();
+  multilogger->info("allocating command buffer");
   auto cmd =
       commandPool.allocateCommandBuffers(1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)[0];
 
@@ -178,14 +190,17 @@ int main() {
       VK_SHADER_STAGE_VERTEX_BIT,
       nullptr};
   set3Dbindings.push_back(instanceBinding);
+  multilogger->info("creating set layout");
   auto setLayout3D = device->createSetLayout(set3Dbindings);
   std::vector<VkDescriptorPoolSize> poolSizes = {
       {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
       {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3}};
+  multilogger->info("creating descriptor pool");
   auto setPool = device->createDescriptorPool(poolSizes, 3);
   std::vector<VkPushConstantRange> pushRanges = {
       {VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}};
   std::vector<VkDescriptorSetLayout> setLayouts = {setLayout3D};
+  multilogger->info("creating pipeline layout");
   auto pipeline3Dlayout = device->createPipelineLayout(pushRanges, setLayouts);
 
   vka::RenderPassCreateInfo renderPassCreateInfo;
@@ -217,6 +232,7 @@ int main() {
       {depthAttachmentDesc,
        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL_KHR});
 
+  multilogger->info("creating render pass");
   auto renderPass3D = device->createRenderPass(renderPassCreateInfo);
   auto pipeline3DInfo =
       vka::GraphicsPipelineCreateInfo(pipeline3Dlayout, renderPass3D, 0);
@@ -240,8 +256,26 @@ int main() {
       &fragmentSpecData,
       fragmentShader,
       "main");
+  pipeline3DInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0);
+  pipeline3DInfo.addVertexAttribute(1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0);
+  pipeline3DInfo.addVertexBinding(
+      0, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX);
+  pipeline3DInfo.addVertexBinding(
+      1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX);
+  pipeline3DInfo.addViewportScissor(VkViewport{}, VkRect2D{});
+  pipeline3DInfo.addColorBlendAttachment(
+      false,
+      VkBlendFactor(0),
+      VkBlendFactor(0),
+      VkBlendOp(0),
+      VkBlendFactor(0),
+      VkBlendFactor(0),
+      VkBlendOp(0),
+      0);
 
+  multilogger->info("creating pipeline cache");
   auto pipelineCache = device->createPipelineCache();
+  multilogger->info("creating pipeline");
   auto pipeline3D =
       device->createGraphicsPipeline(pipelineCache, pipeline3DInfo);
 

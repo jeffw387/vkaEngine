@@ -207,14 +207,21 @@ PipelineLayout Device::createPipelineLayout(
 }
 
 ShaderModule Device::createShaderModule(std::string shaderPath) {
-  std::vector<uint32_t> binaryData;
-  std::basic_ifstream<uint32_t> shaderFile(
-      shaderPath,
-      std::ios_base::binary | std::ios_base::ate | std::ios_base::in);
-  auto fileLength = shaderFile.tellg();
-  binaryData.resize(fileLength);
-  shaderFile.read(binaryData.data(), fileLength);
-  return ShaderModule(deviceHandle, binaryData);
+  try {
+    std::vector<char> binaryData;
+    std::ifstream shaderFile(
+        shaderPath,
+        std::ios_base::binary | std::ios_base::ate | std::ios_base::in);
+    auto fileLength = shaderFile.tellg();
+    multilogger->info("shader file length == {} bytes", fileLength);
+    shaderFile.seekg(std::ios::beg);
+    binaryData.resize(fileLength);
+    shaderFile.read(binaryData.data(), fileLength);
+    return ShaderModule(deviceHandle, binaryData);
+  } catch (const std::exception& e) {
+    multilogger->critical("error while creating shader: {}", e.what());
+    throw e;
+  }
 }
 
 UniqueFramebuffer Device::createFramebuffer(

@@ -44,6 +44,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Config.hpp"
   "${includeDir}/Camera.hpp"
   "${includeDir}/Engine.hpp"
+  "${includeDir}/LevelData.hpp"
   "${includeDir}/Asset.hpp"
   "${includeDir}/RenderPass.hpp"
   "${includeDir}/Instance.hpp"
@@ -71,6 +72,8 @@ add_custom_command(
   POST_BUILD
   COMMAND clang-format -i -style=file ${vkaEngineSources} ${vkaEngineIncludes})
 
+target_link_libraries(vkaEngine PUBLIC stdc++fs)
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
 target_include_directories(outcome INTERFACE
@@ -87,6 +90,10 @@ target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
 #add_subdirectory(external/VulkanFunctionLoader)
 #target_link_libraries(vkaEngine PUBLIC VulkanFunctionLoader)
+
+add_library(dear_imgui external/imgui/imgui.cpp)
+target_include_directories(dear_imgui PUBLIC external/imgui)
+target_link_libraries(vkaEngine PUBLIC dear_imgui)
 
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator 

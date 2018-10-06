@@ -52,7 +52,7 @@ macro(copy_content fileNames inputDir outputDir)
   endforeach()
 endmacro()
 
-list(APPEND modelFileNames triangle.gltf triangle.bin)
+list(APPEND modelFileNames shapes.gltf shapes.bin)
 copy_content(
   modelFileNames
   "${CMAKE_CURRENT_SOURCE_DIR}/content/models"

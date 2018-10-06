@@ -8,6 +8,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <memory>
+#include "Device.hpp"
 
 namespace vka {
 namespace gltf {
@@ -49,11 +50,11 @@ inline void from_json(const json& j, Mesh& mesh) {
   j.at("primitives").get_to(mesh.primitives);
 }
 struct Buffer {
-  VkBuffer vulkanBuffer;
+  AllocatedBuffer vulkanBuffer;
   fs::path uri;
   size_t byteLength;
   std::unique_ptr<char[]> bufferData;
-  operator VkBuffer() const { return vulkanBuffer; }
+  operator VkBuffer() const { return vulkanBuffer.buffer; }
 };
 inline void from_json(const json& j, Buffer& buffer) {
   j.at("byteLength").get_to(buffer.byteLength);
@@ -150,10 +151,13 @@ inline void from_json(const json& j, Asset& asset) {
   j.at("accessors").get_to(asset.accessors);
 }
 inline Asset loadGLTF(fs::path assetPath) {
+  auto currentPath = fs::current_path();
   std::ifstream assetFile{assetPath};
+  auto assetOpened = assetFile.is_open();
   json j;
   assetFile >> j;
-  Asset asset{j};
+  Asset asset;
+  j.get_to(asset);
   for (auto& buffer : asset.buffers) {
     auto binPath = assetPath;
     binPath.replace_filename(buffer.uri);
@@ -200,7 +204,6 @@ static void theoreticalTestCase(Asset asset) {
       vkCmdDrawIndexed(cmd, indexAccessor.elementCount, 1, 0, 0, 0);
     }
   }
-  // vkCmdDrawIndexed(cmd, )
 }
 }  // namespace gltf
 
