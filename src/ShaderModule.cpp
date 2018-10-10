@@ -16,6 +16,8 @@ ShaderModule::ShaderModule(
 }
 
 ShaderModule::~ShaderModule() {
-  vkDestroyShaderModule(device, shaderModule, nullptr);
+  if (device != VK_NULL_HANDLE && shaderModule != VK_NULL_HANDLE) {
+    vkDestroyShaderModule(device, shaderModule, nullptr);
+  }
 }
 }  // namespace vka

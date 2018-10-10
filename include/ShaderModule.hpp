@@ -8,7 +8,7 @@ class Device;
 
 class ShaderModule {
 public:
-  ShaderModule() = delete;
+  ShaderModule() = default;
   ShaderModule(VkDevice device, const std::vector<char>& shaderBytes);
   ShaderModule(ShaderModule&&) = default;
   ShaderModule& operator=(ShaderModule&&) = default;
@@ -19,7 +19,7 @@ public:
   operator VkShaderModule() { return shaderModule; }
 
 private:
-  VkDevice device;
-  VkShaderModule shaderModule;
+  VkDevice device = VK_NULL_HANDLE;
+  VkShaderModule shaderModule = VK_NULL_HANDLE;
 };
 }  // namespace vka
