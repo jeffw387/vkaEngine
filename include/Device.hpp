@@ -126,11 +126,8 @@ public:
   operator VkDevice() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  UniqueAllocatedBuffer createAllocatedBuffer(
-      VkDeviceSize,
-      VkBufferUsageFlags,
-      VmaAllocationCreateFlags,
-      VmaMemoryUsage);
+  UniqueAllocatedBuffer
+      createAllocatedBuffer(VkDeviceSize, VkBufferUsageFlags, VmaMemoryUsage);
   Swapchain createSwapchain();
   RenderPass createRenderPass(const VkRenderPassCreateInfo&);
   PipelineCache createPipelineCache() { return PipelineCache(deviceHandle); }

@@ -11,16 +11,100 @@
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
 #include <memory>
+#include <cstring>
+#include <vector>
 #include "Camera.hpp"
 #include "Asset.hpp"
+#include "vulkan_vector.hpp"
 
 struct Material {
   glm::vec4 diffuse;
 };
 
-struct Materials {
-  std::vector<Material> data;
-};
+// template <typename ContentType, size_t Count>
+// class MutableBuffer {
+//   VkBufferUsageFlags bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+//   std::array<std::vector<ContentType>, Count> content;
+//   std::array<bool, Count> dataValid;
+//   std::array<vka::UniqueAllocatedBuffer, Count> contentBuffers;
+//   std::array<size_t, Count> bufferCapacities;
+//   std::array<void*, Count> mapPtrs;
+
+//   template <size_t Index>
+//   size_t contentSize() const {
+//     return sizeof(ContentType) * content[Index].size();
+//   }
+
+// public:
+//   MutableBuffer() = default;
+//   MutableBuffer(VkBufferUsageFlags bufferUsage) : bufferUsage(bufferUsage) {}
+
+//   template <size_t Index>
+//   size_t size() const {
+//     return content[Index].size();
+//   }
+
+//   template <size_t Index>
+//   void push_back(ContentType value) {
+//     content[Index].push_back(value);
+//   }
+
+//   template <size_t Index>
+//   void push_back(ContentType&& value) {
+//     content[Index].push_back(std::move(value));
+//     dataValid[Index] = false;
+//   }
+
+//   template <size_t Index>
+//   ContentType& operator[](size_t contentIndex) {
+//     return content[Index][contentIndex];
+//   }
+
+//   template <size_t Index>
+//   const ContentType& operator[](size_t contentIndex) const {
+//     return content[Index][contentIndex];
+//   }
+
+//   template <size_t Index>
+//   void validateBuffer(vka::Device* device) {
+//     // pseudo:
+//     // if (resize needed) {resize}
+//     if (size<Index>() > bufferCapacities[Index]) {
+//       createBuffer<Index>(device):
+//     }
+//     // if (data copy needed) {copy data}
+//     if (!dataValid[Index]) {
+//       validateData<Index>();
+//     }
+//   }
+
+// private:
+//   template <size_t Index>
+//   void createBuffer(vka::Device* device) {
+//     contentBuffers[Index] = device->createAllocatedBuffer(
+//         contentSize(),
+//         bufferUsage,
+//         VMA_MEMORY_USAGE_CPU_TO_GPU);
+//     vmaMapMemory(
+//       device->getAllocator(),
+//       (*contentBuffers[Index]).allocation,
+//       &mapPtrs[Index]);
+//   }
+
+//   template <size_t Index>
+//   void validateData() {
+//     std::memcpy(mapPtrs[Index], content[Index].data(), sizeof(ContentType));
+//     dataValid[Index] = true;
+//   }
+
+//   template <size_t Index>
+//   void validateBufferCapacity() {
+//     if (contentCount() <)
+//   }
+//   template <size_t Index>
+//   void validateBufferData() {}
+
+// };
 
 struct Light {
   glm::vec4 color;
@@ -46,20 +130,27 @@ struct InstanceData {
   std::vector<uint32_t> materialIndex;
 };
 
-template <typename T, size_t N>
-struct BufferedType {
-  std::array<T, N> hostData;
-  std::array<vka::UniqueAllocatedBuffer, N> allocatedBuffers;
-};
+// template <typename T, size_t N>
+// struct BufferedType {
+//   std::array<T, N> hostData;
+//   std::array<vka::UniqueAllocatedBuffer, N> allocatedBuffers;
+//   std::array<VkDescriptorBufferInfo, N> bufferInfos;
 
-struct HostRenderState {
-  BufferedType<Materials, 1> materialState;
-  BufferedType<LightData, 3> lightState;
-  BufferedType<Camera, 3> cameraState;
-  BufferedType<InstanceData, 3> instanceState;
-  std::array<vka::DescriptorPool, 3> descriptorPools;
-  std::array<vka::DescriptorSet, 3> descriptorSets;
-};
+//   struct Count {
+//     constexpr size_t operator()() {
+//       return N;
+//     }
+//   };
+// };
+
+// struct HostRenderState {
+//   BufferedType<Materials, 1> materialState;
+//   BufferedType<LightData, 3> lightState;
+//   BufferedType<Camera, 3> cameraState;
+//   BufferedType<InstanceData, 3> instanceState;
+//   std::array<vka::DescriptorPool, 3> descriptorPools;
+//   std::array<vka::DescriptorSet, 3> descriptorSets;
+// };
 
 // 0: prior update (data already uploaded to gpu)
 // 1: latest update (upload data to gpu, interpolate between prior and latest)
@@ -99,15 +190,15 @@ struct PolySize {
 int main() {
   PolySize defaultWidth{900U};
   PolySize defaultHeight{900U};
-  Materials materials{};
-  materials.data.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
+  // MaterialData materialData;
+  // materialData.addMaterial({glm::vec4(1.f, 0.f, 0.f, 1.f)});
 
   LightData lightData{};
   lightData.lights.resize(1);
   lightData.ambient = {1.f, 1.f, 1.f, 0.3f};
 
-  HostRenderState hostRenderState{};
-  hostRenderState.materialState.hostData[0] = materials;
+  // HostRenderState hostRenderState{};
+  // hostRenderState.materialState.hostData[0] = materials;
   auto mainCamera = vka::OrthoCamera{};
   mainCamera.setDimensions(defaultWidth, defaultHeight);
   auto ecsRegistry = entt::DefaultRegistry{};
@@ -128,10 +219,10 @@ int main() {
   };
   engineCreateInfo.renderCallback = [&](vka::Engine* engine) {
     auto renderIndex = engine->currentRenderIndex();
-    hostRenderState.cameraState.hostData[renderIndex].view =
-        mainCamera.getView();
-    hostRenderState.cameraState.hostData[renderIndex].projection =
-        mainCamera.getProjection();
+    // hostRenderState.cameraState.hostData[renderIndex].view =
+    //     mainCamera.getView();
+    // hostRenderState.cameraState.hostData[renderIndex].projection =
+    //     mainCamera.getProjection();
     // hostRenderState.cameraState.allocatedBuffers[renderIndex]
   };
   auto engine = std::make_unique<vka::Engine>(engineCreateInfo);
@@ -148,6 +239,11 @@ int main() {
   deviceRequirements.deviceExtensions.push_back("VK_KHR_swapchain");
   multilogger->info("creating device");
   auto device = instance->createDevice(deviceRequirements);
+
+  auto materials = vka::vulkan_vector<Material>(
+      device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+  materials.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
+
   multilogger->info("creating vertex shader");
   auto vertexShader = device->createShaderModule("content/shaders/shader.vert");
   multilogger->info("creating fragment shader");
@@ -279,37 +375,37 @@ int main() {
   auto pipeline3D =
       device->createGraphicsPipeline(pipelineCache, pipeline3DInfo);
 
-  for (auto& allocBuffer : hostRenderState.materialState.allocatedBuffers) {
-    allocBuffer = device->createAllocatedBuffer(
-        sizeof(Material) * materials.data.size(),
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        0,
-        VMA_MEMORY_USAGE_GPU_ONLY);
-  }
+  // for (auto& allocBuffer : hostRenderState.materialState.allocatedBuffers) {
+  //   allocBuffer = device->createAllocatedBuffer(
+  //       sizeof(Material) * materials.data.size(),
+  //       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+  //       0,
+  //       VMA_MEMORY_USAGE_GPU_ONLY);
+  // }
 
-  for (auto& allocBuffer : hostRenderState.lightState.allocatedBuffers) {
-    allocBuffer = device->createAllocatedBuffer(
-        sizeof(Light) * lightData.lights.size(),
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VMA_ALLOCATION_CREATE_MAPPED_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
-  }
+  // for (auto& allocBuffer : hostRenderState.lightState.allocatedBuffers) {
+  //   allocBuffer = device->createAllocatedBuffer(
+  //       sizeof(Light) * lightData.lights.size(),
+  //       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+  //       VMA_ALLOCATION_CREATE_MAPPED_BIT,
+  //       VMA_MEMORY_USAGE_CPU_TO_GPU);
+  // }
 
-  for (auto& allocBuffer : hostRenderState.cameraState.allocatedBuffers) {
-    allocBuffer = device->createAllocatedBuffer(
-        sizeof(Camera),
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VMA_ALLOCATION_CREATE_MAPPED_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
-  }
+  // for (auto& allocBuffer : hostRenderState.cameraState.allocatedBuffers) {
+  //   allocBuffer = device->createAllocatedBuffer(
+  //       sizeof(Camera),
+  //       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+  //       VMA_ALLOCATION_CREATE_MAPPED_BIT,
+  //       VMA_MEMORY_USAGE_CPU_TO_GPU);
+  // }
 
-  for (auto& allocBuffer : hostRenderState.instanceState.allocatedBuffers) {
-    allocBuffer = device->createAllocatedBuffer(
-        sizeof(Instance),
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VMA_ALLOCATION_CREATE_MAPPED_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
-  }
+  // for (auto& allocBuffer : hostRenderState.instanceState.allocatedBuffers) {
+  //   allocBuffer = device->createAllocatedBuffer(
+  //       sizeof(Instance),
+  //       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+  //       VMA_ALLOCATION_CREATE_MAPPED_BIT,
+  //       VMA_MEMORY_USAGE_CPU_TO_GPU);
+  // }
 
   engine->run();
   return 0;

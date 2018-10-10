@@ -46,6 +46,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Engine.hpp"
   "${includeDir}/LevelData.hpp"
   "${includeDir}/Asset.hpp"
+  "${includeDir}/vulkan_vector.hpp"
   "${includeDir}/RenderPass.hpp"
   "${includeDir}/Instance.hpp"
   "${includeDir}/Device.hpp"

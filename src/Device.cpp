@@ -137,7 +137,6 @@ VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {
 UniqueAllocatedBuffer Device::createAllocatedBuffer(
     VkDeviceSize size,
     VkBufferUsageFlags usage,
-    VmaAllocationCreateFlags allocFlags,
     VmaMemoryUsage memoryUsage) {
   AllocatedBuffer result{};
   VkBufferCreateInfo bufferCreateInfo{};
@@ -148,7 +147,6 @@ UniqueAllocatedBuffer Device::createAllocatedBuffer(
   bufferCreateInfo.size = size;
 
   VmaAllocationCreateInfo allocationCreateInfo{};
-  allocationCreateInfo.flags = allocFlags;
   allocationCreateInfo.usage = memoryUsage;
   vmaCreateBuffer(
       allocator,
