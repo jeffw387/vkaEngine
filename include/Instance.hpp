@@ -54,7 +54,7 @@ class Instance {
   friend class Device;
 
 public:
-  Instance() = delete;
+  Instance() = default;
   Instance(const Instance&) = delete;
   Instance& operator=(const Instance&);
   Instance(Engine*, InstanceCreateInfo);

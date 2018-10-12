@@ -168,7 +168,8 @@ Swapchain Device::createSwapchain() {
   createInfo.setImageExtent(capabilities.currentExtent);
   createInfo.setSurfacePreTransform(capabilities.currentTransform);
   createInfo.setSurface(surface);
-  return Swapchain(deviceHandle, createInfo);
+  return Swapchain(
+      physicalDeviceHandle, deviceHandle, graphicsQueueIndex, createInfo);
 }
 
 GraphicsPipeline Device::createGraphicsPipeline(

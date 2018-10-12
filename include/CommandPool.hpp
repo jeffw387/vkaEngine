@@ -285,7 +285,7 @@ private:
 class CommandPool {
 public:
   CommandPool(VkDevice device, uint32_t gfxQueueIndex);
-  CommandPool() = delete;
+  CommandPool() = default;
   CommandPool(const CommandPool&) = delete;
   CommandPool& operator=(const CommandPool&) = delete;
   CommandPool(CommandPool&&) = default;

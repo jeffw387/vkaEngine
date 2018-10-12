@@ -33,7 +33,7 @@ struct EngineCreateInfo {
 
 class Engine {
 public:
-  Engine() = delete;
+  Engine() = default;
   Engine(const Engine&) = delete;
   Engine& operator=(const Engine&) = delete;
   Engine(EngineCreateInfo);

@@ -8,7 +8,7 @@ class Device;
 
 class DescriptorSetLayout {
 public:
-  DescriptorSetLayout() = delete;
+  DescriptorSetLayout() = default;
   DescriptorSetLayout(
       VkDevice device,
       const std::vector<VkDescriptorSetLayoutBinding>&);

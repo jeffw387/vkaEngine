@@ -1,35 +1,14 @@
 #version 450
 
-//layout (constant_id = 0) const uint materialCount;
-//layout (constant_id = 1) const uint lightCount;
-
 layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec3 inNormal;
 
-// struct Material {
-//   vec4 diffuse;
-// };
-
-// struct Light {
-//   vec4 color;
-//   vec4 positionViewSpace;
-// };
-
-// layout (set = 0, binding = 0) uniform Materials
-// {
-//   Material[materialCount] data;
-// } materials;
-
-// layout (set = 0, binding = 1) uniform Lights {
-//   Light[lightCount] data;
-// } lights;
-
-layout (set = 0, binding = 2) uniform Camera {
+layout (set = 0, binding = 3) uniform Camera {
   mat4 view;
   mat4 projection;
 } camera;
 
-layout (set = 0, binding = 3) uniform Instance {
+layout (set = 0, binding = 4) uniform Instance {
   mat4 model;
 } instance;
 

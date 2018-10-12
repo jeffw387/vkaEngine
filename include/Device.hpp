@@ -123,6 +123,7 @@ public:
   Device& operator=(Device&&) = default;
   ~Device() = default;
 
+  operator VkPhysicalDevice() { return physicalDeviceHandle; }
   operator VkDevice() { return deviceHandle; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
@@ -170,6 +171,14 @@ public:
   VkSurfaceCapabilitiesKHR getSurfaceCapabilities();
   void updateDescriptorSets(
       const std::vector<VkWriteDescriptorSet>& descriptorWrites);
+
+  const VkPhysicalDeviceProperties& getDeviceProperties() {
+    return deviceProperties;
+  }
+
+  const VkPhysicalDeviceMemoryProperties& getMemoryProperties() {
+    return memoryProperties;
+  }
 
 private:
   VkSurfaceKHR surface;

@@ -9,7 +9,7 @@ class Device;
 
 class PipelineLayout {
 public:
-  PipelineLayout() = delete;
+  PipelineLayout() = default;
   PipelineLayout(
       VkDevice device,
       const std::vector<VkPushConstantRange>& pushRanges,

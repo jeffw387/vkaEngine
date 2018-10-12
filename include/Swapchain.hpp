@@ -26,8 +26,12 @@ private:
 
 class Swapchain {
 public:
-  Swapchain() = delete;
-  Swapchain(VkDevice device, const VkSwapchainCreateInfoKHR& createInfo);
+  Swapchain() = default;
+  Swapchain(
+      VkPhysicalDevice physicalDevice,
+      VkDevice device,
+      uint32_t graphicsQueueIndex,
+      const VkSwapchainCreateInfoKHR& createInfo);
   const std::vector<VkImage>& getSwapImages();
   ~Swapchain();
   operator VkSwapchainKHR();
@@ -36,8 +40,8 @@ public:
   outcome::result<uint32_t, VkResult> acquireImage(VkSemaphore semaphore);
 
 private:
-  VkDevice device;
-  VkSwapchainKHR swapchainHandle;
+  VkDevice device = VK_NULL_HANDLE;
+  VkSwapchainKHR swapchainHandle = VK_NULL_HANDLE;
   std::vector<VkImage> swapImages;
 };
 }  // namespace vka

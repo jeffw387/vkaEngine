@@ -63,7 +63,7 @@ private:
 
 class RenderPass {
 public:
-  RenderPass() = delete;
+  RenderPass() = default;
   RenderPass(VkDevice device, const VkRenderPassCreateInfo& createInfo);
   RenderPass(RenderPass&&) = default;
   RenderPass& operator=(RenderPass&&) = default;

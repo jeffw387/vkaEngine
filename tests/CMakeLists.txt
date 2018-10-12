@@ -16,7 +16,7 @@ add_custom_command(
 macro(process_shader fileNames inputDir outputDir)
   foreach(fileName ${${fileNames}})
     set(inputShader "${inputDir}/${fileName}")
-    set(outputShader "${outputDir}/${fileName}")
+    set(outputShader "${outputDir}/${fileName}.spv")
     add_custom_command(
       OUTPUT ${outputShader}
       VERBATIM

@@ -51,9 +51,21 @@ SwapchainCreateInfo::operator const VkSwapchainCreateInfoKHR&() {
 }
 
 Swapchain::Swapchain(
+    VkPhysicalDevice physicalDevice,
     VkDevice device,
+    uint32_t graphicsQueueIndex,
     const VkSwapchainCreateInfoKHR& createInfo)
     : device(device) {
+  VkBool32 presentSupport{};
+  vkGetPhysicalDeviceSurfaceSupportKHR(
+      physicalDevice, graphicsQueueIndex, createInfo.surface, &presentSupport);
+  uint32_t formatCount{};
+  vkGetPhysicalDeviceSurfaceFormatsKHR(
+      physicalDevice, createInfo.surface, &formatCount, nullptr);
+  std::vector<VkSurfaceFormatKHR> surfaceFormats;
+  surfaceFormats.resize(formatCount);
+  vkGetPhysicalDeviceSurfaceFormatsKHR(
+      physicalDevice, createInfo.surface, &formatCount, surfaceFormats.data());
   vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapchainHandle);
   uint32_t swapImageCount{};
   vkGetSwapchainImagesKHR(device, swapchainHandle, &swapImageCount, nullptr);

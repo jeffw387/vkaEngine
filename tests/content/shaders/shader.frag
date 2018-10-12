@@ -45,33 +45,27 @@ layout (set = 0, binding = 0) uniform Materials
   Material[materialCount] data;
 } materials;
 
-layout (set = 0, binding = 1) uniform Lights {
+layout (set = 0, binding = 1) uniform DynamicLights {
   Light[lightCount] data;
-  vec4 ambient;
-} lights;
+} dynamicLights;
 
-// layout (set = 0, binding = 2) uniform Camera {
-//   mat4 view;
-//   mat4 projection;
-// } camera;
-
-// layout (set = 0, binding = 3) uniform Instance {
-//   mat4 model;
-// } instance;
+layout (set = 0, binding = 2) uniform Ambient {
+  vec4 color;
+} ambient;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
   vec3 diffuseLighting;
   for (uint i = 0; i < lightCount; ++i) {
-    vec3 lightViewPos = vec3(lights.data[i].positionViewSpace);
+    vec3 lightViewPos = vec3(dynamicLights.data[i].positionViewSpace);
     vec3 surfaceToLight = lightViewPos - inViewPos;
     float cosTheta = dot(inViewNormal, surfaceToLight) 
       / (length(surfaceToLight) * length(inViewNormal));
-    float intensity = lights.data[i].color.a * max(cosTheta, 0);
-    diffuseLighting += lights.data[i].color.rgb * intensity;
+    float intensity = dynamicLights.data[i].color.a * max(cosTheta, 0);
+    diffuseLighting += dynamicLights.data[i].color.rgb * intensity;
   }
   vec3 diffuse = materials.data[push.materialIndex].diffuse.rgb;
-  vec3 hdrColor = diffuse * diffuseLighting;
+  vec3 hdrColor = diffuse * (diffuseLighting + vec3(ambient.color));
   outColor = vec4(Uncharted2ToneMapping(hdrColor), 1);
 }
