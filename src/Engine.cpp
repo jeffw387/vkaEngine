@@ -13,7 +13,7 @@
 #include "spdlog/spdlog.h"
 #include "Surface.hpp"
 #include "Config.hpp"
-#include "Asset.hpp"
+
 namespace vka {
 
 static void
