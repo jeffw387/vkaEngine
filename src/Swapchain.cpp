@@ -107,10 +107,10 @@ Swapchain::operator VkSwapchainKHR() { return swapchainHandle; }
 Swapchain::operator VkSwapchainKHR*() { return &swapchainHandle; }
 
 outcome::result<uint32_t, VkResult> Swapchain::acquireImage(
-    VkSemaphore semaphore) {
+    VkFence fence) {
   uint32_t imageIndex{};
   auto result = vkAcquireNextImageKHR(
-      device, swapchainHandle, UINT64_MAX, semaphore, 0, &imageIndex);
+      device, swapchainHandle, UINT64_MAX, 0, fence, &imageIndex);
   if (result != VK_SUCCESS) {
     return outcome::failure(result);
   }
