@@ -4,6 +4,8 @@
 #include "vk_mem_alloc.h"
 #include <memory>
 #include <vector>
+#include <map>
+#include <string>
 #include "spdlog/spdlog.h"
 #include "glm/glm.hpp"
 #include "ShaderModule.hpp"
@@ -64,6 +66,16 @@ struct AllocatedBufferDeleter {
 };
 using UniqueAllocatedBuffer =
     std::unique_ptr<AllocatedBuffer, AllocatedBufferDeleter>;
+
+static std::map<uint32_t, std::string> ImageUsageFlags{
+    {0x00000001, "VK_IMAGE_USAGE_TRANSFER_SRC_BIT"},
+    {0x00000002, "VK_IMAGE_USAGE_TRANSFER_DST_BIT"},
+    {0x00000004, "VK_IMAGE_USAGE_SAMPLED_BIT"},
+    {0x00000008, "VK_IMAGE_USAGE_STORAGE_BIT"},
+    {0x00000010, "VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT"},
+    {0x00000020, "VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT"},
+    {0x00000040, "VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT"},
+    {0x00000080, "VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT"}};
 
 struct AllocatedImage {
   VkImage image;
@@ -146,10 +158,10 @@ public:
       const std::vector<VkDescriptorPoolSize>& poolSizes,
       uint32_t maxSets);
   DescriptorSetLayout createSetLayout(
-      const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+      std::vector<VkDescriptorSetLayoutBinding> bindings);
   PipelineLayout createPipelineLayout(
-      const std::vector<VkPushConstantRange>&,
-      const std::vector<VkDescriptorSetLayout>&);
+      std::vector<VkPushConstantRange>,
+      std::vector<VkDescriptorSetLayout>);
   ShaderModule createShaderModule(std::string shaderPath);
   UniqueFramebuffer createFramebuffer(
       std::vector<VkImageView> attachments,
