@@ -109,6 +109,7 @@ struct AppState {
   struct BufferedState {
     vka::CommandPool commandPool;
     vka::DescriptorPool descriptorPool;
+    vka::DescriptorSet descriptorSet;
     // if light count changes, pipeline must be recompiled (ideally only change
     // on area change)
     vka::vulkan_vector<Light> dynamicLightsUniform;
