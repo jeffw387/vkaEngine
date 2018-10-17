@@ -163,6 +163,48 @@ UniqueAllocatedBuffer Device::createAllocatedBuffer(
 Swapchain Device::createSwapchain() {
   auto capabilities = getSurfaceCapabilities();
 
+  multilogger->info(
+      "capabilities.minImageExtent: w{} h{}",
+      capabilities.minImageExtent.width,
+      capabilities.minImageExtent.height);
+  multilogger->info(
+      "capabilities.currentExtent: w{} h{}",
+      capabilities.currentExtent.width,
+      capabilities.currentExtent.height);
+  multilogger->info(
+      "capabilities.maxImageExtent: w{} h{}",
+      capabilities.maxImageExtent.width,
+      capabilities.maxImageExtent.height);
+  multilogger->info(
+      "capabilities.minImageCount: {}", capabilities.minImageCount);
+  multilogger->info(
+      "capabilities.maxImageCount: {}", capabilities.maxImageCount);
+  multilogger->info(
+      "capabilities.currentTransform: {}", capabilities.currentTransform);
+  for (const auto& [bit, name] : ImageUsageFlags) {
+    multilogger->info(
+        "{} image usage supported: {}",
+        name,
+        ((bit & capabilities.supportedUsageFlags) == bit));
+  }
+
+  for (const auto& [bit, name] : CompositeAlphaFlags) {
+    multilogger->info(
+        "{} supported: {}",
+        name,
+        ((bit & capabilities.supportedCompositeAlpha) == bit));
+  }
+
+  uint32_t presentModeCount{};
+  vkGetPhysicalDeviceSurfacePresentModesKHR(
+      physicalDeviceHandle, surface, &presentModeCount, nullptr);
+  std::vector<VkPresentModeKHR> supportedModes;
+  supportedModes.resize(presentModeCount);
+  vkGetPhysicalDeviceSurfacePresentModesKHR(
+      physicalDeviceHandle, surface, &presentModeCount, supportedModes.data());
+  for (const auto& mode : supportedModes) {
+    multilogger->info("Supported present mode: {}.", PresentModes[mode]);
+  }
   SwapchainCreateInfo createInfo{};
   createInfo.addQueueFamilyIndex(graphicsQueueIndex);
   createInfo.setImageExtent(capabilities.currentExtent);
@@ -195,14 +237,15 @@ DescriptorPool Device::createDescriptorPool(
 }
 
 DescriptorSetLayout Device::createSetLayout(
-    const std::vector<VkDescriptorSetLayoutBinding>& bindings) {
-  return DescriptorSetLayout(deviceHandle, bindings);
+    std::vector<VkDescriptorSetLayoutBinding> bindings) {
+  return DescriptorSetLayout(deviceHandle, std::move(bindings));
 }
 
 PipelineLayout Device::createPipelineLayout(
-    const std::vector<VkPushConstantRange>& pushRanges,
-    const std::vector<VkDescriptorSetLayout>& setLayouts) {
-  return PipelineLayout(deviceHandle, pushRanges, setLayouts);
+    std::vector<VkPushConstantRange> pushRanges,
+    std::vector<VkDescriptorSetLayout> setLayouts) {
+  return PipelineLayout(
+      deviceHandle, std::move(pushRanges), std::move(setLayouts));
 }
 
 ShaderModule Device::createShaderModule(std::string shaderPath) {
