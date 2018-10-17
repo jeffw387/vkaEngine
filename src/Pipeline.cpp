@@ -4,6 +4,36 @@
 #include "Device.hpp"
 
 namespace vka {
+PipelineCache::PipelineCache(VkDevice device, std::vector<char> initialData)
+    : device(device) {
+  VkPipelineCacheCreateInfo createInfo{};
+  createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+  createInfo.initialDataSize = initialData.size();
+  createInfo.pInitialData = initialData.data();
+  vkCreatePipelineCache(device, &createInfo, nullptr, &cacheHandle);
+}
+
+PipelineCache::PipelineCache(VkDevice device) : device(device) {
+  VkPipelineCacheCreateInfo createInfo{};
+  createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+  vkCreatePipelineCache(device, &createInfo, nullptr, &cacheHandle);
+}
+
+PipelineCache::~PipelineCache() {
+  if (device != VK_NULL_HANDLE && cacheHandle != VK_NULL_HANDLE) {
+    vkDestroyPipelineCache(device, cacheHandle, nullptr);
+  }
+}
+
+auto PipelineCache::getCacheData() {
+  std::vector<char> cacheData;
+  size_t dataSize{};
+  vkGetPipelineCacheData(device, cacheHandle, &dataSize, nullptr);
+  cacheData.resize(dataSize);
+  vkGetPipelineCacheData(device, cacheHandle, &dataSize, cacheData.data());
+  return cacheData;
+}
+
 GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
     VkPipelineLayout layout,
     VkRenderPass renderPass,
@@ -252,7 +282,9 @@ ComputePipeline::ComputePipeline(
 }
 
 ComputePipeline::~ComputePipeline() {
-  vkDestroyPipeline(device, pipelineHandle, nullptr);
+  if (device != VK_NULL_HANDLE && pipelineHandle != VK_NULL_HANDLE) {
+    vkDestroyPipeline(device, pipelineHandle, nullptr);
+  }
 }
 
 }  // namespace vka

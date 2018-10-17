@@ -1,6 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
-//#include <GLFW/glfw3.h>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 namespace vka {
@@ -16,18 +16,8 @@ struct ShaderStageData {
 class PipelineCache {
 public:
   PipelineCache() = default;
-  PipelineCache(VkDevice device, std::vector<char> initialData) {
-    VkPipelineCacheCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    createInfo.initialDataSize = initialData.size();
-    createInfo.pInitialData = initialData.data();
-    vkCreatePipelineCache(device, &createInfo, nullptr, &cacheHandle);
-  }
-  PipelineCache(VkDevice device) {
-    VkPipelineCacheCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    vkCreatePipelineCache(device, &createInfo, nullptr, &cacheHandle);
-  }
+  PipelineCache(VkDevice device, std::vector<char> initialData);
+  PipelineCache(VkDevice device);
   PipelineCache(const PipelineCache&) = delete;
   PipelineCache& operator=(const PipelineCache&) = delete;
   PipelineCache(PipelineCache&& other) { *this = std::move(other); }
@@ -40,26 +30,15 @@ public:
     }
     return *this;
   }
-  ~PipelineCache() {
-    if (device != VK_NULL_HANDLE && cacheHandle != VK_NULL_HANDLE) {
-      vkDestroyPipelineCache(device, cacheHandle, nullptr);
-    }
-  }
+  ~PipelineCache();
 
   operator VkPipelineCache() { return cacheHandle; }
 
-  auto getCacheData() {
-    std::vector<char> cacheData;
-    size_t dataSize{};
-    vkGetPipelineCacheData(device, cacheHandle, &dataSize, nullptr);
-    cacheData.resize(dataSize);
-    vkGetPipelineCacheData(device, cacheHandle, &dataSize, cacheData.data());
-    return cacheData;
-  }
+  auto getCacheData();
 
 private:
-  VkDevice device;
-  VkPipelineCache cacheHandle;
+  VkDevice device = VK_NULL_HANDLE;
+  VkPipelineCache cacheHandle = VK_NULL_HANDLE;
 };
 
 class GraphicsPipelineCreateInfo {
