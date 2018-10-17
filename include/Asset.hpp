@@ -168,43 +168,56 @@ inline Asset loadGLTF(fs::path assetPath) {
   return asset;
 }
 
-static void theoreticalTestCase(Asset asset) {
-  VkCommandBuffer cmd{};
-  for (const auto& node : asset.nodes) {
-    for (const auto& primitive : asset.meshes[node.meshIndex].primitives) {
-      const auto& indexAccessor = asset.accessors[primitive.indexAccessorIndex];
-      const auto& indexBufferView =
-          asset.bufferViews[indexAccessor.bufferViewIndex];
-      const auto& indexBuffer = asset.buffers[indexBufferView.bufferIndex];
-      vkCmdBindIndexBuffer(
-          cmd,
-          indexBuffer,
-          indexBufferView.byteOffset,
-          indexAccessor.componentType);
-
-      const auto& positionAccessor =
-          asset.accessors[primitive.positionAccessorIndex];
-      const auto& positionBufferView =
-          asset.bufferViews[positionAccessor.bufferViewIndex];
-      const auto& normalAccessor =
-          asset.accessors[primitive.normalAccessorIndex];
-      const auto& normalBufferView =
-          asset.bufferViews[normalAccessor.bufferViewIndex];
-      std::vector<VkBuffer> vertexBuffers = {
-          asset.buffers[positionBufferView.bufferIndex],
-          asset.buffers[normalBufferView.bufferIndex]};
-      std::vector<VkDeviceSize> offsets = {positionBufferView.byteOffset,
-                                           normalBufferView.byteOffset};
-      vkCmdBindVertexBuffers(
-          cmd,
-          0,
-          static_cast<uint32_t>(vertexBuffers.size()),
-          vertexBuffers.data(),
-          offsets.data());
-      vkCmdDrawIndexed(cmd, indexAccessor.elementCount, 1, 0, 0, 0);
-    }
-  }
+struct BufferData {
+  Accessor accessor;
+  BufferView view;
+  VkBuffer buffer;
+};
+inline BufferData getBufferData(Asset& asset, size_t accessorIndex) {
+  BufferData result{};
+  result.accessor = asset.accessors[accessorIndex];
+  result.view = asset.bufferViews[result.accessor.bufferViewIndex];
+  result.buffer = asset.buffers[result.view.bufferIndex];
+  return result;
 }
+// static void theoreticalTestCase(Asset asset) {
+//   VkCommandBuffer cmd{};
+//   for (const auto& node : asset.nodes) {
+//     for (const auto& primitive : asset.meshes[node.meshIndex].primitives) {
+//       const auto& indexAccessor =
+//       asset.accessors[primitive.indexAccessorIndex]; const auto&
+//       indexBufferView =
+//           asset.bufferViews[indexAccessor.bufferViewIndex];
+//       const auto& indexBuffer = asset.buffers[indexBufferView.bufferIndex];
+//       vkCmdBindIndexBuffer(
+//           cmd,
+//           indexBuffer,
+//           indexBufferView.byteOffset,
+//           indexAccessor.componentType);
+
+//       const auto& positionAccessor =
+//           asset.accessors[primitive.positionAccessorIndex];
+//       const auto& positionBufferView =
+//           asset.bufferViews[positionAccessor.bufferViewIndex];
+//       const auto& normalAccessor =
+//           asset.accessors[primitive.normalAccessorIndex];
+//       const auto& normalBufferView =
+//           asset.bufferViews[normalAccessor.bufferViewIndex];
+//       std::vector<VkBuffer> vertexBuffers = {
+//           asset.buffers[positionBufferView.bufferIndex],
+//           asset.buffers[normalBufferView.bufferIndex]};
+//       std::vector<VkDeviceSize> offsets = {positionBufferView.byteOffset,
+//                                            normalBufferView.byteOffset};
+//       vkCmdBindVertexBuffers(
+//           cmd,
+//           0,
+//           static_cast<uint32_t>(vertexBuffers.size()),
+//           vertexBuffers.data(),
+//           offsets.data());
+//       vkCmdDrawIndexed(cmd, indexAccessor.elementCount, 1, 0, 0, 0);
+//     }
+//   }
+// }
 }  // namespace gltf
 
 }  // namespace vka
