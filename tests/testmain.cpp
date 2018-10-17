@@ -144,6 +144,10 @@ struct AppState {
     };
     engineCreateInfo.renderCallback = [&](vka::Engine* engine) {
       auto renderIndex = engine->currentRenderIndex();
+      bufState[renderIndex].cameraUniform[0].projection =
+          mainCamera.getProjection();
+      bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
+      bufState[renderIndex].cameraUniform.flushMemory(device);
     };
     engine = std::make_unique<vka::Engine>(engineCreateInfo);
     multilogger = spdlog::get(vka::LoggerName);
