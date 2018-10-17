@@ -92,7 +92,9 @@ public:
   void validate(VkDevice device);
   template <typename T>
   T* getDescriptor(DescriptorReference ref) {
-    return std::get_if<T>(bindings.at(ref.bindingIndex).at(ref.arrayIndex));
+    auto& binding = bindings.at(ref.bindingIndex);
+    auto& descriptor = binding.at(ref.arrayIndex);
+    return &(std::get<T>(descriptor));
   }
 
 private:
@@ -114,7 +116,8 @@ public:
   ~DescriptorPool();
   operator VkDescriptorPool() { return poolHandle; }
 
-  auto allocateDescriptorSets(std::vector<DescriptorSetLayout*> layouts);
+  std::vector<DescriptorSet> allocateDescriptorSets(
+      std::vector<DescriptorSetLayout*> layouts);
   void reset();
 
 private:
