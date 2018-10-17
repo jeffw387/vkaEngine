@@ -77,6 +77,16 @@ struct PolySize {
   }
 };
 
+inline void createAssetBuffers(vka::Device* device, vka::gltf::Asset& asset) {
+  for (auto& buffer : asset.buffers) {
+    buffer.vulkanBuffer = device->createAllocatedBuffer(
+        buffer.byteLength,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY);
+  }
+}
+
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
   PolySize defaultHeight = PolySize{900U};
@@ -115,8 +125,8 @@ struct AppState {
     vka::vulkan_vector<Light> dynamicLightsUniform;
     vka::vulkan_vector<Light> ambientLightUniform;
     vka::vulkan_vector<Camera> cameraUniform;
-    vka::vulkan_vector<Instance> instanceUniform;
-    VkSemaphore frameAcquired;
+    vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor> instanceUniform;
+    VkFence frameAcquired;
     VkSemaphore renderComplete;
     uint32_t swapImageIndex;
     vka::UniqueFramebuffer framebuffer;
@@ -133,7 +143,7 @@ struct AppState {
     instanceCreateInfo.instanceExtensions.push_back("VK_KHR_surface");
     instanceCreateInfo.instanceExtensions.push_back("VK_EXT_debug_utils");
     instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_standard_validation");
-    // instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_api_dump");
+    instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_api_dump");
 
     vka::SurfaceCreateInfo surfaceCreateInfo{};
     surfaceCreateInfo.windowTitle = "testmain window";
@@ -150,11 +160,27 @@ struct AppState {
           mainCamera.getProjection();
       bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
       bufState[renderIndex].cameraUniform.flushMemory(device);
+      bufState[renderIndex].commandPool.reset();
+      //swapchain.acquireImage()
+      auto surfaceCapabilities = device->getSurfaceCapabilities();
+      auto framebuffer = device->createFramebuffer(
+          {swapImageViews[bufState[renderIndex].swapImageIndex].get(),
+           depthImageView.get()},
+          renderPass,
+          surfaceCapabilities.currentExtent.width,
+          surfaceCapabilities.currentExtent.height);
+      auto cmd = bufState[renderIndex].commandPool.allocateCommandBuffers(1)[0];
+      cmd.begin(
+          VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+          renderPass,
+          0,
+          framebuffer.get());
     };
     engine = std::make_unique<vka::Engine>(engineCreateInfo);
     multilogger = spdlog::get(vka::LoggerName);
     multilogger->info("loading shapes.gltf");
     shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
+    createAssetBuffers(device, shapesAsset);
 
     multilogger->info("creating instance");
     instance = engine->createInstance(instanceCreateInfo);
@@ -165,31 +191,6 @@ struct AppState {
     deviceRequirements.deviceExtensions.push_back("VK_KHR_swapchain");
     multilogger->info("creating device");
     device = instance->createDevice(deviceRequirements);
-
-    materialUniform = vka::vulkan_vector<Material>(
-        device,
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
-    materialUniform.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
-
-    auto currentPath = fs::current_path();
-    multilogger->info("creating vertex shader");
-    vertexShader =
-        device->createShaderModule("content/shaders/shader.vert.spv");
-    multilogger->info("creating fragment shader");
-    fragmentShader =
-        device->createShaderModule("content/shaders/shader.frag.spv");
-    multilogger->info("creating swapchain");
-    swapchain = device->createSwapchain();
-    for (auto& state : bufState) {
-      multilogger->info("creating command pool");
-      state.commandPool = device->createCommandPool();
-      multilogger->info("creating descriptor pool");
-      state.descriptorPool = device->createDescriptorPool(
-          {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
-           {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3}},
-          1);
-    }
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,
@@ -227,6 +228,85 @@ struct AppState {
                                                    ambientLightBinding,
                                                    cameraBinding,
                                                    instanceBinding});
+
+    materialUniform = vka::vulkan_vector<Material>(
+        device,
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VMA_MEMORY_USAGE_CPU_TO_GPU);
+    materialUniform.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
+
+    for (auto& state : bufState) {
+      multilogger->info("creating command pool");
+      state.commandPool = device->createCommandPool();
+      multilogger->info("creating descriptor pool");
+
+      state.dynamicLightsUniform = vka::vulkan_vector<Light>(
+          device,
+          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+      state.ambientLightUniform = vka::vulkan_vector<Light>(
+          device,
+          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      state.ambientLightUniform.resize(1);
+
+      state.cameraUniform = vka::vulkan_vector<Camera>(
+          device,
+          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      state.cameraUniform.resize(1);
+
+      state.instanceUniform =
+          vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>(
+              device,
+              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+      state.descriptorPool = device->createDescriptorPool(
+          {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
+           {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3}},
+          1);
+      state.descriptorSet =
+          std::move(state.descriptorPool.allocateDescriptorSets(
+              {&descriptorSetLayout})[0]);
+      auto materialDescriptor =
+          state.descriptorSet.getDescriptor<vka::BufferDescriptor>(
+              {VkDescriptorSet{}, 0, 0});
+      materialUniform.subscribe(materialDescriptor);
+
+      auto dynamicLightDescriptor =
+          state.descriptorSet.getDescriptor<vka::BufferDescriptor>(
+              {VkDescriptorSet{}, 1, 0});
+      state.dynamicLightsUniform.subscribe(dynamicLightDescriptor);
+
+      auto ambientLightDescriptor =
+          state.descriptorSet.getDescriptor<vka::BufferDescriptor>(
+              {VkDescriptorSet{}, 2, 0});
+      state.ambientLightUniform.subscribe(ambientLightDescriptor);
+
+      auto cameraDescriptor =
+          state.descriptorSet.getDescriptor<vka::BufferDescriptor>(
+              {VkDescriptorSet{}, 3, 0});
+      state.cameraUniform.subscribe(cameraDescriptor);
+
+      auto instanceDescriptor =
+          state.descriptorSet.getDescriptor<vka::DynamicBufferDescriptor>(
+              {VkDescriptorSet{}, 4, 0});
+      state.instanceUniform.subscribe(instanceDescriptor);
+
+//TODO: sync wrappers, device creation thereof
+      //state.frameAcquired = device->createF
+    }
+
+    multilogger->info("creating vertex shader");
+    vertexShader =
+        device->createShaderModule("content/shaders/shader.vert.spv");
+    multilogger->info("creating fragment shader");
+    fragmentShader =
+        device->createShaderModule("content/shaders/shader.frag.spv");
+    multilogger->info("creating swapchain");
+    swapchain = device->createSwapchain();
 
     multilogger->info("creating pipeline layout");
     pipelineLayout = device->createPipelineLayout(
