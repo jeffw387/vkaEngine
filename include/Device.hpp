@@ -17,6 +17,8 @@
 #include "Pipeline.hpp"
 #include "Swapchain.hpp"
 #include "outcome.hpp"
+#include "Fence.hpp"
+#include "Semaphore.hpp"
 
 namespace vka {
 
@@ -168,6 +170,8 @@ public:
       VkRenderPass renderPass,
       uint32_t width,
       uint32_t height);
+  Fence createFence(bool signaled = true);
+  Semaphore createSemaphore();
 
   VkResult presentImage(
       VkSwapchainKHR swapchain,
