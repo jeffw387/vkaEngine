@@ -7,13 +7,14 @@
 #include <functional>
 #include "Device.hpp"
 #include "vk_mem_alloc.h"
+#include "DescriptorPool.hpp"
 
 namespace vka {
 template <typename T, size_t N = 4U>
 class vulkan_vector {
 public:
   using value_type = T;
-  using subscriber_type = std::function<void(AllocatedBuffer)>;
+  using subscriber_type = BufferDescriptor;
   struct iterator {
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::ptrdiff_t;
@@ -188,49 +189,57 @@ public:
       auto minDynamicUboAlignment =
           device->getDeviceProperties().limits.minUniformBufferOffsetAlignment;
       if (sizeof(T) < minDynamicUboAlignment) {
-        elementAlignment = minDynamicUboAlignment;
+        m_alignment = minDynamicUboAlignment;
       } else {
-        elementAlignment = static_cast<VkDeviceSize>(
+        m_alignment = static_cast<VkDeviceSize>(
             std::ceil(double(sizeof(T)) / double(minDynamicUboAlignment)));
       }
     } else {
-      elementAlignment = sizeof(T);
+      m_alignment = sizeof(T);
     }
   }
 
   void subscribe(subscriber_type subscriber) {
-    subscribers.push_back(subscriber);
+    m_subscribers.push_back(subscriber);
   }
 
   template <typename PtrT>
   iterator make_iterator(PtrT ptr) {
-    return iterator{reinterpret_cast<char*>(ptr), elementAlignment};
+    return iterator{reinterpret_cast<char*>(ptr), m_alignment};
   }
 
   template <typename PtrT>
   const_iterator make_const_iterator(PtrT ptr) {
-    return const_iterator{reinterpret_cast<char*>(ptr), elementAlignment};
+    return const_iterator{reinterpret_cast<char*>(ptr), m_alignment};
   }
 
   vulkan_vector(const vulkan_vector<T>&) = delete;
-  vulkan_vector(vulkan_vector<T>&& other) { *this = std::move(other); }
   vulkan_vector<T>& operator=(const vulkan_vector<T>&) = delete;
+  vulkan_vector(vulkan_vector<T>&& other) { *this = std::move(other); }
   vulkan_vector<T>& operator=(vulkan_vector<T>&& other) {
-    m_storage = other.m_storage;
-    m_size = other.m_size;
-    m_capacity = other.m_capacity;
-    m_device = other.m_device;
-    elementAlignment = other.elementAlignment;
-    m_vulkan_buffer = std::move(other.m_vulkan_buffer);
-    m_buffer_usage = other.m_buffer_usage;
-    m_memory_usage = other.m_memory_usage;
-    subscribers = std::move(other.subscribers);
+    if (this != &other) {
+      m_storage = other.m_storage;
+      m_size = other.m_size;
+      m_capacity = other.m_capacity;
+      m_device = other.m_device;
+      m_alignment = other.m_alignment;
+      m_vulkan_buffer = std::move(other.m_vulkan_buffer);
+      m_buffer_usage = other.m_buffer_usage;
+      m_memory_usage = other.m_memory_usage;
+      m_subscribers = std::move(other.m_subscribers);
+    }
     return *this;
   }
 
-  VkDeviceSize getDynamicOffset(size_t index) {
-    return index * elementAlignment;
+  void flushMemory(Device* device) {
+    vmaFlushAllocation(
+        device->getAllocator(),
+        m_vulkan_buffer.get().allocation,
+        0,
+        size() * m_alignment);
   }
+
+  VkDeviceSize getDynamicOffset(size_t index) { return index * m_alignment; }
   T& operator[](size_t pos) { return begin()[pos]; }
   const T& operator[](size_t pos) const { return *(begin()[pos]); }
   T& front() { return (*this)[0]; }
@@ -261,8 +270,8 @@ public:
   size_t size() const noexcept { return m_size; }
 
   void notify() {
-    for (auto& subscriber : subscribers) {
-      subscriber(m_vulkan_buffer.get());
+    for (auto& subscriber : m_subscribers) {
+      subscriber(m_vulkan_buffer.get().buffer, size() * m_alignment);
     }
   }
 
@@ -270,11 +279,11 @@ public:
     auto actualNewCap = new_cap < N ? N : new_cap;
     if (actualNewCap > m_capacity) {
       auto newBuffer = m_device->createAllocatedBuffer(
-          actualNewCap * elementAlignment, m_buffer_usage, m_memory_usage);
+          actualNewCap * m_alignment, m_buffer_usage, m_memory_usage);
       void* newStoragePtr{};
       vmaMapMemory(
           m_device->getAllocator(), newBuffer.get().allocation, &newStoragePtr);
-      std::memcpy(newStoragePtr, m_storage, m_size * elementAlignment);
+      std::memcpy(newStoragePtr, m_storage, m_size * m_alignment);
       m_vulkan_buffer = std::move(newBuffer);
       m_storage = reinterpret_cast<T*>(newStoragePtr);
       m_capacity = actualNewCap;
@@ -334,10 +343,10 @@ private:
   size_t m_size = 0U;
   size_t m_capacity = 0U;
   Device* m_device;
-  VkDeviceSize elementAlignment;
+  VkDeviceSize m_alignment;
   UniqueAllocatedBuffer m_vulkan_buffer;
   VkBufferUsageFlags m_buffer_usage = 0;
   VmaMemoryUsage m_memory_usage = VmaMemoryUsage(0);
-  std::vector<subscriber_type> subscribers;
+  std::vector<subscriber_type> m_subscribers;
 };
 }  // namespace vka
