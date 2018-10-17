@@ -13,7 +13,7 @@
 #include "spdlog/spdlog.h"
 #include "Surface.hpp"
 #include "Config.hpp"
-
+#include "Asset.hpp"
 namespace vka {
 
 static void
@@ -50,43 +50,6 @@ Engine::Engine(EngineCreateInfo engineCreateInfo)
   multilogger->flush_on(spdlog::level::err);
   multilogger->info("Logger initialized.");
   multilogger->info("Creating Engine.");
-}
-
-size_t Engine::LoadAsset(const std::string& assetPath) {
-  // multilogger->info("Loading asset {}.", assetPath);
-  // {
-  //   std::fstream assetFile{assetPath};
-  //   if (!assetFile.is_open()) {
-  //     multilogger->error("Unable to open file {}", assetPath);
-  //   }
-  // }
-  // assetBuffer.invalidate();
-  // auto asset = assetImporter.ReadFile(assetPath, assetImportFlags);
-  // std::string errString{assetImporter.GetErrorString()};
-  // if (!errString.compare(std::string{""})) {
-  //   multilogger->critical("Failed to load asset: {}", errString);
-  // }
-  // std::vector<Mesh> assetMeshes;
-  // std::vector<size_t> assetMaterials;
-  // for (auto m = 0U; m < asset->mNumMeshes; ++m) {
-  //   assetMeshes.emplace_back();
-  //   auto currentMesh = asset->mMeshes[m];
-  //   for (auto v = 0U; v < currentMesh->mNumVertices; ++v) {
-  //     auto cv = currentMesh->mVertices[v];
-  //     auto cn = currentMesh->mNormals[v];
-  //     assetMeshes.back().vertices.emplace_back(
-  //         Vertex{{cv.x, cv.y, cv.z}, {cn.x, cn.y, cn.z}});
-  //   }
-  //   for (auto f = 0U; f < currentMesh->mNumFaces; ++f) {
-  //     auto& currentFace = currentMesh->mFaces[f];
-  //     for (auto i = 0U; i < currentFace.mNumIndices; ++i) {
-  //       assetMeshes.back().indices.push_back(currentFace.mIndices[i]);
-  //     }
-  //   }
-  //   // TODO: fix material loading and/or linking
-  //   assetMaterials.push_back(0);
-  // }
-  // return assetBuffer.addAsset(assetMeshes, assetMaterials);
 }
 
 Instance* Engine::createInstance(InstanceCreateInfo instanceCreateInfo) {
