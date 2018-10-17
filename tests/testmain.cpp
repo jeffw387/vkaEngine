@@ -132,6 +132,7 @@ struct AppState {
     instanceCreateInfo.instanceExtensions.push_back("VK_KHR_surface");
     instanceCreateInfo.instanceExtensions.push_back("VK_EXT_debug_utils");
     instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_standard_validation");
+    // instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_api_dump");
 
     vka::SurfaceCreateInfo surfaceCreateInfo{};
     surfaceCreateInfo.windowTitle = "testmain window";
