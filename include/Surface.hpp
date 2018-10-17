@@ -17,7 +17,9 @@ struct SurfaceDeleter {
   SurfaceDeleter() = default;
   SurfaceDeleter(VkInstance instanceHandle) : instanceHandle(instanceHandle) {}
   void operator()(VkSurfaceKHR surfaceHandle) {
-    vkDestroySurfaceKHR(instanceHandle, surfaceHandle, nullptr);
+    if (instanceHandle != VK_NULL_HANDLE && surfaceHandle != VK_NULL_HANDLE) {
+      vkDestroySurfaceKHR(instanceHandle, surfaceHandle, nullptr);
+    }
   }
 };
 using SurfaceOwner = std::unique_ptr<VkSurfaceKHR, SurfaceDeleter>;
