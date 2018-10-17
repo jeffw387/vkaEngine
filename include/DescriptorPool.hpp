@@ -1,34 +1,103 @@
 #pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <variant>
+#include <optional>
+#include <map>
 
 namespace vka {
 class DescriptorSetLayout;
+class DescriptorSet;
+
+struct DescriptorReference {
+  VkDescriptorSet set;
+  uint32_t bindingIndex;
+  uint32_t arrayIndex;
+};
+
+class BufferDescriptor {
+public:
+  void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
+  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+
+private:
+  bool valid = false;
+  VkDescriptorBufferInfo bufferInfo;
+  VkWriteDescriptorSet write;
+};
+
+class DynamicBufferDescriptor {
+public:
+  void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
+  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+
+private:
+  bool valid = false;
+  VkDescriptorBufferInfo bufferInfo;
+  VkWriteDescriptorSet write;
+};
+
+class ImageDescriptor {
+public:
+  void operator()(VkImageView, VkImageLayout);
+  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+
+private:
+  bool valid = false;
+  VkDescriptorImageInfo imageInfo;
+  VkWriteDescriptorSet write;
+};
+
+class ImageSamplerDescriptor {
+public:
+  void operator()(VkImageView, VkImageLayout, VkSampler = VK_NULL_HANDLE);
+  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+
+private:
+  bool valid = false;
+  VkDescriptorImageInfo imageInfo;
+  VkWriteDescriptorSet write;
+};
+
+class SamplerDescriptor {
+public:
+  void operator()(VkSampler);
+  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+
+private:
+  bool valid = false;
+  VkDescriptorImageInfo imageInfo;
+  VkWriteDescriptorSet write;
+};
+
+using Descriptor = std::variant<
+    BufferDescriptor,
+    DynamicBufferDescriptor,
+    ImageDescriptor,
+    SamplerDescriptor,
+    ImageSamplerDescriptor>;
+
+// need Descriptor& getDescriptor(uint32_t binding, uint32_t descriptor);
 
 class DescriptorSet {
 public:
   DescriptorSet() = default;
-  DescriptorSet(VkDescriptorSet set, DescriptorSetLayout* layout);
+  DescriptorSet(VkDescriptorSet, DescriptorSetLayout*);
   DescriptorSet(DescriptorSet&&) = default;
-  DescriptorSet(const DescriptorSet&) = default;
   DescriptorSet& operator=(DescriptorSet&&) = default;
-  DescriptorSet& operator=(const DescriptorSet&) = default;
+  DescriptorSet(const DescriptorSet&) = delete;
+  DescriptorSet& operator=(const DescriptorSet&) = delete;
   ~DescriptorSet() = default;
   operator VkDescriptorSet();
-
-  VkWriteDescriptorSet createImageDescriptorWrite(
-      uint32_t binding,
-      uint32_t arrayElement,
-      const std::vector<VkDescriptorImageInfo>& imageInfos);
-
-  VkWriteDescriptorSet createBufferDescriptorWrite(
-      uint32_t binding,
-      uint32_t arrayElement,
-      const std::vector<VkDescriptorBufferInfo>& bufferInfos);
+  void validate(VkDevice device);
+  template <typename T>
+  T* getDescriptor(DescriptorReference ref) {
+    return std::get_if<T>(bindings.at(ref.bindingIndex).at(ref.arrayIndex));
+  }
 
 private:
   VkDescriptorSet set;
-  DescriptorSetLayout* layout;
+  std::map<uint32_t, std::vector<Descriptor>> bindings;
 };
 
 class DescriptorPool {
@@ -36,18 +105,17 @@ public:
   DescriptorPool() = default;
   DescriptorPool(
       VkDevice device,
-      const std::vector<VkDescriptorPoolSize>& poolSizes,
+      std::vector<VkDescriptorPoolSize> poolSizes,
       uint32_t maxSets);
-  DescriptorPool(DescriptorPool&&) = default;
-  DescriptorPool& operator=(DescriptorPool&&) = default;
+  DescriptorPool(DescriptorPool&&);
+  DescriptorPool& operator=(DescriptorPool&&);
   DescriptorPool(const DescriptorPool&) = delete;
   DescriptorPool& operator=(const DescriptorPool&) = delete;
   ~DescriptorPool();
   operator VkDescriptorPool() { return poolHandle; }
 
-  auto allocateDescriptorSets(const std::vector<DescriptorSetLayout*>& layouts);
+  auto allocateDescriptorSets(std::vector<DescriptorSetLayout*> layouts);
   void reset();
-  void destroy();
 
 private:
   VkDevice device = VK_NULL_HANDLE;
