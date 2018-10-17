@@ -10,11 +10,11 @@
 #include "DescriptorPool.hpp"
 
 namespace vka {
-template <typename T, size_t N = 4U>
+template <typename T, typename subscriberT = BufferDescriptor, size_t N = 4U>
 class vulkan_vector {
 public:
   using value_type = T;
-  using subscriber_type = BufferDescriptor;
+  using subscriber_type = subscriberT*;
   struct iterator {
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::ptrdiff_t;
@@ -201,6 +201,7 @@ public:
 
   void subscribe(subscriber_type subscriber) {
     m_subscribers.push_back(subscriber);
+    notify();
   }
 
   template <typename PtrT>
@@ -270,8 +271,8 @@ public:
   size_t size() const noexcept { return m_size; }
 
   void notify() {
-    for (auto& subscriber : m_subscribers) {
-      subscriber(m_vulkan_buffer.get().buffer, size() * m_alignment);
+    for (auto subscriber : m_subscribers) {
+      (*subscriber)(m_vulkan_buffer.get().buffer, size() * m_alignment);
     }
   }
 
