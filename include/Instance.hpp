@@ -40,16 +40,6 @@ struct DebugMessengerDeleter {
 using DebugMessengerOwner =
     std::unique_ptr<VkDebugUtilsMessengerEXT, DebugMessengerDeleter>;
 
-struct GLFWOwner {
-  GLFWOwner() { glfwInit(); }
-
-  GLFWOwner(GLFWOwner&&) = default;
-  GLFWOwner& operator=(GLFWOwner&&) = default;
-  GLFWOwner(const GLFWOwner&) = delete;
-  GLFWOwner& operator=(const GLFWOwner&) = delete;
-  ~GLFWOwner() { glfwTerminate(); }
-};
-
 class Instance {
   friend class Device;
 
@@ -72,7 +62,6 @@ public:
 
 private:
   Engine* engine;
-  GLFWOwner glfwOwner;
   VkInstance instanceHandle;
   InstanceOwner instanceOwner;
   VkDebugUtilsMessengerEXT debugMessenger;

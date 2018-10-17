@@ -45,10 +45,6 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
     : engine(engine) {
   multilogger = spdlog::get(LoggerName);
   multilogger->info("Creating instance.");
-  glfwSetErrorCallback([](int error, const char* desc) {
-    auto multilogger = spdlog::get(LoggerName);
-    multilogger->error("GLFW error {}: {}", error, desc);
-  });
 
   VkApplicationInfo appInfo{};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;

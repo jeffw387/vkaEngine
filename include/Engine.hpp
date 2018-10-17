@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <array>
 #include <chrono>
-#include <GLFW/glfw3.h>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -23,6 +22,21 @@ static auto LoggerName = "MultiLogger";
 class Engine;
 class Instance;
 struct InstanceCreateInfo;
+
+struct GLFWOwner {
+  GLFWOwner() {
+    glfwInit();
+    glfwSetErrorCallback([](int error, const char* desc) {
+      auto multilogger = spdlog::get(LoggerName);
+      multilogger->error("GLFW error {}: {}", error, desc);
+    });
+  }
+  GLFWOwner(GLFWOwner&&) = default;
+  GLFWOwner& operator=(GLFWOwner&&) = default;
+  GLFWOwner(const GLFWOwner&) = delete;
+  GLFWOwner& operator=(const GLFWOwner&) = delete;
+  ~GLFWOwner() { glfwTerminate(); }
+};
 
 using UpdateCallback = std::function<void(Engine*)>;
 using RenderCallback = std::function<void(Engine*)>;
@@ -57,6 +71,7 @@ private:
   void acquireRenderSlot();
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
+  GLFWOwner glfwOwner;
   std::unique_ptr<Instance> instance;
   std::mutex stateMutex;
   bool running = false;
@@ -65,7 +80,7 @@ private:
   int32_t renderIndex = -1;
   bool continueRendering;
   bool continueUpdating;
-  uint32_t updatesPerSecond;
+  uint32_t updatesPerSecond = 60;
   Clock::time_point startTime;
   std::array<Clock::time_point, BufferCount> indexUpdateTime;
   UpdateCallback updateCallback;
