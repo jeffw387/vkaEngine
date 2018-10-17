@@ -136,7 +136,7 @@ struct AppState {
     vka::SurfaceCreateInfo surfaceCreateInfo{};
     surfaceCreateInfo.windowTitle = "testmain window";
     surfaceCreateInfo.width = defaultWidth;
-    surfaceCreateInfo.height = 900;
+    surfaceCreateInfo.height = defaultHeight;
 
     vka::EngineCreateInfo engineCreateInfo{};
     engineCreateInfo.updateCallback = [&](vka::Engine* engine) {
