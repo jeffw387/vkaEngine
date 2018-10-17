@@ -315,7 +315,7 @@ public:
   operator VkSwapchainKHR*();
 
   const std::vector<VkImage>& getSwapImages();
-  outcome::result<uint32_t, VkResult> acquireImage(VkSemaphore semaphore);
+  outcome::result<uint32_t, VkResult> acquireImage(VkFence fence);
 
 private:
   VkDevice device = VK_NULL_HANDLE;
