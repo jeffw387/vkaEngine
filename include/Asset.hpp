@@ -50,11 +50,11 @@ inline void from_json(const json& j, Mesh& mesh) {
   j.at("primitives").get_to(mesh.primitives);
 }
 struct Buffer {
-  AllocatedBuffer vulkanBuffer;
+  UniqueAllocatedBuffer vulkanBuffer;
   fs::path uri;
   size_t byteLength;
   std::unique_ptr<char[]> bufferData;
-  operator VkBuffer() const { return vulkanBuffer.buffer; }
+  operator VkBuffer() const { return vulkanBuffer.get().buffer; }
 };
 inline void from_json(const json& j, Buffer& buffer) {
   j.at("byteLength").get_to(buffer.byteLength);
