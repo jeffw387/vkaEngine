@@ -11,9 +11,9 @@ public:
   DescriptorSetLayout() = default;
   DescriptorSetLayout(
       VkDevice device,
-      const std::vector<VkDescriptorSetLayoutBinding>&);
-  DescriptorSetLayout(DescriptorSetLayout&&) = default;
-  DescriptorSetLayout& operator=(DescriptorSetLayout&&) = default;
+      std::vector<VkDescriptorSetLayoutBinding>);
+  DescriptorSetLayout(DescriptorSetLayout&&);
+  DescriptorSetLayout& operator=(DescriptorSetLayout&&);
   DescriptorSetLayout(const DescriptorSetLayout&) = delete;
   DescriptorSetLayout& operator=(const DescriptorSetLayout&) = delete;
   ~DescriptorSetLayout();

@@ -288,8 +288,8 @@ public:
   CommandPool() = default;
   CommandPool(const CommandPool&) = delete;
   CommandPool& operator=(const CommandPool&) = delete;
-  CommandPool(CommandPool&&) = default;
-  CommandPool& operator=(CommandPool&&) = default;
+  CommandPool(CommandPool&&);
+  CommandPool& operator=(CommandPool&&);
   ~CommandPool();
 
   operator VkCommandPool() { return poolHandle; }

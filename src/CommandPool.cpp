@@ -28,9 +28,23 @@ std::vector<CommandBuffer> CommandPool::allocateCommandBuffers(
   return result;
 }
 
+CommandPool& CommandPool::operator=(CommandPool&& other) {
+  if (this != &other) {
+    device = other.device;
+    poolHandle = other.poolHandle;
+    other.device = {};
+    other.poolHandle = {};
+  }
+  return *this;
+}
+
+CommandPool::CommandPool(CommandPool&& other) { *this = std::move(other); }
+
 void CommandPool::reset() { vkResetCommandPool(device, poolHandle, 0); }
 
 CommandPool::~CommandPool() {
-  vkDestroyCommandPool(device, poolHandle, nullptr);
+  if (device != VK_NULL_HANDLE && poolHandle != VK_NULL_HANDLE) {
+    vkDestroyCommandPool(device, poolHandle, nullptr);
+  }
 }
 }  // namespace vka

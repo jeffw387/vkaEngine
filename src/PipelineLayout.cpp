@@ -4,8 +4,8 @@
 namespace vka {
 PipelineLayout::PipelineLayout(
     VkDevice device,
-    const std::vector<VkPushConstantRange>& pushRanges,
-    const std::vector<VkDescriptorSetLayout>& setLayouts)
+    std::vector<VkPushConstantRange> pushRanges,
+    std::vector<VkDescriptorSetLayout> setLayouts)
     : device(device) {
   VkPipelineLayoutCreateInfo createInfo{
       VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
@@ -16,7 +16,23 @@ PipelineLayout::PipelineLayout(
   vkCreatePipelineLayout(device, &createInfo, nullptr, &layoutHandle);
 }
 
+PipelineLayout& PipelineLayout::operator=(PipelineLayout&& other) {
+  if (this != &other) {
+    device = other.device;
+    layoutHandle = other.layoutHandle;
+    other.device = {};
+    other.layoutHandle = {};
+  }
+  return *this;
+}
+
+PipelineLayout::PipelineLayout(PipelineLayout&& other) {
+  *this = std::move(other);
+}
+
 PipelineLayout::~PipelineLayout() {
-  vkDestroyPipelineLayout(device, layoutHandle, nullptr);
+  if (device != VK_NULL_HANDLE && layoutHandle != VK_NULL_HANDLE) {
+    vkDestroyPipelineLayout(device, layoutHandle, nullptr);
+  }
 }
 }  // namespace vka

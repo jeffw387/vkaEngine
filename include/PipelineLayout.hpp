@@ -12,10 +12,10 @@ public:
   PipelineLayout() = default;
   PipelineLayout(
       VkDevice device,
-      const std::vector<VkPushConstantRange>& pushRanges,
-      const std::vector<VkDescriptorSetLayout>& setLayouts);
-  PipelineLayout(PipelineLayout&&) = default;
-  PipelineLayout& operator=(PipelineLayout&&) = default;
+      std::vector<VkPushConstantRange> pushRanges,
+      std::vector<VkDescriptorSetLayout> setLayouts);
+  PipelineLayout(PipelineLayout&&);
+  PipelineLayout& operator=(PipelineLayout&&);
   PipelineLayout(const PipelineLayout&) = delete;
   PipelineLayout& operator=(const PipelineLayout&) = delete;
   ~PipelineLayout();

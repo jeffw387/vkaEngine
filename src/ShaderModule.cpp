@@ -4,9 +4,15 @@
 #include <vector>
 
 namespace vka {
-ShaderModule::ShaderModule(
-    VkDevice device,
-    const std::vector<char>& shaderBytes)
+ShaderModule::ShaderModule(ShaderModule&& other) { *this = std::move(other); }
+ShaderModule& ShaderModule::operator=(ShaderModule&& other) {
+  if (this != &other) {
+    std::swap(device, other.device);
+    std::swap(shaderModule, other.shaderModule);
+  }
+  return *this;
+}
+ShaderModule::ShaderModule(VkDevice device, std::vector<char> shaderBytes)
     : device(device) {
   VkShaderModuleCreateInfo createInfo{
       VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};

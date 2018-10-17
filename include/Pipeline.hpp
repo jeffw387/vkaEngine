@@ -16,7 +16,7 @@ struct ShaderStageData {
 class PipelineCache {
 public:
   PipelineCache() = default;
-  PipelineCache(VkDevice device, const std::vector<char>& initialData) {
+  PipelineCache(VkDevice device, std::vector<char> initialData) {
     VkPipelineCacheCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     createInfo.initialDataSize = initialData.size();
@@ -30,9 +30,21 @@ public:
   }
   PipelineCache(const PipelineCache&) = delete;
   PipelineCache& operator=(const PipelineCache&) = delete;
-  PipelineCache(PipelineCache&&) = default;
-  PipelineCache& operator=(PipelineCache&&) = default;
-  ~PipelineCache() { vkDestroyPipelineCache(device, cacheHandle, nullptr); }
+  PipelineCache(PipelineCache&& other) { *this = std::move(other); }
+  PipelineCache& operator=(PipelineCache&& other) {
+    if (this != &other) {
+      device = other.device;
+      cacheHandle = other.cacheHandle;
+      other.device = {};
+      other.cacheHandle = {};
+    }
+    return *this;
+  }
+  ~PipelineCache() {
+    if (device != VK_NULL_HANDLE && cacheHandle != VK_NULL_HANDLE) {
+      vkDestroyPipelineCache(device, cacheHandle, nullptr);
+    }
+  }
 
   operator VkPipelineCache() { return cacheHandle; }
 
@@ -179,8 +191,8 @@ public:
       VkDevice device,
       VkPipelineCache cache,
       const VkGraphicsPipelineCreateInfo& createInfo);
-  GraphicsPipeline(GraphicsPipeline&&) = default;
-  GraphicsPipeline& operator=(GraphicsPipeline&&) = default;
+  GraphicsPipeline(GraphicsPipeline&&);
+  GraphicsPipeline& operator=(GraphicsPipeline&&);
   GraphicsPipeline(const GraphicsPipeline&) = delete;
   GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
   ~GraphicsPipeline();
@@ -199,8 +211,8 @@ public:
       VkDevice device,
       VkPipelineCache cache,
       const VkComputePipelineCreateInfo& createInfo);
-  ComputePipeline(ComputePipeline&&) = default;
-  ComputePipeline& operator=(ComputePipeline&&) = default;
+  ComputePipeline(ComputePipeline&&);
+  ComputePipeline& operator=(ComputePipeline&&);
   ComputePipeline(const ComputePipeline&) = delete;
   ComputePipeline& operator=(const ComputePipeline&) = delete;
   ~ComputePipeline();

@@ -111,13 +111,6 @@ void RenderPassCreateInfo::addSubpassDependency(
   dep.dependencyFlags = dependencyFlags;
 }
 
-RenderPass::RenderPass(
-    VkDevice device,
-    const VkRenderPassCreateInfo& createInfo)
-    : device(device) {
-  vkCreateRenderPass(device, &createInfo, nullptr, &renderPassHandle);
-}
-
 Subpass* RenderPassCreateInfo::addGraphicsSubpass() {
   subpasses.push_back(
       std::make_unique<Subpass>(VK_PIPELINE_BIND_POINT_GRAPHICS));
@@ -130,7 +123,26 @@ Subpass* RenderPassCreateInfo::addComputeSubpass() {
   return subpasses.back().get();
 }
 
+RenderPass::RenderPass(
+    VkDevice device,
+    const VkRenderPassCreateInfo& createInfo)
+    : device(device) {
+  vkCreateRenderPass(device, &createInfo, nullptr, &renderPassHandle);
+}
+
+RenderPass& RenderPass::operator=(RenderPass&& other) {
+  if (this != &other) {
+    device = other.device;
+    renderPassHandle = other.renderPassHandle;
+    other.device = {};
+    other.renderPassHandle = {};
+  }
+  return *this;
+}
+
 RenderPass::~RenderPass() {
-  vkDestroyRenderPass(device, renderPassHandle, nullptr);
+  if (device != VK_NULL_HANDLE && renderPassHandle != VK_NULL_HANDLE) {
+    vkDestroyRenderPass(device, renderPassHandle, nullptr);
+  }
 }
 }  // namespace vka

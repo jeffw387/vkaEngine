@@ -1,4 +1,5 @@
 #include "Swapchain.hpp"
+#include "Engine.hpp"
 
 namespace vka {
 SwapchainCreateInfo::SwapchainCreateInfo() {
@@ -56,9 +57,11 @@ Swapchain::Swapchain(
     uint32_t graphicsQueueIndex,
     const VkSwapchainCreateInfoKHR& createInfo)
     : device(device) {
+  auto multilogger = spdlog::get(LoggerName);
   VkBool32 presentSupport{};
   vkGetPhysicalDeviceSurfaceSupportKHR(
       physicalDevice, graphicsQueueIndex, createInfo.surface, &presentSupport);
+  multilogger->info("Surface present support: {}", presentSupport);
   uint32_t formatCount{};
   vkGetPhysicalDeviceSurfaceFormatsKHR(
       physicalDevice, createInfo.surface, &formatCount, nullptr);
@@ -66,6 +69,19 @@ Swapchain::Swapchain(
   surfaceFormats.resize(formatCount);
   vkGetPhysicalDeviceSurfaceFormatsKHR(
       physicalDevice, createInfo.surface, &formatCount, surfaceFormats.data());
+
+  for (const auto& surfFormat : surfaceFormats) {
+    multilogger->info(
+        "Supported surface format: {}, supported colorspace: {}.",
+        Formats[surfFormat.format],
+        ColorSpaces[surfFormat.colorSpace]);
+  }
+
+  multilogger->info(
+      "Swapchain composite alpha: {}",
+      CompositeAlphaFlags[createInfo.compositeAlpha]);
+  multilogger->info(
+      "Swapchain transform: {}", TransformFlags[createInfo.preTransform]);
   vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapchainHandle);
   uint32_t swapImageCount{};
   vkGetSwapchainImagesKHR(device, swapchainHandle, &swapImageCount, nullptr);
@@ -73,6 +89,19 @@ Swapchain::Swapchain(
   vkGetSwapchainImagesKHR(
       device, swapchainHandle, &swapImageCount, swapImages.data());
 }
+
+Swapchain& Swapchain::operator=(Swapchain&& other) {
+  if (this != &other) {
+    device = other.device;
+    swapchainHandle = other.swapchainHandle;
+    swapImages = std::move(other.swapImages);
+    other.device = {};
+    other.swapchainHandle = {};
+  }
+  return *this;
+}
+
+Swapchain::Swapchain(Swapchain&& other) { *this = std::move(other); }
 
 Swapchain::operator VkSwapchainKHR() { return swapchainHandle; }
 Swapchain::operator VkSwapchainKHR*() { return &swapchainHandle; }
@@ -89,6 +118,8 @@ outcome::result<uint32_t, VkResult> Swapchain::acquireImage(
 }
 
 Swapchain::~Swapchain() {
-  vkDestroySwapchainKHR(device, swapchainHandle, nullptr);
+  if (device != VK_NULL_HANDLE && swapchainHandle != VK_NULL_HANDLE) {
+    vkDestroySwapchainKHR(device, swapchainHandle, nullptr);
+  }
 }
 }  // namespace vka
