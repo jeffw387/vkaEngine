@@ -11,8 +11,9 @@ public:
   Semaphore& operator=(Semaphore&&);
   operator VkSemaphore();
   ~Semaphore();
+
 private:
   VkDevice device = VK_NULL_HANDLE;
   VkSemaphore semaphore = VK_NULL_HANDLE;
 };
-}
+}  // namespace vka

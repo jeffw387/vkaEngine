@@ -37,6 +37,8 @@ list(APPEND vkaEngineSources
   "${srcDir}/ShaderModule.cpp"
   "${srcDir}/PipelineLayout.cpp"
   "${srcDir}/Pipeline.cpp"
+  "${srcDir}/Fence.cpp"
+  "${srcDir}/Semaphore.cpp"
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
@@ -57,6 +59,8 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Swapchain.hpp"
   "${includeDir}/PipelineLayout.hpp"
   "${includeDir}/Pipeline.hpp"
+  "${includeDir}/Fence.hpp"
+  "${includeDir}/Semaphore.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/Surface.hpp")
 add_library(vkaEngine)

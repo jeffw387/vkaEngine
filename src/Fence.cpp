@@ -9,9 +9,7 @@ Fence::Fence(VkDevice device, bool signaled) : device(device) {
   vkCreateFence(device, &createInfo, nullptr, &fence);
 }
 
-Fence::Fence(Fence&& other) {
-  *this = std::move(other);
-}
+Fence::Fence(Fence&& other) { *this = std::move(other); }
 
 Fence& Fence::operator=(Fence&& other) {
   if (this != &other) {
@@ -30,4 +28,4 @@ Fence::~Fence() {
     vkDestroyFence(device, fence, nullptr);
   }
 }
-}
+}  // namespace vka

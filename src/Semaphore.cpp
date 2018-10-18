@@ -18,17 +18,13 @@ Semaphore& Semaphore::operator=(Semaphore&& other) {
   return *this;
 }
 
-Semaphore::Semaphore(Semaphore&& other) {
-  *this = std::move(other);
-}
+Semaphore::Semaphore(Semaphore&& other) { *this = std::move(other); }
 
-Semaphore::operator VkSemaphore() {
-  return semaphore;
-}
+Semaphore::operator VkSemaphore() { return semaphore; }
 
 Semaphore::~Semaphore() {
   if (device != VK_NULL_HANDLE && semaphore != VK_NULL_HANDLE) {
     vkDestroySemaphore(device, semaphore, nullptr);
   }
 }
-}
+}  // namespace vka
