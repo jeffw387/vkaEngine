@@ -7,6 +7,7 @@
 #include "PipelineLayout.hpp"
 #include "Pipeline.hpp"
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "entt/entt.hpp"
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
@@ -126,8 +127,8 @@ struct AppState {
     vka::vulkan_vector<Light> ambientLightUniform;
     vka::vulkan_vector<Camera> cameraUniform;
     vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor> instanceUniform;
-    VkFence frameAcquired;
-    VkSemaphore renderComplete;
+    vka::Fence frameAcquired;
+    vka::Semaphore renderComplete;
     uint32_t swapImageIndex;
     vka::UniqueFramebuffer framebuffer;
     entt::DefaultRegistry ecs;
@@ -151,17 +152,30 @@ struct AppState {
     surfaceCreateInfo.height = defaultHeight;
 
     vka::EngineCreateInfo engineCreateInfo{};
+    engineCreateInfo.initCallback = [&](vka::Engine* engine,
+                                        int32_t initialIndex) {
+      bufState[initialIndex].instanceUniform.push_back(
+          {glm::scale(glm::mat4(1.f), glm::vec3(10.f, 10.f, 1.f))});
+    };
     engineCreateInfo.updateCallback = [&](vka::Engine* engine) {
       auto updateIndex = engine->currentUpdateIndex();
     };
     engineCreateInfo.renderCallback = [&](vka::Engine* engine) {
       auto renderIndex = engine->currentRenderIndex();
+      if (auto index =
+              swapchain.acquireImage(bufState[renderIndex].frameAcquired)) {
+        bufState[renderIndex].swapImageIndex = index.value();
+      } else {
+        if (index.error() != VK_SUCCESS) {
+          return;
+        }
+      }
       bufState[renderIndex].cameraUniform[0].projection =
           mainCamera.getProjection();
       bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
       bufState[renderIndex].cameraUniform.flushMemory(device);
       bufState[renderIndex].commandPool.reset();
-      //swapchain.acquireImage()
+
       auto surfaceCapabilities = device->getSurfaceCapabilities();
       auto framebuffer = device->createFramebuffer(
           {swapImageViews[bufState[renderIndex].swapImageIndex].get(),
@@ -175,6 +189,17 @@ struct AppState {
           renderPass,
           0,
           framebuffer.get());
+      std::vector<VkClearValue> clearValues = {
+          VkClearValue{{0.f, 0.f, 0.f, 0.f}}, VkClearValue{{0.f, 0U}}};
+      cmd.beginRenderPass(
+          renderPass,
+          framebuffer.get(),
+          {{0, 0}, surfaceCapabilities.currentExtent},
+          clearValues,
+          VK_SUBPASS_CONTENTS_INLINE);
+      cmd.bindGraphicsPipeline(pipeline);
+      cmd.bindGraphicsDescriptorSets(
+          pipelineLayout, 0, {bufState[renderIndex].descriptorSet}, {});
     };
     engine = std::make_unique<vka::Engine>(engineCreateInfo);
     multilogger = spdlog::get(vka::LoggerName);
@@ -295,8 +320,8 @@ struct AppState {
               {VkDescriptorSet{}, 4, 0});
       state.instanceUniform.subscribe(instanceDescriptor);
 
-//TODO: sync wrappers, device creation thereof
-      //state.frameAcquired = device->createF
+      state.frameAcquired = device->createFence(false);
+      state.renderComplete = device->createSemaphore();
     }
 
     multilogger->info("creating vertex shader");
