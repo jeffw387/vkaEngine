@@ -106,8 +106,7 @@ Swapchain::Swapchain(Swapchain&& other) { *this = std::move(other); }
 Swapchain::operator VkSwapchainKHR() { return swapchainHandle; }
 Swapchain::operator VkSwapchainKHR*() { return &swapchainHandle; }
 
-outcome::result<uint32_t, VkResult> Swapchain::acquireImage(
-    VkFence fence) {
+outcome::result<uint32_t, VkResult> Swapchain::acquireImage(VkFence fence) {
   uint32_t imageIndex{};
   auto result = vkAcquireNextImageKHR(
       device, swapchainHandle, UINT64_MAX, 0, fence, &imageIndex);
