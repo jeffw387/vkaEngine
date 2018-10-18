@@ -32,7 +32,8 @@ mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 }
 
 Engine::Engine(EngineCreateInfo engineCreateInfo)
-    : updateCallback(engineCreateInfo.updateCallback),
+    : initCallback(engineCreateInfo.initCallback),
+      updateCallback(engineCreateInfo.updateCallback),
       renderCallback(engineCreateInfo.renderCallback) {
   // sometimes valve's overlay causes problems, this next line will disable it
   // on windows
@@ -85,6 +86,8 @@ void Engine::handleOSMessages() {
 
 void Engine::run() {
   running = true;
+  initCallback(this, 0);
+  lastUpdatedIndex = 0;
   multilogger->log(spdlog::level::info, "Running engine.");
   if (!instance) {
     multilogger->critical("No instance found!");

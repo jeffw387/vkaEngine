@@ -38,9 +38,11 @@ struct GLFWOwner {
   ~GLFWOwner() { glfwTerminate(); }
 };
 
+using InitCallback = std::function<void(Engine*, int32_t)>;
 using UpdateCallback = std::function<void(Engine*)>;
 using RenderCallback = std::function<void(Engine*)>;
 struct EngineCreateInfo {
+  InitCallback initCallback;
   UpdateCallback updateCallback;
   RenderCallback renderCallback;
 };
@@ -82,6 +84,7 @@ private:
   uint32_t updatesPerSecond = 60;
   Clock::time_point startTime;
   std::array<Clock::time_point, BufferCount> indexUpdateTime;
+  InitCallback initCallback;
   UpdateCallback updateCallback;
   RenderCallback renderCallback;
 
