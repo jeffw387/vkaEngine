@@ -288,9 +288,7 @@ Fence Device::createFence(bool signaled) {
   return Fence(deviceHandle, signaled);
 }
 
-Semaphore Device::createSemaphore() {
-  return Semaphore(deviceHandle);
-}
+Semaphore Device::createSemaphore() { return Semaphore(deviceHandle); }
 
 VkResult Device::presentImage(
     VkSwapchainKHR swapchain,
