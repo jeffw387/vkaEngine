@@ -13,76 +13,69 @@
 #include <fstream>
 
 namespace vka {
-Device::Device(
-    VkInstance instance,
-    VkSurfaceKHR surface,
-    DeviceRequirements requirements)
-    : surface(surface), requirements(requirements) {
-  multilogger = spdlog::get(LoggerName);
-  multilogger->info("Creating device.");
-
+PhysicalDeviceData::PhysicalDeviceData(VkInstance instance) {
   uint32_t physicalDeviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
   physicalDevices.resize(physicalDeviceCount);
   vkEnumeratePhysicalDevices(
       instance, &physicalDeviceCount, physicalDevices.data());
 
-  physicalDeviceHandle = physicalDevices.at(0);
+  for (const auto& physicalDevice : physicalDevices) {
+    VkPhysicalDeviceProperties deviceProperties{};
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 
-  vkGetPhysicalDeviceProperties(physicalDeviceHandle, &deviceProperties);
+    VkPhysicalDeviceMemoryProperties deviceMemoryProperties{};
+    vkGetPhysicalDeviceMemoryProperties(
+        physicalDevice, &deviceMemoryProperties);
 
-  uint32_t queueFamilyPropertyCount = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(
-      physicalDeviceHandle, &queueFamilyPropertyCount, nullptr);
-  queueFamilyProperties.resize(queueFamilyPropertyCount);
-  vkGetPhysicalDeviceQueueFamilyProperties(
-      physicalDeviceHandle,
-      &queueFamilyPropertyCount,
-      queueFamilyProperties.data());
+    std::vector<VkQueueFamilyProperties> deviceQueueFamilyProperties{};
+    uint32_t queueFamilyPropertyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        physicalDevice, &queueFamilyPropertyCount, nullptr);
+    deviceQueueFamilyProperties.resize(queueFamilyPropertyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        physicalDevice,
+        &queueFamilyPropertyCount,
+        deviceQueueFamilyProperties.data());
 
-  uint32_t currentFamilyIndex{};
-  for (const auto& familyProps : queueFamilyProperties) {
-    if (familyProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      graphicsQueueIndex = currentFamilyIndex;
-      break;
-    }
-    ++currentFamilyIndex;
+    properties[physicalDevice] = std::move(deviceProperties);
+    memoryProperties[physicalDevice] = std::move(deviceMemoryProperties);
+    queueFamilyProperties[physicalDevice] =
+        std::move(deviceQueueFamilyProperties);
   }
-  if (graphicsQueueIndex == UINT32_MAX) {
-    multilogger->critical("No graphics-capable queue found!");
-  }
+}
+Device::Device(
+    VkInstance instance,
+    VkSurfaceKHR surface,
+    std::vector<const char*> deviceExtensions,
+    std::vector<PhysicalDeviceFeatures> enabledFeatures,
+    DeviceSelectCallback selectCallback)
+    : surface(surface),
+      multilogger(spdlog::get(LoggerName)),
+      physicalDeviceData(instance) {
+  multilogger->info("Creating device.");
 
-  vkGetPhysicalDeviceMemoryProperties(physicalDeviceHandle, &memoryProperties);
+  physicalDeviceHandle = selectCallback(physicalDeviceData);
+  deviceProperties = physicalDeviceData.properties.at(physicalDeviceHandle);
+  memoryProperties =
+      physicalDeviceData.memoryProperties.at(physicalDeviceHandle);
+  queueFamilyProperties =
+      physicalDeviceData.queueFamilyProperties.at(physicalDeviceHandle);
 
-  VkPhysicalDeviceFeatures enabledFeatures{};
-  for (auto feature : requirements.requiredFeatures) {
-    switch (feature) {
-      case PhysicalDeviceFeatures::robustBufferAccess:
-        enabledFeatures.robustBufferAccess = true;
-        break;
-      case PhysicalDeviceFeatures::geometryShader:
-        enabledFeatures.geometryShader = true;
-        break;
-      case PhysicalDeviceFeatures::multiDrawIndirect:
-        enabledFeatures.multiDrawIndirect = true;
-        break;
-      case PhysicalDeviceFeatures::drawIndirectFirstInstance:
-        enabledFeatures.drawIndirectFirstInstance = true;
-        break;
-      case PhysicalDeviceFeatures::fillModeNonSolid:
-        enabledFeatures.fillModeNonSolid = true;
-        break;
-      case PhysicalDeviceFeatures::multiViewport:
-        enabledFeatures.multiViewport = true;
-        break;
-      case PhysicalDeviceFeatures::samplerAnistropy:
-        enabledFeatures.samplerAnisotropy = true;
-        break;
-    }
-  }
+  // uint32_t currentFamilyIndex{};
+  // for (const auto& familyProps : queueFamilyProperties) {
+  //   if (familyProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+  //     graphicsQueueIndex = currentFamilyIndex;
+  //     break;
+  //   }
+  //   ++currentFamilyIndex;
+  // }
+  // if (graphicsQueueIndex == UINT32_MAX) {
+  //   multilogger->critical("No graphics-capable queue found!");
+  // }
 
   auto findGraphicsQueueFamily = [&]() {
-    for (uint32_t i = 0U; i < queueFamilyPropertyCount; ++i) {
+    for (uint32_t i = 0U; i < queueFamilyProperties.size(); ++i) {
       if ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) ==
           VK_QUEUE_GRAPHICS_BIT) {
         multilogger->info("Graphics queue family index selected: {}", i);
@@ -100,13 +93,13 @@ Device::Device(
   queueCreateInfo.queueCount = 1;
   queueCreateInfo.queueFamilyIndex = findGraphicsQueueFamily();
 
+  auto enabledFeaturesVk = makeVkFeatures(enabledFeatures);
   VkDeviceCreateInfo deviceCreateInfo{};
   deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+  deviceCreateInfo.pEnabledFeatures = &enabledFeaturesVk;
   deviceCreateInfo.enabledExtensionCount =
-      static_cast<uint32_t>(requirements.deviceExtensions.size());
-  deviceCreateInfo.ppEnabledExtensionNames =
-      requirements.deviceExtensions.data();
+      static_cast<uint32_t>(deviceExtensions.size());
+  deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
   deviceCreateInfo.queueCreateInfoCount = 1;
   deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
   auto deviceResult = vkCreateDevice(

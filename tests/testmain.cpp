@@ -144,7 +144,7 @@ struct AppState {
     instanceCreateInfo.instanceExtensions.push_back("VK_KHR_surface");
     instanceCreateInfo.instanceExtensions.push_back("VK_EXT_debug_utils");
     instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_standard_validation");
-    instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_api_dump");
+    // instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_api_dump");
 
     vka::SurfaceCreateInfo surfaceCreateInfo{};
     surfaceCreateInfo.windowTitle = "testmain window";
@@ -203,19 +203,23 @@ struct AppState {
     };
     engine = std::make_unique<vka::Engine>(engineCreateInfo);
     multilogger = spdlog::get(vka::LoggerName);
-    multilogger->info("loading shapes.gltf");
-    shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
-    createAssetBuffers(device, shapesAsset);
 
     multilogger->info("creating instance");
     instance = engine->createInstance(instanceCreateInfo);
     multilogger->info("creating surface");
     surface = instance->createSurface(surfaceCreateInfo);
 
-    vka::DeviceRequirements deviceRequirements{};
-    deviceRequirements.deviceExtensions.push_back("VK_KHR_swapchain");
     multilogger->info("creating device");
-    device = instance->createDevice(deviceRequirements);
+    device = instance->createDevice(
+        {"VK_KHR_swapchain"}, {}, [&](const vka::PhysicalDeviceData& data) {
+          for (const auto& prop : data.properties) {
+          }
+          return VkPhysicalDevice{};
+        });
+
+    multilogger->info("loading shapes.gltf");
+    shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
+    createAssetBuffers(device, shapesAsset);
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,

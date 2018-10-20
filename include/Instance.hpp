@@ -12,7 +12,6 @@ namespace vka {
 class Engine;
 class Surface;
 class Device;
-struct DeviceRequirements;
 struct SurfaceCreateInfo;
 
 struct InstanceCreateInfo {
@@ -52,7 +51,10 @@ public:
   Instance& operator=(Instance&&) = default;
   ~Instance() = default;
 
-  Device* createDevice(DeviceRequirements);
+  Device* createDevice(
+      std::vector<const char*> deviceExtensions,
+      std::vector<PhysicalDeviceFeatures> enabledFeatures,
+      DeviceSelectCallback selectCallback);
   Device* getDevice() { return device.get(); }
   Surface* createSurface(SurfaceCreateInfo);
   Surface* getSurface() { return surface.get(); }

@@ -112,8 +112,16 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
   debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);
 }
 
-Device* Instance::createDevice(DeviceRequirements requirements) {
-  device = std::make_unique<Device>(instanceHandle, *surface, requirements);
+Device* Instance::createDevice(
+    std::vector<const char*> deviceExtensions,
+    std::vector<PhysicalDeviceFeatures> enabledFeatures,
+    DeviceSelectCallback selectCallback) {
+  device = std::make_unique<Device>(
+      instanceHandle,
+      *surface,
+      deviceExtensions,
+      enabledFeatures,
+      selectCallback);
   return device.get();
 }
 

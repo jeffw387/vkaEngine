@@ -33,6 +33,37 @@ enum class PhysicalDeviceFeatures {
   samplerAnistropy
 };
 
+inline VkPhysicalDeviceFeatures makeVkFeatures(
+    std::vector<PhysicalDeviceFeatures> features) {
+  VkPhysicalDeviceFeatures vkFeatures{};
+  for (auto feature : features) {
+    switch (feature) {
+      case PhysicalDeviceFeatures::robustBufferAccess:
+        vkFeatures.robustBufferAccess = true;
+        break;
+      case PhysicalDeviceFeatures::geometryShader:
+        vkFeatures.geometryShader = true;
+        break;
+      case PhysicalDeviceFeatures::multiDrawIndirect:
+        vkFeatures.multiDrawIndirect = true;
+        break;
+      case PhysicalDeviceFeatures::drawIndirectFirstInstance:
+        vkFeatures.drawIndirectFirstInstance = true;
+        break;
+      case PhysicalDeviceFeatures::fillModeNonSolid:
+        vkFeatures.fillModeNonSolid = true;
+        break;
+      case PhysicalDeviceFeatures::multiViewport:
+        vkFeatures.multiViewport = true;
+        break;
+      case PhysicalDeviceFeatures::samplerAnistropy:
+        vkFeatures.samplerAnisotropy = true;
+        break;
+    }
+  }
+  return vkFeatures;
+}
+
 struct DeviceDeleter {
   using pointer = VkDevice;
   void operator()(VkDevice deviceHandle) {
@@ -123,17 +154,28 @@ struct FramebufferDeleter {
   VkDevice device;
 };
 using UniqueFramebuffer = std::unique_ptr<VkFramebuffer, FramebufferDeleter>;
-
-struct DeviceRequirements {
-  std::vector<PhysicalDeviceFeatures> requiredFeatures;
-  std::vector<const char*> deviceExtensions;
+struct PhysicalDeviceData {
+  PhysicalDeviceData() = default;
+  PhysicalDeviceData(VkInstance);
+  std::vector<VkPhysicalDevice> physicalDevices;
+  std::map<VkPhysicalDevice, VkPhysicalDeviceProperties> properties;
+  std::map<VkPhysicalDevice, VkPhysicalDeviceMemoryProperties> memoryProperties;
+  std::map<VkPhysicalDevice, std::vector<VkQueueFamilyProperties>>
+      queueFamilyProperties;
 };
+using DeviceSelectCallback =
+    std::function<VkPhysicalDevice(const PhysicalDeviceData&)>;
 class Device {
 public:
   Device() = delete;
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;
-  Device(VkInstance, VkSurfaceKHR, DeviceRequirements);
+  Device(
+      VkInstance,
+      VkSurfaceKHR,
+      std::vector<const char*>,
+      std::vector<PhysicalDeviceFeatures>,
+      DeviceSelectCallback);
   Device(Device&&) = default;
   Device& operator=(Device&&) = default;
   ~Device() = default;
@@ -199,13 +241,12 @@ public:
 
 private:
   VkSurfaceKHR surface;
-  DeviceRequirements requirements;
   std::shared_ptr<spdlog::logger> multilogger;
-  std::vector<VkPhysicalDevice> physicalDevices;
+  PhysicalDeviceData physicalDeviceData;
   VkPhysicalDevice physicalDeviceHandle;
   VkPhysicalDeviceProperties deviceProperties;
-  std::vector<VkQueueFamilyProperties> queueFamilyProperties;
   VkPhysicalDeviceMemoryProperties memoryProperties;
+  std::vector<VkQueueFamilyProperties> queueFamilyProperties;
 
   VkDevice deviceHandle;
   DeviceOwner deviceOwner;
