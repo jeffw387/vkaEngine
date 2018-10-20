@@ -1,13 +1,15 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include "vk_mem_alloc.h"
+#include <vk_mem_alloc.h>
 #include <memory>
 #include <vector>
 #include <map>
 #include <string>
-#include "spdlog/spdlog.h"
-#include "glm/glm.hpp"
+#include <functional>
+#include <outcome.hpp>
+#include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 #include "ShaderModule.hpp"
 #include "CommandPool.hpp"
 #include "DescriptorPool.hpp"
@@ -16,7 +18,6 @@
 #include "PipelineLayout.hpp"
 #include "Pipeline.hpp"
 #include "Swapchain.hpp"
-#include "outcome.hpp"
 #include "Fence.hpp"
 #include "Semaphore.hpp"
 
