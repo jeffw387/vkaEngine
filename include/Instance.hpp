@@ -5,6 +5,7 @@
 #include <vector>
 #include "version.hpp"
 #include "spdlog/spdlog.h"
+#include "Device.hpp"
 
 namespace vka {
 
