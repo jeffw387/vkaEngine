@@ -7,17 +7,13 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
 #include "Asset.hpp"
+#include "Logger.hpp"
 
 namespace vka {
 static constexpr auto BufferCount = 3U;
 using Clock = std::chrono::high_resolution_clock;
 static constexpr Clock::duration OneSecond = std::chrono::seconds(1);
-static auto LogFileName = "vkaEngineLog.txt";
-static auto LoggerName = "MultiLogger";
 
 class Engine;
 class Instance;
@@ -27,8 +23,7 @@ struct GLFWOwner {
   GLFWOwner() {
     glfwInit();
     glfwSetErrorCallback([](int error, const char* desc) {
-      auto multilogger = spdlog::get(LoggerName);
-      multilogger->error("GLFW error {}: {}", error, desc);
+      MultiLogger::get()->error("GLFW error {}: {}", error, desc);
     });
   }
   GLFWOwner(GLFWOwner&&) = default;
@@ -87,10 +82,5 @@ private:
   InitCallback initCallback;
   UpdateCallback updateCallback;
   RenderCallback renderCallback;
-
-  std::shared_ptr<spdlog::sinks::sink> fileSink;
-  std::shared_ptr<spdlog::sinks::sink> stdoutSink;
-  std::shared_ptr<spdlog::sinks::sink> stderrSink;
-  std::shared_ptr<spdlog::logger> multilogger;
 };
 }  // namespace vka

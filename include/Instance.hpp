@@ -60,8 +60,6 @@ public:
   Surface* getSurface() { return surface.get(); }
   operator VkInstance() { return instanceHandle; }
 
-  std::shared_ptr<spdlog::logger> multilogger;
-
 private:
   Engine* engine;
   VkInstance instanceHandle;

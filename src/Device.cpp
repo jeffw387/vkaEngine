@@ -10,6 +10,7 @@
 #include "Config.hpp"
 #include "Swapchain.hpp"
 #include "Pipeline.hpp"
+#include "Logger.hpp"
 #include <fstream>
 
 namespace vka {
@@ -50,10 +51,8 @@ Device::Device(
     std::vector<const char*> deviceExtensions,
     std::vector<PhysicalDeviceFeatures> enabledFeatures,
     DeviceSelectCallback selectCallback)
-    : surface(surface),
-      multilogger(spdlog::get(LoggerName)),
-      physicalDeviceData(instance) {
-  multilogger->info("Creating device.");
+    : surface(surface), physicalDeviceData(instance) {
+  MultiLogger::get()->info("Creating device.");
 
   physicalDeviceHandle = selectCallback(physicalDeviceData);
   deviceProperties = physicalDeviceData.properties.at(physicalDeviceHandle);
@@ -78,15 +77,15 @@ Device::Device(
     for (uint32_t i = 0U; i < queueFamilyProperties.size(); ++i) {
       if ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) ==
           VK_QUEUE_GRAPHICS_BIT) {
-        multilogger->info("Graphics queue family index selected: {}", i);
+        MultiLogger::get()->info("Graphics queue family index selected: {}", i);
         return i;
       }
     }
     auto errorMsg = "Cannot find graphics queue family.";
-    multilogger->critical(errorMsg);
-    multilogger->flush();
+    MultiLogger::get()->critical(errorMsg);
+    MultiLogger::get()->flush();
     throw std::runtime_error(errorMsg);
-  };
+  }();
 
   float queuePriority = 1.f;
   queueCreateInfo.pQueuePriorities = &queuePriority;
@@ -105,7 +104,8 @@ Device::Device(
   auto deviceResult = vkCreateDevice(
       physicalDeviceHandle, &deviceCreateInfo, nullptr, &deviceHandle);
   if (deviceResult != VK_SUCCESS) {
-    multilogger->error("Device not created, result code {}.", deviceResult);
+    MultiLogger::get()->error(
+        "Device not created, result code {}.", deviceResult);
   }
   deviceOwner = DeviceOwner(deviceHandle);
 
@@ -156,33 +156,33 @@ UniqueAllocatedBuffer Device::createAllocatedBuffer(
 Swapchain Device::createSwapchain() {
   auto capabilities = getSurfaceCapabilities();
 
-  multilogger->info(
+  MultiLogger::get()->info(
       "capabilities.minImageExtent: w{} h{}",
       capabilities.minImageExtent.width,
       capabilities.minImageExtent.height);
-  multilogger->info(
+  MultiLogger::get()->info(
       "capabilities.currentExtent: w{} h{}",
       capabilities.currentExtent.width,
       capabilities.currentExtent.height);
-  multilogger->info(
+  MultiLogger::get()->info(
       "capabilities.maxImageExtent: w{} h{}",
       capabilities.maxImageExtent.width,
       capabilities.maxImageExtent.height);
-  multilogger->info(
+  MultiLogger::get()->info(
       "capabilities.minImageCount: {}", capabilities.minImageCount);
-  multilogger->info(
+  MultiLogger::get()->info(
       "capabilities.maxImageCount: {}", capabilities.maxImageCount);
-  multilogger->info(
+  MultiLogger::get()->info(
       "capabilities.currentTransform: {}", capabilities.currentTransform);
   for (const auto& [bit, name] : ImageUsageFlags) {
-    multilogger->info(
+    MultiLogger::get()->info(
         "{} image usage supported: {}",
         name,
         ((bit & capabilities.supportedUsageFlags) == bit));
   }
 
   for (const auto& [bit, name] : CompositeAlphaFlags) {
-    multilogger->info(
+    MultiLogger::get()->info(
         "{} supported: {}",
         name,
         ((bit & capabilities.supportedCompositeAlpha) == bit));
@@ -196,7 +196,7 @@ Swapchain Device::createSwapchain() {
   vkGetPhysicalDeviceSurfacePresentModesKHR(
       physicalDeviceHandle, surface, &presentModeCount, supportedModes.data());
   for (const auto& mode : supportedModes) {
-    multilogger->info("Supported present mode: {}.", PresentModes[mode]);
+    MultiLogger::get()->info("Supported present mode: {}.", PresentModes[mode]);
   }
   SwapchainCreateInfo createInfo{};
   createInfo.addQueueFamilyIndex(graphicsQueueIndex);
@@ -248,13 +248,13 @@ ShaderModule Device::createShaderModule(std::string shaderPath) {
         shaderPath,
         std::ios_base::binary | std::ios_base::ate | std::ios_base::in);
     auto fileLength = shaderFile.tellg();
-    multilogger->info("shader file length == {} bytes", fileLength);
+    MultiLogger::get()->info("shader file length == {} bytes", fileLength);
     shaderFile.seekg(std::ios::beg);
     binaryData.resize(fileLength);
     shaderFile.read(binaryData.data(), fileLength);
     return ShaderModule(deviceHandle, binaryData);
   } catch (const std::exception& e) {
-    multilogger->critical("error while creating shader: {}", e.what());
+    MultiLogger::get()->critical("error while creating shader: {}", e.what());
     throw e;
   }
 }

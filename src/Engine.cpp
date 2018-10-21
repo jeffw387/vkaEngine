@@ -13,6 +13,7 @@
 #include "spdlog/spdlog.h"
 #include "Surface.hpp"
 #include "Config.hpp"
+#include "Logger.hpp"
 
 namespace vka {
 
@@ -38,19 +39,9 @@ Engine::Engine(EngineCreateInfo engineCreateInfo)
   // sometimes valve's overlay causes problems, this next line will disable it
   // on windows
   // _putenv("DISABLE_VK_LAYER_VALVE_steam_overlay_1=1");
-  fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(LogFileName);
-  fileSink->set_level(spdlog::level::trace);
-  stdoutSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-  stdoutSink->set_level(spdlog::level::info);
-  stderrSink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
-  stderrSink->set_level(spdlog::level::info);
-  std::vector<spdlog::sink_ptr> sinks = {fileSink, stderrSink};
-  multilogger =
-      std::make_shared<spdlog::logger>(LoggerName, sinks.begin(), sinks.end());
-  spdlog::register_logger(multilogger);
-  multilogger->flush_on(spdlog::level::err);
-  multilogger->info("Logger initialized.");
-  multilogger->info("Creating Engine.");
+
+  MultiLogger::get()->info("Logger initialized.");
+  MultiLogger::get()->info("Creating Engine.");
 }
 
 Instance* Engine::createInstance(InstanceCreateInfo instanceCreateInfo) {
@@ -88,26 +79,26 @@ void Engine::run() {
   running = true;
   initCallback(this, 0);
   lastUpdatedIndex = 0;
-  multilogger->log(spdlog::level::info, "Running engine.");
+  MultiLogger::get()->log(spdlog::level::info, "Running engine.");
   if (!instance) {
-    multilogger->critical("No instance found!");
+    MultiLogger::get()->critical("No instance found!");
   }
   if (!(instance->getSurface())) {
-    multilogger->warn("No surface found!");
+    MultiLogger::get()->warn("No surface found!");
   }
   if (!(instance->getDevice())) {
-    multilogger->critical("No device found!");
+    MultiLogger::get()->critical("No device found!");
   }
 
-  multilogger->info("Creating input callbacks.");
+  MultiLogger::get()->info("Creating input callbacks.");
   initInputCallbacks();
 
   startTime = Clock::now();
-  multilogger->info("Starting render thread.");
+  MultiLogger::get()->info("Starting render thread.");
   std::thread renderThread(&Engine::renderThreadFunc, this);
 
   continueUpdating = true;
-  multilogger->info("Starting update loop.");
+  MultiLogger::get()->info("Starting update loop.");
   while (true) {
     auto lastUpdateTime = (lastUpdatedIndex != -1)
                               ? indexUpdateTime[lastUpdatedIndex]
@@ -145,7 +136,7 @@ void Engine::acquireUpdateSlot() {
     updateIndex = i;
     return;
   }
-  multilogger->error("Error acquiring update slot, no valid indices.");
+  MultiLogger::get()->error("Error acquiring update slot, no valid indices.");
 }
 void Engine::acquireRenderSlot() {
   std::scoped_lock renderLock(stateMutex);

@@ -57,11 +57,10 @@ Swapchain::Swapchain(
     uint32_t graphicsQueueIndex,
     const VkSwapchainCreateInfoKHR& createInfo)
     : device(device) {
-  auto multilogger = spdlog::get(LoggerName);
   VkBool32 presentSupport{};
   vkGetPhysicalDeviceSurfaceSupportKHR(
       physicalDevice, graphicsQueueIndex, createInfo.surface, &presentSupport);
-  multilogger->info("Surface present support: {}", presentSupport);
+  MultiLogger::get()->info("Surface present support: {}", presentSupport);
   uint32_t formatCount{};
   vkGetPhysicalDeviceSurfaceFormatsKHR(
       physicalDevice, createInfo.surface, &formatCount, nullptr);
@@ -71,16 +70,16 @@ Swapchain::Swapchain(
       physicalDevice, createInfo.surface, &formatCount, surfaceFormats.data());
 
   for (const auto& surfFormat : surfaceFormats) {
-    multilogger->info(
+    MultiLogger::get()->info(
         "Supported surface format: {}, supported colorspace: {}.",
         Formats[surfFormat.format],
         ColorSpaces[surfFormat.colorSpace]);
   }
 
-  multilogger->info(
+  MultiLogger::get()->info(
       "Swapchain composite alpha: {}",
       CompositeAlphaFlags[createInfo.compositeAlpha]);
-  multilogger->info(
+  MultiLogger::get()->info(
       "Swapchain transform: {}", TransformFlags[createInfo.preTransform]);
   vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapchainHandle);
   uint32_t swapImageCount{};

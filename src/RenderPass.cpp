@@ -96,8 +96,7 @@ void RenderPassCreateInfo::addSubpassDependency(
         return index;
       }
     }
-    auto multilogger = spdlog::get(LoggerName);
-    multilogger->error(
+    MultiLogger::get()->error(
         "Could not select subpass for dependency! {} {}", __FILE__, __LINE__);
     return index;
   };

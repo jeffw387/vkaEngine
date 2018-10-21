@@ -16,20 +16,19 @@ static VkBool32 vulkanDebugCallback(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
-  auto multilogger = reinterpret_cast<spdlog::logger*>(pUserData);
   if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-    multilogger->error(
+    MultiLogger::get()->error(
         "Vulkan Error: {} {}",
         pCallbackData->pMessageIdName,
         pCallbackData->pMessage);
   } else if (
       messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-    multilogger->warn(
+    MultiLogger::get()->warn(
         "Vulkan Warning: {} {}",
         pCallbackData->pMessageIdName,
         pCallbackData->pMessage);
   } else {
-    multilogger->info(
+    MultiLogger::get()->info(
         "Vulkan Info: {} {}",
         pCallbackData->pMessageIdName,
         pCallbackData->pMessage);
@@ -43,8 +42,7 @@ void DebugMessengerDeleter::operator()(VkDebugUtilsMessengerEXT messenger) {
 
 Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
     : engine(engine) {
-  multilogger = spdlog::get(LoggerName);
-  multilogger->info("Creating instance.");
+  MultiLogger::get()->info("Creating instance.");
 
   VkApplicationInfo appInfo{};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -106,7 +104,6 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
       VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
-  messengerCreateInfo.pUserData = multilogger.get();
   pfn_vkCreateDebugUtilsMessengerEXT(
       instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
   debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);

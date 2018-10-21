@@ -48,7 +48,6 @@ public:
   ~Surface() = default;
 
 private:
-  std::shared_ptr<spdlog::logger> multilogger;
   VkInstance instance;
   VkSurfaceKHR surfaceHandle;
   SurfaceOwner surfaceOwner;

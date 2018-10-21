@@ -93,7 +93,6 @@ struct AppState {
   PolySize defaultHeight = PolySize{900U};
   vka::OrthoCamera mainCamera;
   std::unique_ptr<vka::Engine> engine;
-  std::shared_ptr<spdlog::logger> multilogger;
   vka::Instance* instance;
   vka::Surface* surface;
   vka::Device* device;
@@ -202,14 +201,13 @@ struct AppState {
           pipelineLayout, 0, {bufState[renderIndex].descriptorSet}, {});
     };
     engine = std::make_unique<vka::Engine>(engineCreateInfo);
-    multilogger = spdlog::get(vka::LoggerName);
 
-    multilogger->info("creating instance");
+    MultiLogger::get()->info("creating instance");
     instance = engine->createInstance(instanceCreateInfo);
-    multilogger->info("creating surface");
+    MultiLogger::get()->info("creating surface");
     surface = instance->createSurface(surfaceCreateInfo);
 
-    multilogger->info("creating device");
+    MultiLogger::get()->info("creating device");
     device = instance->createDevice(
         {"VK_KHR_swapchain"}, {}, [&](const vka::PhysicalDeviceData& data) {
           for (const auto& prop : data.properties) {
@@ -217,7 +215,7 @@ struct AppState {
           return VkPhysicalDevice{};
         });
 
-    multilogger->info("loading shapes.gltf");
+    MultiLogger::get()->info("loading shapes.gltf");
     shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
     createAssetBuffers(device, shapesAsset);
 
@@ -251,7 +249,7 @@ struct AppState {
         1,
         VK_SHADER_STAGE_VERTEX_BIT,
         nullptr};
-    multilogger->info("creating set layout");
+    MultiLogger::get()->info("creating set layout");
     descriptorSetLayout = device->createSetLayout({materialBinding,
                                                    dynamicLightBinding,
                                                    ambientLightBinding,
@@ -262,12 +260,11 @@ struct AppState {
         device,
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VMA_MEMORY_USAGE_CPU_TO_GPU);
-    materialUniform.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
 
     for (auto& state : bufState) {
-      multilogger->info("creating command pool");
+      MultiLogger::get()->info("creating command pool");
       state.commandPool = device->createCommandPool();
-      multilogger->info("creating descriptor pool");
+      MultiLogger::get()->info("creating descriptor pool");
 
       state.dynamicLightsUniform = vka::vulkan_vector<Light>(
           device,
@@ -328,16 +325,15 @@ struct AppState {
       state.renderComplete = device->createSemaphore();
     }
 
-    multilogger->info("creating vertex shader");
+    MultiLogger::get()->info("creating vertex shader");
     vertexShader =
         device->createShaderModule("content/shaders/shader.vert.spv");
-    multilogger->info("creating fragment shader");
+    MultiLogger::get()->info("creating fragment shader");
     fragmentShader =
         device->createShaderModule("content/shaders/shader.frag.spv");
-    multilogger->info("creating swapchain");
-    swapchain = device->createSwapchain();
+    MultiLogger::get()->info("creating swapchain");
 
-    multilogger->info("creating pipeline layout");
+    MultiLogger::get()->info("creating pipeline layout");
     pipelineLayout = device->createPipelineLayout(
         {{VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}}, {descriptorSetLayout});
 
@@ -370,7 +366,7 @@ struct AppState {
         {depthAttachmentDesc,
          VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL_KHR});
 
-    multilogger->info("creating render pass");
+    MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
     auto pipeline3DInfo =
         vka::GraphicsPipelineCreateInfo(pipelineLayout, renderPass, 0);
@@ -403,9 +399,9 @@ struct AppState {
         VkBlendOp(0),
         0);
 
-    multilogger->info("creating pipeline cache");
+    MultiLogger::get()->info("creating pipeline cache");
     pipelineCache = device->createPipelineCache();
-    multilogger->info("creating pipeline");
+    MultiLogger::get()->info("creating pipeline");
     pipeline = device->createGraphicsPipeline(pipelineCache, pipeline3DInfo);
 
     engine->run();
