@@ -148,7 +148,7 @@ public:
   void copyBuffer(
       VkBuffer srcBuffer,
       VkBuffer dstBuffer,
-      const std::vector<VkBufferCopy>& regions) {
+      std::vector<VkBufferCopy> regions) {
     vkCmdCopyBuffer(
         commandBufferHandle,
         srcBuffer,
@@ -296,7 +296,7 @@ public:
   std::vector<CommandBuffer> allocateCommandBuffers(
       size_t count,
       VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-  void reset();
+  void reset(bool releaseResources = false);
 
 private:
   VkDevice device;
