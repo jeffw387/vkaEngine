@@ -304,6 +304,7 @@ public:
     }
     (*this)[newPos] = value;
     ++m_size;
+    notify();
   }
   void push_back(T&& value) {
     auto newPos = m_size;
@@ -312,8 +313,12 @@ public:
     }
     (*this)[newPos] = std::move(value);
     ++m_size;
+    notify();
   }
-  void pop_back() { (*this)[--m_size].~T(); }
+  void pop_back() {
+    (*this)[--m_size].~T();
+    notify();
+  }
   void resize(size_t count) {
     reserve(count);
     if (count > m_size) {
