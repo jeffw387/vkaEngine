@@ -71,7 +71,7 @@ public:
   operator VkSwapchainKHR();
   operator VkSwapchainKHR*();
 
-  const std::vector<VkImage>& getSwapImages();
+  std::vector<VkImage> getSwapImages() const noexcept;
   outcome::result<uint32_t, VkResult> acquireImage(VkFence fence);
 
 private:
