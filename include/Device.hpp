@@ -223,7 +223,8 @@ public:
   void queueSubmit(
       const std::vector<VkSemaphore>& waitSemaphores,
       const std::vector<VkCommandBuffer>& commandBuffers,
-      const std::vector<VkSemaphore>& signalSemaphores);
+      const std::vector<VkSemaphore>& signalSemaphores,
+      VkFence fence = VK_NULL_HANDLE);
 
   void waitIdle();
 
