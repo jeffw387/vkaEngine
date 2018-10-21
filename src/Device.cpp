@@ -61,19 +61,7 @@ Device::Device(
   queueFamilyProperties =
       physicalDeviceData.queueFamilyProperties.at(physicalDeviceHandle);
 
-  // uint32_t currentFamilyIndex{};
-  // for (const auto& familyProps : queueFamilyProperties) {
-  //   if (familyProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-  //     graphicsQueueIndex = currentFamilyIndex;
-  //     break;
-  //   }
-  //   ++currentFamilyIndex;
-  // }
-  // if (graphicsQueueIndex == UINT32_MAX) {
-  //   multilogger->critical("No graphics-capable queue found!");
-  // }
-
-  auto findGraphicsQueueFamily = [&]() {
+  graphicsQueueIndex = [&]() {
     for (uint32_t i = 0U; i < queueFamilyProperties.size(); ++i) {
       if ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) ==
           VK_QUEUE_GRAPHICS_BIT) {
@@ -90,7 +78,7 @@ Device::Device(
   float queuePriority = 1.f;
   queueCreateInfo.pQueuePriorities = &queuePriority;
   queueCreateInfo.queueCount = 1;
-  queueCreateInfo.queueFamilyIndex = findGraphicsQueueFamily();
+  queueCreateInfo.queueFamilyIndex = graphicsQueueIndex;
 
   auto enabledFeaturesVk = makeVkFeatures(enabledFeatures);
   VkDeviceCreateInfo deviceCreateInfo{};
@@ -153,7 +141,55 @@ UniqueAllocatedBuffer Device::createAllocatedBuffer(
   return bufferUnique;
 }
 
-Swapchain Device::createSwapchain() {
+UniqueAllocatedImage Device::createAllocatedImage2D(
+    VkExtent2D extent,
+    VkFormat format,
+    VkImageUsageFlags usage,
+    ImageAspect aspect) {
+  VkImageCreateInfo imageCreateInfo{};
+  imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  imageCreateInfo.usage = usage;
+  imageCreateInfo.format = format;
+  imageCreateInfo.extent = {extent.width, extent.height, 1};
+  imageCreateInfo.mipLevels = 1;
+  imageCreateInfo.arrayLayers = 1;
+  imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imageCreateInfo.pQueueFamilyIndices = &graphicsQueueIndex;
+  imageCreateInfo.queueFamilyIndexCount = 1;
+  imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+  imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+  VmaAllocationCreateInfo allocationCreateInfo{};
+  allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+  AllocatedImage result{};
+  vmaCreateImage(
+      allocator,
+      &imageCreateInfo,
+      &allocationCreateInfo,
+      &result.image,
+      &result.allocation,
+      &result.allocInfo);
+  return UniqueAllocatedImage(result, {allocator});
+}
+
+UniqueImageView
+Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
+  VkImageViewCreateInfo createInfo{};
+  createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  createInfo.subresourceRange = {
+      static_cast<VkImageAspectFlags>(aspect), 0, 1, 0, 1};
+  createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  createInfo.image = image;
+  createInfo.format = format;
+
+  VkImageView view{};
+  vkCreateImageView(deviceHandle, &createInfo, nullptr, &view);
+  return UniqueImageView(view, {deviceHandle});
+}
+
+Swapchain Device::createSwapchain(VkFormat format) {
   auto capabilities = getSurfaceCapabilities();
 
   MultiLogger::get()->info(
@@ -203,6 +239,7 @@ Swapchain Device::createSwapchain() {
   createInfo.setImageExtent(capabilities.currentExtent);
   createInfo.setSurfacePreTransform(capabilities.currentTransform);
   createInfo.setSurface(surface);
+  createInfo.setImageFormat(format);
   return Swapchain(
       physicalDeviceHandle, deviceHandle, graphicsQueueIndex, createInfo);
 }

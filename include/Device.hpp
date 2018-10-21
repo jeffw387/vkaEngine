@@ -180,7 +180,13 @@ public:
   VmaAllocator getAllocator() { return allocator; }
   UniqueAllocatedBuffer
       createAllocatedBuffer(VkDeviceSize, VkBufferUsageFlags, VmaMemoryUsage);
-  Swapchain createSwapchain();
+  UniqueAllocatedImage createAllocatedImage2D(
+      VkExtent2D,
+      VkFormat,
+      VkImageUsageFlags,
+      ImageAspect);
+  UniqueImageView createImageView2D(VkImage, VkFormat, ImageAspect);
+  Swapchain createSwapchain(VkFormat = VK_FORMAT_B8G8R8A8_UNORM);
   RenderPass createRenderPass(const VkRenderPassCreateInfo&);
   PipelineCache createPipelineCache() { return PipelineCache(deviceHandle); }
   PipelineCache createPipelineCache(const std::vector<char> initialData) {
@@ -235,7 +241,6 @@ public:
 
 private:
   VkSurfaceKHR surface;
-  std::shared_ptr<spdlog::logger> multilogger;
   PhysicalDeviceData physicalDeviceData;
   VkPhysicalDevice physicalDeviceHandle;
   VkPhysicalDeviceProperties deviceProperties;
