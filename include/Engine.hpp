@@ -53,10 +53,12 @@ public:
   ~Engine() = default;
 
   Instance* createInstance(InstanceCreateInfo);
+  Instance* getInstance() const noexcept { return instance.get(); }
   void run();
   void setUpdatesPerSecond(uint32_t count) { updatesPerSecond = count; }
-  int32_t currentUpdateIndex() { return updateIndex; }
-  int32_t currentRenderIndex() { return renderIndex; }
+  int32_t previousUpdateIndex() const noexcept { return lastUpdatedIndex; }
+  int32_t currentUpdateIndex() const noexcept { return updateIndex; }
+  int32_t currentRenderIndex() const noexcept { return renderIndex; }
 
 private:
   void initInputCallbacks();
