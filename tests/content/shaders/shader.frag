@@ -50,7 +50,7 @@ layout (set = 0, binding = 1) uniform DynamicLights {
 } dynamicLights;
 
 layout (set = 0, binding = 2) uniform Ambient {
-  vec4 color;
+  Light light;
 } ambient;
 
 layout(location = 0) out vec4 outColor;
@@ -66,6 +66,6 @@ void main() {
     diffuseLighting += dynamicLights.data[i].color.rgb * intensity;
   }
   vec3 diffuse = materials.data[push.materialIndex].diffuse.rgb;
-  vec3 hdrColor = diffuse * (diffuseLighting + vec3(ambient.color));
+  vec3 hdrColor = diffuse * (diffuseLighting + vec3(ambient.light.color));
   outColor = vec4(Uncharted2ToneMapping(hdrColor), 1);
 }
