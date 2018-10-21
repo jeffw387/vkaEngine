@@ -8,7 +8,7 @@ namespace vka {
 std::optional<VkWriteDescriptorSet> BufferDescriptor::writeDescriptor(
     DescriptorReference ref) {
   std::optional<VkWriteDescriptorSet> result;
-  if (valid) {
+  if (valid || bufferInfo.range == 0) {
     return result;
   }
   VkWriteDescriptorSet write{};
@@ -20,13 +20,14 @@ std::optional<VkWriteDescriptorSet> BufferDescriptor::writeDescriptor(
   write.descriptorCount = 1;
   write.pBufferInfo = &bufferInfo;
   result = std::move(write);
+  valid = true;
   return result;
 }
 
 std::optional<VkWriteDescriptorSet> DynamicBufferDescriptor::writeDescriptor(
     DescriptorReference ref) {
   std::optional<VkWriteDescriptorSet> result;
-  if (valid) {
+  if (valid || bufferInfo.range == 0) {
     return result;
   }
   VkWriteDescriptorSet write{};
@@ -38,6 +39,7 @@ std::optional<VkWriteDescriptorSet> DynamicBufferDescriptor::writeDescriptor(
   write.descriptorCount = 1;
   write.pBufferInfo = &bufferInfo;
   result = std::move(write);
+  valid = true;
   return result;
 }
 
@@ -56,6 +58,7 @@ std::optional<VkWriteDescriptorSet> ImageDescriptor::writeDescriptor(
   write.descriptorCount = 1;
   write.pImageInfo = &imageInfo;
   result = std::move(write);
+  valid = true;
   return result;
 }
 
@@ -74,6 +77,7 @@ std::optional<VkWriteDescriptorSet> SamplerDescriptor::writeDescriptor(
   write.descriptorCount = 1;
   write.pImageInfo = &imageInfo;
   result = std::move(write);
+  valid = true;
   return result;
 }
 
@@ -92,6 +96,7 @@ std::optional<VkWriteDescriptorSet> ImageSamplerDescriptor::writeDescriptor(
   write.descriptorCount = 1;
   write.pImageInfo = &imageInfo;
   result = std::move(write);
+  valid = true;
   return result;
 }
 
