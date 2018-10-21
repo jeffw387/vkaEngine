@@ -40,24 +40,25 @@ struct Light {
   vec4 positionViewSpace;
 };
 
-layout (set = 0, binding = 0) uniform Materials
+layout (set = 0) uniform Materials
 {
   Material[materialCount] data;
 } materials;
 
-layout (set = 0, binding = 1) uniform DynamicLights {
-  Light[lightCount] data;
+layout (set = 1) readonly buffer DynamicLights {
+  Light[] data;
 } dynamicLights;
 
-layout (set = 0, binding = 2) uniform Ambient {
-  Light light;
-} ambient;
+layout (set = 2) uniform LightUniform {
+  vec4 ambient;
+  uint dynamicLightCount;
+} lightUniform;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
   vec3 diffuseLighting;
-  for (uint i = 0; i < lightCount; ++i) {
+  for (uint i = 0; i < lightUniform.dynamicLightCount; ++i) {
     vec3 lightViewPos = vec3(dynamicLights.data[i].positionViewSpace);
     vec3 surfaceToLight = lightViewPos - inViewPos;
     float cosTheta = dot(inViewNormal, surfaceToLight) 
@@ -66,6 +67,7 @@ void main() {
     diffuseLighting += dynamicLights.data[i].color.rgb * intensity;
   }
   vec3 diffuse = materials.data[push.materialIndex].diffuse.rgb;
-  vec3 hdrColor = diffuse * (diffuseLighting + vec3(ambient.light.color));
-  outColor = vec4(Uncharted2ToneMapping(hdrColor), 1);
+  vec3 hdrColor = diffuse * (diffuseLighting + vec3(lightUniform.ambient));
+  //outColor = vec4(Uncharted2ToneMapping(hdrColor), 1);
+  outColor = vec4(1, 0, 0, 1);
 }

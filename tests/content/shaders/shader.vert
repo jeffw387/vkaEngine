@@ -3,12 +3,12 @@
 layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec3 inNormal;
 
-layout (set = 0, binding = 3) uniform Camera {
+layout (set = 3) uniform Camera {
   mat4 view;
   mat4 projection;
 } camera;
 
-layout (set = 0, binding = 4) uniform Instance {
+layout (set = 4) uniform Instance {
   mat4 model;
 } instance;
 
@@ -25,5 +25,5 @@ void main()
   mat4 viewModel = camera.view * instance.model;
   outViewPos =  vec3(viewModel * vec4(inPos, 1));
   outViewNormal = normalize(vec3(viewModel * vec4(inNormal, 1)));
-	gl_Position =  camera.projection * viewModel * vec4(inPos, 1.0);
+	gl_Position = camera.projection * viewModel * vec4(inPos, 1.0);
 }
