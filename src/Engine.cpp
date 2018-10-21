@@ -53,7 +53,7 @@ void Engine::renderThreadFunc() {
   continueRendering = true;
   while (true) {
     acquireRenderSlot();
-
+    renderCallback(this);
     if (!continueRendering || !continueUpdating) {
       return;
     }
