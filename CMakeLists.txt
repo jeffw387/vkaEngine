@@ -63,6 +63,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Pipeline.hpp"
   "${includeDir}/Fence.hpp"
   "${includeDir}/Semaphore.hpp"
+  "${includeDir}/VkEnumStrings.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/Surface.hpp")
 add_library(vkaEngine)

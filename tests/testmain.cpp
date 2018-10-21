@@ -18,6 +18,7 @@
 #include "Asset.hpp"
 #include "vulkan_vector.hpp"
 #include <experimental/filesystem>
+#include "VkEnumStrings.hpp"
 
 namespace fs = std::experimental::filesystem;
 
