@@ -105,6 +105,10 @@ Swapchain::Swapchain(Swapchain&& other) { *this = std::move(other); }
 Swapchain::operator VkSwapchainKHR() { return swapchainHandle; }
 Swapchain::operator VkSwapchainKHR*() { return &swapchainHandle; }
 
+std::vector<VkImage> Swapchain::getSwapImages() const noexcept {
+  return swapImages;
+}
+
 outcome::result<uint32_t, VkResult> Swapchain::acquireImage(VkFence fence) {
   uint32_t imageIndex{};
   auto result = vkAcquireNextImageKHR(
