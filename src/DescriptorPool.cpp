@@ -24,6 +24,25 @@ std::optional<VkWriteDescriptorSet> BufferDescriptor::writeDescriptor(
   return result;
 }
 
+std::optional<VkWriteDescriptorSet> StorageBufferDescriptor::writeDescriptor(
+    DescriptorReference ref) {
+  std::optional<VkWriteDescriptorSet> result;
+  if (valid || bufferInfo.range == 0) {
+    return result;
+  }
+  VkWriteDescriptorSet write{};
+  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  write.dstSet = ref.set;
+  write.dstBinding = ref.bindingIndex;
+  write.dstArrayElement = ref.arrayIndex;
+  write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  write.descriptorCount = 1;
+  write.pBufferInfo = &bufferInfo;
+  result = std::move(write);
+  valid = true;
+  return result;
+}
+
 std::optional<VkWriteDescriptorSet> DynamicBufferDescriptor::writeDescriptor(
     DescriptorReference ref) {
   std::optional<VkWriteDescriptorSet> result;
@@ -107,6 +126,15 @@ void BufferDescriptor::operator()(VkBuffer newBuffer, VkDeviceSize newRange) {
   valid = false;
 }
 
+void StorageBufferDescriptor::operator()(
+    VkBuffer newBuffer,
+    VkDeviceSize newRange) {
+  bufferInfo.buffer = newBuffer;
+  bufferInfo.offset = 0;
+  bufferInfo.range = VK_WHOLE_SIZE;
+  valid = false;
+}
+
 void DynamicBufferDescriptor::operator()(
     VkBuffer newBuffer,
     VkDeviceSize newRange) {
@@ -150,6 +178,9 @@ DescriptorSet::DescriptorSet(VkDescriptorSet set, DescriptorSetLayout* layout)
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
         addDescriptors(BufferDescriptor());
         break;
+      case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+        addDescriptors(StorageBufferDescriptor());
+        break;
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
         addDescriptors(DynamicBufferDescriptor());
         break;
@@ -163,7 +194,7 @@ DescriptorSet::DescriptorSet(VkDescriptorSet set, DescriptorSetLayout* layout)
         addDescriptors(SamplerDescriptor());
         break;
       default:
-        // TODO: error handling here;
+        throw std::runtime_error("Descriptor type not implemented!");
         break;
     }
   }

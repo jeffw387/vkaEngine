@@ -10,6 +10,13 @@
 #include "DescriptorPool.hpp"
 
 namespace vka {
+
+enum class VectorType {
+  Uniform,
+  DynamicUniform,
+  Storage,
+  // DynamicStorage
+};
 template <typename T, typename subscriberT = BufferDescriptor, size_t N = 4U>
 class vulkan_vector {
 public:
@@ -181,11 +188,12 @@ public:
       Device* device,
       VkBufferUsageFlags buffer_usage,
       VmaMemoryUsage memory_usage,
-      bool dynamic = false)
+      VectorType vector_type = VectorType::Uniform)
       : m_device(device),
         m_buffer_usage(buffer_usage),
-        m_memory_usage(memory_usage) {
-    if (dynamic) {
+        m_memory_usage(memory_usage),
+        vector_type(vector_type) {
+    if (vector_type == VectorType::DynamicUniform) {
       auto minDynamicUboAlignment =
           device->getDeviceProperties().limits.minUniformBufferOffsetAlignment;
       if (sizeof(T) < minDynamicUboAlignment) {
@@ -304,7 +312,9 @@ public:
     }
     (*this)[newPos] = value;
     ++m_size;
-    notify();
+    if (vector_type != VectorType::Storage) {
+      notify();
+    }
   }
   void push_back(T&& value) {
     auto newPos = m_size;
@@ -313,11 +323,15 @@ public:
     }
     (*this)[newPos] = std::move(value);
     ++m_size;
-    notify();
+    if (vector_type != VectorType::Storage) {
+      notify();
+    }
   }
   void pop_back() {
     (*this)[--m_size].~T();
-    notify();
+    if (vector_type != VectorType::Storage) {
+      notify();
+    }
   }
   void resize(size_t count) {
     reserve(count);
@@ -354,5 +368,6 @@ private:
   VkBufferUsageFlags m_buffer_usage = 0;
   VmaMemoryUsage m_memory_usage = VmaMemoryUsage(0);
   std::vector<subscriber_type> m_subscribers;
+  VectorType vector_type;
 };
 }  // namespace vka

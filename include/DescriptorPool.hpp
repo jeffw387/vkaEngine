@@ -23,7 +23,16 @@ public:
 private:
   bool valid = false;
   VkDescriptorBufferInfo bufferInfo;
-  VkWriteDescriptorSet write;
+};
+
+class StorageBufferDescriptor {
+public:
+  void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
+  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+
+private:
+  bool valid = false;
+  VkDescriptorBufferInfo bufferInfo;
 };
 
 class DynamicBufferDescriptor {
@@ -34,7 +43,6 @@ public:
 private:
   bool valid = false;
   VkDescriptorBufferInfo bufferInfo;
-  VkWriteDescriptorSet write;
 };
 
 class ImageDescriptor {
@@ -45,7 +53,6 @@ public:
 private:
   bool valid = false;
   VkDescriptorImageInfo imageInfo;
-  VkWriteDescriptorSet write;
 };
 
 class ImageSamplerDescriptor {
@@ -56,7 +63,6 @@ public:
 private:
   bool valid = false;
   VkDescriptorImageInfo imageInfo;
-  VkWriteDescriptorSet write;
 };
 
 class SamplerDescriptor {
@@ -67,17 +73,15 @@ public:
 private:
   bool valid = false;
   VkDescriptorImageInfo imageInfo;
-  VkWriteDescriptorSet write;
 };
 
 using Descriptor = std::variant<
     BufferDescriptor,
+    StorageBufferDescriptor,
     DynamicBufferDescriptor,
     ImageDescriptor,
     SamplerDescriptor,
     ImageSamplerDescriptor>;
-
-// need Descriptor& getDescriptor(uint32_t binding, uint32_t descriptor);
 
 class DescriptorSet {
 public:
