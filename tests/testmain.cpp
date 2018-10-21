@@ -92,6 +92,8 @@ inline void createAssetBuffers(vka::Device* device, vka::gltf::Asset& asset) {
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
   PolySize defaultHeight = PolySize{900U};
+  VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
+  VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
   vka::OrthoCamera mainCamera;
   std::unique_ptr<vka::Engine> engine;
   vka::Instance* instance;
@@ -118,7 +120,6 @@ struct AppState {
   vka::UniqueImageView depthImageView;
 
   struct BufferedState {
-    vka::CommandPool commandPool;
     vka::DescriptorPool descriptorPool;
     vka::DescriptorSet descriptorSet;
     // if light count changes, pipeline must be recompiled (ideally only change
@@ -131,9 +132,163 @@ struct AppState {
     vka::Semaphore renderComplete;
     uint32_t swapImageIndex;
     vka::UniqueFramebuffer framebuffer;
+    vka::CommandPool commandPool;
     entt::DefaultRegistry ecs;
   };
   std::array<BufferedState, vka::BufferCount> bufState;
+
+  void initCallback(vka::Engine* engine, int32_t initialIndex) {
+    MultiLogger::get()->info("Init Callback");
+    bufState[initialIndex].instanceUniform.push_back(
+        {glm::scale(glm::mat4(1.f), glm::vec3(10.f, 10.f, 1.f))});
+    bufState[initialIndex].instanceUniform.flushMemory(device);
+
+    bufState[initialIndex].ambientLightUniform.push_back(
+        {glm::vec4(0.5f, 0.5f, 0.5f, 1.0f), {}});
+    bufState[initialIndex].ambientLightUniform.flushMemory(device);
+
+    bufState[initialIndex].dynamicLightsUniform.push_back({glm::vec4(), {}});
+    bufState[initialIndex].dynamicLightsUniform.flushMemory(device);
+
+    materialUniform.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
+    materialUniform.flushMemory(device);
+  }
+
+  void updateCallback(vka::Engine* engine) {
+    auto updateIndex = engine->currentUpdateIndex();
+    auto lastUpdateIndex = engine->previousUpdateIndex();
+    MultiLogger::get()->info(
+        "Update callback: index {}, prior index {}.",
+        updateIndex,
+        lastUpdateIndex);
+    bufState[updateIndex].instanceUniform.resize(
+        bufState[lastUpdateIndex].instanceUniform.size());
+    for (auto i = 0U; i < bufState[lastUpdateIndex].instanceUniform.size();
+         ++i) {
+      bufState[updateIndex].instanceUniform[i] =
+          bufState[lastUpdateIndex].instanceUniform[i];
+    }
+    bufState[lastUpdateIndex].instanceUniform.flushMemory(device);
+  }
+
+  void renderCallback(vka::Engine* engine) {
+    auto renderIndex = engine->currentRenderIndex();
+    MultiLogger::get()->info("Render callback: index {}.", renderIndex);
+    bufState[renderIndex].descriptorSet.validate(*device);
+    if (auto index =
+            swapchain.acquireImage(bufState[renderIndex].frameAcquired)) {
+      bufState[renderIndex].swapImageIndex = index.value();
+    } else {
+      switch (index.error()) {
+        case VK_NOT_READY:
+          return;
+        case VK_ERROR_OUT_OF_DATE_KHR:
+        case VK_SUBOPTIMAL_KHR:
+          createSwapchain();
+          break;
+        default:
+          MultiLogger::get()->critical(
+              "Unrecoverable vulkan error: {}", vka::Results[index.error()]);
+          throw std::runtime_error("Unrecoverable vulkan error.");
+      }
+    }
+    bufState[renderIndex].frameAcquired.wait();
+    bufState[renderIndex].frameAcquired.reset();
+    bufState[renderIndex].commandPool.reset();
+    bufState[renderIndex].cameraUniform[0].projection =
+        mainCamera.getProjection();
+    bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
+    bufState[renderIndex].cameraUniform.flushMemory(device);
+
+    auto surfaceCapabilities = device->getSurfaceCapabilities();
+    bufState[renderIndex].framebuffer = device->createFramebuffer(
+        {swapImageViews[bufState[renderIndex].swapImageIndex].get(),
+         depthImageView.get()},
+        renderPass,
+        surfaceCapabilities.currentExtent.width,
+        surfaceCapabilities.currentExtent.height);
+    auto cmd = bufState[renderIndex].commandPool.allocateCommandBuffers(1)[0];
+    cmd.begin(
+        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        renderPass,
+        0,
+        bufState[renderIndex].framebuffer.get());
+    std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 0.f}},
+                                             VkClearValue{{0.f, 0U}}};
+    cmd.beginRenderPass(
+        renderPass,
+        bufState[renderIndex].framebuffer.get(),
+        {{0, 0}, surfaceCapabilities.currentExtent},
+        clearValues,
+        VK_SUBPASS_CONTENTS_INLINE);
+    cmd.setViewport(
+        0,
+        {{0,
+          0,
+          static_cast<float>(surfaceCapabilities.currentExtent.width),
+          static_cast<float>(surfaceCapabilities.currentExtent.height),
+          0,
+          1}});
+    cmd.setScissor(
+        0,
+        {{0,
+          0,
+          surfaceCapabilities.currentExtent.width,
+          surfaceCapabilities.currentExtent.height}});
+    cmd.bindGraphicsPipeline(pipeline);
+    cmd.bindGraphicsDescriptorSets(
+        pipelineLayout, 0, {bufState[renderIndex].descriptorSet}, {0});
+    auto vertexBuffers = getVertexBuffers(shapesAsset, 0);
+    cmd.bindIndexBuffer(
+        vertexBuffers.indexBuffer.buffer,
+        0,
+        vertexBuffers.indexBuffer.accessor.componentType);
+    cmd.bindVertexBuffers(
+        0,
+        {vertexBuffers.positionBuffer.buffer,
+         vertexBuffers.normalBuffer.buffer},
+        {vertexBuffers.positionBuffer.view.byteOffset,
+         vertexBuffers.normalBuffer.view.byteOffset});
+    cmd.drawIndexed(
+        vertexBuffers.indexBuffer.accessor.elementCount, 1, 0, 0, 0);
+    cmd.endRenderPass();
+    cmd.end();
+    device->queueSubmit({}, {cmd}, {bufState[renderIndex].renderComplete});
+    auto presentResult = device->presentImage(
+        swapchain,
+        bufState[renderIndex].swapImageIndex,
+        bufState[renderIndex].renderComplete);
+
+    switch (presentResult) {
+      case VK_SUCCESS:
+        return;
+      case VK_ERROR_OUT_OF_DATE_KHR:
+      case VK_SUBOPTIMAL_KHR:
+        createSwapchain();
+        break;
+      default:
+        MultiLogger::get()->critical(
+            "Unrecoverable vulkan error: {}", vka::Results[presentResult]);
+        throw std::runtime_error("Unrecoverable vulkan error.");
+    }
+  }
+
+  void createSwapchain() {
+    swapImageViews.clear();
+    swapchain = device->createSwapchain();
+    swapImages = std::move(swapchain.getSwapImages());
+    for (const auto& swapImage : swapImages) {
+      swapImageViews.push_back(device->createImageView2D(
+          swapImage, swapFormat, vka::ImageAspect::Color));
+    }
+    depthImage = device->createAllocatedImage2D(
+        device->getSurfaceCapabilities().currentExtent,
+        depthFormat,
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        vka::ImageAspect::Depth);
+    depthImageView = device->createImageView2D(
+        depthImage.get().image, depthFormat, vka::ImageAspect::Depth);
+  }
 
   AppState() {
     mainCamera.setDimensions(defaultWidth, defaultHeight);
@@ -152,54 +307,14 @@ struct AppState {
     surfaceCreateInfo.height = defaultHeight;
 
     vka::EngineCreateInfo engineCreateInfo{};
-    engineCreateInfo.initCallback = [&](vka::Engine* engine,
-                                        int32_t initialIndex) {
-      bufState[initialIndex].instanceUniform.push_back(
-          {glm::scale(glm::mat4(1.f), glm::vec3(10.f, 10.f, 1.f))});
+    engineCreateInfo.initCallback = [this](auto engine, auto initialIndex) {
+      initCallback(engine, initialIndex);
     };
-    engineCreateInfo.updateCallback = [&](vka::Engine* engine) {
-      auto updateIndex = engine->currentUpdateIndex();
+    engineCreateInfo.updateCallback = [this](auto engine) {
+      updateCallback(engine);
     };
-    engineCreateInfo.renderCallback = [&](vka::Engine* engine) {
-      auto renderIndex = engine->currentRenderIndex();
-      if (auto index =
-              swapchain.acquireImage(bufState[renderIndex].frameAcquired)) {
-        bufState[renderIndex].swapImageIndex = index.value();
-      } else {
-        if (index.error() != VK_SUCCESS) {
-          return;
-        }
-      }
-      bufState[renderIndex].cameraUniform[0].projection =
-          mainCamera.getProjection();
-      bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
-      bufState[renderIndex].cameraUniform.flushMemory(device);
-      bufState[renderIndex].commandPool.reset();
-
-      auto surfaceCapabilities = device->getSurfaceCapabilities();
-      auto framebuffer = device->createFramebuffer(
-          {swapImageViews[bufState[renderIndex].swapImageIndex].get(),
-           depthImageView.get()},
-          renderPass,
-          surfaceCapabilities.currentExtent.width,
-          surfaceCapabilities.currentExtent.height);
-      auto cmd = bufState[renderIndex].commandPool.allocateCommandBuffers(1)[0];
-      cmd.begin(
-          VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-          renderPass,
-          0,
-          framebuffer.get());
-      std::vector<VkClearValue> clearValues = {
-          VkClearValue{{0.f, 0.f, 0.f, 0.f}}, VkClearValue{{0.f, 0U}}};
-      cmd.beginRenderPass(
-          renderPass,
-          framebuffer.get(),
-          {{0, 0}, surfaceCapabilities.currentExtent},
-          clearValues,
-          VK_SUBPASS_CONTENTS_INLINE);
-      cmd.bindGraphicsPipeline(pipeline);
-      cmd.bindGraphicsDescriptorSets(
-          pipelineLayout, 0, {bufState[renderIndex].descriptorSet}, {});
+    engineCreateInfo.renderCallback = [this](auto engine) {
+      renderCallback(engine);
     };
     engine = std::make_unique<vka::Engine>(engineCreateInfo);
 
@@ -211,10 +326,15 @@ struct AppState {
     MultiLogger::get()->info("creating device");
     device = instance->createDevice(
         {"VK_KHR_swapchain"}, {}, [&](const vka::PhysicalDeviceData& data) {
-          for (const auto& prop : data.properties) {
+          for (const auto& [physicalDevice, props] : data.properties) {
+            if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+              return physicalDevice;
+            }
           }
-          return VkPhysicalDevice{};
+          return data.physicalDevices.at(0);
         });
+
+    createSwapchain();
 
     MultiLogger::get()->info("loading shapes.gltf");
     shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
@@ -363,9 +483,8 @@ struct AppState {
     auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
     subpass3D->addColorRef(
         {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    subpass3D->setDepthRef(
-        {depthAttachmentDesc,
-         VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL_KHR});
+    subpass3D->setDepthRef({depthAttachmentDesc,
+                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
 
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
