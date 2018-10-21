@@ -337,7 +337,8 @@ VkResult Device::presentImage(
 void Device::queueSubmit(
     const std::vector<VkSemaphore>& waitSemaphores,
     const std::vector<VkCommandBuffer>& commandBuffers,
-    const std::vector<VkSemaphore>& signalSemaphores) {
+    const std::vector<VkSemaphore>& signalSemaphores,
+    VkFence fence) {
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
@@ -347,7 +348,7 @@ void Device::queueSubmit(
   submitInfo.signalSemaphoreCount =
       static_cast<uint32_t>(signalSemaphores.size());
   submitInfo.pSignalSemaphores = signalSemaphores.data();
-  vkQueueSubmit(graphicsQueue, 1, &submitInfo, 0);
+  vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence);
 }
 
 RenderPass Device::createRenderPass(const VkRenderPassCreateInfo& createInfo) {
