@@ -21,6 +21,12 @@ Fence& Fence::operator=(Fence&& other) {
   return *this;
 }
 
+void Fence::wait(uint64_t timeout) {
+  vkWaitForFences(device, 1, &fence, true, timeout);
+}
+
+void Fence::reset() { vkResetFences(device, 1, &fence); }
+
 Fence::operator VkFence() { return fence; }
 
 Fence::~Fence() {
