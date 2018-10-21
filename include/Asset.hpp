@@ -180,6 +180,26 @@ inline BufferData getBufferData(Asset& asset, size_t accessorIndex) {
   result.buffer = asset.buffers[result.view.bufferIndex];
   return result;
 }
+
+struct VertexBuffers {
+  BufferData positionBuffer;
+  BufferData normalBuffer;
+  BufferData indexBuffer;
+};
+inline VertexBuffers getVertexBuffers(Asset& asset, size_t nodeIndex) {
+  VertexBuffers result{};
+  auto meshIndex = asset.nodes[nodeIndex].meshIndex;
+  auto positionAccessorIndex =
+      asset.meshes[meshIndex].primitives[0].positionAccessorIndex;
+  auto normalAccessorIndex =
+      asset.meshes[meshIndex].primitives[0].normalAccessorIndex;
+  auto indexAccessorIndex =
+      asset.meshes[meshIndex].primitives[0].indexAccessorIndex;
+  result.positionBuffer = getBufferData(asset, positionAccessorIndex);
+  result.normalBuffer = getBufferData(asset, normalAccessorIndex);
+  result.indexBuffer = getBufferData(asset, indexAccessorIndex);
+  return result;
+}
 // static void theoreticalTestCase(Asset asset) {
 //   VkCommandBuffer cmd{};
 //   for (const auto& node : asset.nodes) {
