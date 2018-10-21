@@ -40,7 +40,12 @@ CommandPool& CommandPool::operator=(CommandPool&& other) {
 
 CommandPool::CommandPool(CommandPool&& other) { *this = std::move(other); }
 
-void CommandPool::reset() { vkResetCommandPool(device, poolHandle, 0); }
+void CommandPool::reset(bool releaseResources) {
+  vkResetCommandPool(
+      device,
+      poolHandle,
+      releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0);
+}
 
 CommandPool::~CommandPool() {
   if (device != VK_NULL_HANDLE && poolHandle != VK_NULL_HANDLE) {
