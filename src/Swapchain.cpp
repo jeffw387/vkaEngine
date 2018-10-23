@@ -60,7 +60,7 @@ Swapchain::Swapchain(
     VkDevice device,
     uint32_t graphicsQueueIndex,
     const VkSwapchainCreateInfoKHR& createInfo)
-    : device(device) {
+    : device(device), swapExtent(createInfo.imageExtent) {
   VkBool32 presentSupport{};
   vkGetPhysicalDeviceSurfaceSupportKHR(
       physicalDevice, graphicsQueueIndex, createInfo.surface, &presentSupport);
@@ -98,8 +98,10 @@ Swapchain& Swapchain::operator=(Swapchain&& other) {
     device = other.device;
     swapchainHandle = other.swapchainHandle;
     swapImages = std::move(other.swapImages);
+    swapExtent = std::move(other.swapExtent);
     other.device = {};
     other.swapchainHandle = {};
+    other.swapExtent = {};
   }
   return *this;
 }
@@ -122,6 +124,8 @@ outcome::result<uint32_t, VkResult> Swapchain::acquireImage(VkFence fence) {
   }
   return outcome::success(imageIndex);
 }
+
+VkExtent2D Swapchain::getSwapExtent() const noexcept { return swapExtent; }
 
 void Swapchain::reset() {
   if (device != VK_NULL_HANDLE && swapchainHandle != VK_NULL_HANDLE) {

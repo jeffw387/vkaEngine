@@ -74,11 +74,13 @@ public:
 
   std::vector<VkImage> getSwapImages() const noexcept;
   outcome::result<uint32_t, VkResult> acquireImage(VkFence fence);
+  VkExtent2D getSwapExtent() const noexcept;
   void reset();
 
 private:
   VkDevice device = VK_NULL_HANDLE;
   VkSwapchainKHR swapchainHandle = VK_NULL_HANDLE;
   std::vector<VkImage> swapImages;
+  VkExtent2D swapExtent = {};
 };
 }  // namespace vka
