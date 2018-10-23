@@ -74,6 +74,7 @@ public:
 
   std::vector<VkImage> getSwapImages() const noexcept;
   outcome::result<uint32_t, VkResult> acquireImage(VkFence fence);
+  void reset();
 
 private:
   VkDevice device = VK_NULL_HANDLE;

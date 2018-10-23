@@ -300,6 +300,7 @@ struct AppState {
 
   void createSwapchain() {
     swapImageViews.clear();
+    swapchain.reset();
     swapchain = device->createSwapchain();
     swapImages = std::move(swapchain.getSwapImages());
     for (const auto& swapImage : swapImages) {
