@@ -28,6 +28,12 @@ void OrthoCamera::setDimensions(float width, float height) {
   projection.reset();
 }
 
+void OrthoCamera::setNearFar(float near, float far) {
+  this->near = near;
+  this->far = far;
+  projection.reset();
+}
+
 const glm::mat4& OrthoCamera::getView() {
   if (view) {
     return view.value();
@@ -40,7 +46,7 @@ const glm::mat4& OrthoCamera::getProjection() {
   if (projection) {
     return projection.value();
   }
-  projection = glm::ortho(left, right, bottom, top);
+  projection = glm::ortho(left, right, bottom, top, 0.f, 1.f);
   return projection.value();
 }
 }  // namespace vka
