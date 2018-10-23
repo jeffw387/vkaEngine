@@ -44,6 +44,10 @@ void SwapchainCreateInfo::setPresentMode(VkPresentModeKHR presentMode) {
   createInfo.presentMode = presentMode;
 }
 
+void SwapchainCreateInfo::setOldSwapchain(VkSwapchainKHR oldSwapchain) {
+  createInfo.oldSwapchain = oldSwapchain;
+}
+
 SwapchainCreateInfo::operator const VkSwapchainCreateInfoKHR&() {
   createInfo.queueFamilyIndexCount =
       static_cast<uint32_t>(queueFamilyIndices.size());

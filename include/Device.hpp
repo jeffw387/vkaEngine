@@ -186,7 +186,9 @@ public:
       VkImageUsageFlags,
       ImageAspect);
   UniqueImageView createImageView2D(VkImage, VkFormat, ImageAspect);
-  Swapchain createSwapchain(VkFormat = VK_FORMAT_B8G8R8A8_UNORM);
+  Swapchain createSwapchain(
+      VkSwapchainKHR = VK_NULL_HANDLE,
+      VkFormat = VK_FORMAT_B8G8R8A8_UNORM);
   RenderPass createRenderPass(const VkRenderPassCreateInfo&);
   PipelineCache createPipelineCache() { return PipelineCache(deviceHandle); }
   PipelineCache createPipelineCache(const std::vector<char> initialData) {

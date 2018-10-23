@@ -49,6 +49,7 @@ public:
   void addQueueFamilyIndex(uint32_t queueFamilyIndex);
   void setSurfacePreTransform(VkSurfaceTransformFlagBitsKHR preTransform);
   void setPresentMode(VkPresentModeKHR presentMode);
+  void setOldSwapchain(VkSwapchainKHR oldSwapchain);
 
 private:
   std::vector<uint32_t> queueFamilyIndices;

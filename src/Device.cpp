@@ -189,7 +189,9 @@ Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
   return UniqueImageView(view, {deviceHandle});
 }
 
-Swapchain Device::createSwapchain(VkFormat format) {
+Swapchain Device::createSwapchain(
+    VkSwapchainKHR oldSwapchain,
+    VkFormat format) {
   auto capabilities = getSurfaceCapabilities();
 
   MultiLogger::get()->info(
@@ -240,6 +242,7 @@ Swapchain Device::createSwapchain(VkFormat format) {
   createInfo.setSurfacePreTransform(capabilities.currentTransform);
   createInfo.setSurface(surface);
   createInfo.setImageFormat(format);
+  createInfo.setOldSwapchain(oldSwapchain);
   return Swapchain(
       physicalDeviceHandle, deviceHandle, graphicsQueueIndex, createInfo);
 }
