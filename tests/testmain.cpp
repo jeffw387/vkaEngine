@@ -308,7 +308,7 @@ struct AppState {
           swapImage, swapFormat, vka::ImageAspect::Color));
     }
     depthImage = device->createAllocatedImage2D(
-        device->getSurfaceCapabilities().currentExtent,
+        swapchain.getSwapExtent(),
         depthFormat,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         vka::ImageAspect::Depth);
