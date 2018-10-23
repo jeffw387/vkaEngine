@@ -160,6 +160,11 @@ void GraphicsPipelineCreateInfo::setDepthTestEnable(VkBool32 depthTestEnable) {
   depthStencilInfo.depthTestEnable = depthTestEnable;
 }
 
+void GraphicsPipelineCreateInfo::setDepthWriteEnable(
+    VkBool32 depthWriteEnable) {
+  depthStencilInfo.depthWriteEnable = depthWriteEnable;
+}
+
 void GraphicsPipelineCreateInfo::setDepthCompareOp(VkCompareOp depthCompareOp) {
   depthStencilInfo.depthCompareOp = depthCompareOp;
 }
