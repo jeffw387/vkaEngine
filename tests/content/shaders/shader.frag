@@ -68,6 +68,6 @@ void main() {
   }
   vec3 diffuse = materials.data[push.materialIndex].diffuse.rgb;
   vec3 hdrColor = diffuse * (diffuseLighting + vec3(lightUniform.ambient));
-  //outColor = vec4(Uncharted2ToneMapping(hdrColor), 1);
-  outColor = vec4(1, 0, 0, 1);
+  outColor = vec4(Uncharted2ToneMapping(hdrColor), 1);
+  //outColor = vec4(1, 0, 0, 1);
 }

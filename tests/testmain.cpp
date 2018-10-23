@@ -120,8 +120,13 @@ struct AppState {
 
   vka::gltf::Asset shapesAsset;
   vka::vulkan_vector<Material> materialUniform;
+  std::array<uint16_t, 3> indices{0, 1, 2};
   vka::UniqueAllocatedBuffer indexBuffer;
+  std::array<glm::vec3, 3> positions{glm::vec3{0.f, -1.f, 0.f},
+                                     glm::vec3{-1.f, 1.f, 0.f},
+                                     glm::vec3{1.f, 1.f, 0.f}};
   vka::UniqueAllocatedBuffer positionBuffer;
+  std::array<glm::vec3, 3> normals{};
   vka::UniqueAllocatedBuffer normalBuffer;
   std::vector<VkImage> swapImages;
   std::vector<vka::UniqueImageView> swapImageViews;
@@ -158,7 +163,8 @@ struct AppState {
     bufState[initialIndex].lightDataUniform.push_back(std::move(lightData));
     bufState[initialIndex].lightDataUniform.flushMemory(device);
 
-    bufState[initialIndex].dynamicLightsUniform.push_back({glm::vec4(), {}});
+    bufState[initialIndex].dynamicLightsUniform.push_back(
+        {glm::vec4(.8f, .8f, .8f, 10), {}});
     bufState[initialIndex].dynamicLightsUniform.flushMemory(device);
 
     materialUniform.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
@@ -197,8 +203,9 @@ struct AppState {
           return;
         case VK_ERROR_OUT_OF_DATE_KHR:
         case VK_SUBOPTIMAL_KHR:
+          device->waitIdle();
           createSwapchain();
-          break;
+          return;
         default:
           MultiLogger::get()->critical(
               "Unrecoverable vulkan error: {}", vka::Results[index.error()]);
@@ -215,40 +222,39 @@ struct AppState {
     bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
     bufState[renderIndex].cameraUniform.flushMemory(device);
 
-    auto surfaceCapabilities = device->getSurfaceCapabilities();
+    auto swapExtent = swapchain.getSwapExtent();
+    if (swapExtent.width == 0 || swapExtent.height == 0) {
+      return;
+    }
     bufState[renderIndex].framebuffer = device->createFramebuffer(
         {swapImageViews[bufState[renderIndex].swapImageIndex].get(),
          depthImageView.get()},
         renderPass,
-        surfaceCapabilities.currentExtent.width,
-        surfaceCapabilities.currentExtent.height);
+        swapExtent.width,
+        swapExtent.height);
     bufState[renderIndex].cmd.begin(
         VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
         renderPass,
         0,
         bufState[renderIndex].framebuffer.get());
-    std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 0.f}},
-                                             VkClearValue{{0.f, 0U}}};
+    std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
+                                             VkClearValue{{1.f, 0U}}};
     bufState[renderIndex].cmd.beginRenderPass(
         renderPass,
         bufState[renderIndex].framebuffer.get(),
-        {{0, 0}, surfaceCapabilities.currentExtent},
+        {{0, 0}, swapExtent},
         clearValues,
         VK_SUBPASS_CONTENTS_INLINE);
     bufState[renderIndex].cmd.setViewport(
         0,
         {{0,
           0,
-          static_cast<float>(surfaceCapabilities.currentExtent.width),
-          static_cast<float>(surfaceCapabilities.currentExtent.height),
+          static_cast<float>(swapExtent.width),
+          static_cast<float>(swapExtent.height),
           0,
           1}});
     bufState[renderIndex].cmd.setScissor(
-        0,
-        {{0,
-          0,
-          surfaceCapabilities.currentExtent.width,
-          surfaceCapabilities.currentExtent.height}});
+        0, {{0, 0, swapExtent.width, swapExtent.height}});
     bufState[renderIndex].cmd.bindGraphicsPipeline(pipeline);
     bufState[renderIndex].cmd.bindGraphicsDescriptorSets(
         pipelineLayout,
@@ -259,7 +265,7 @@ struct AppState {
          bufState[renderIndex].descriptorSets[3],
          bufState[renderIndex].descriptorSets[4]},
         {0});
-    auto vertexBuffers = getVertexBuffers(shapesAsset, 4);
+    auto vertexBuffers = getVertexBuffers(shapesAsset, 0);
     bufState[renderIndex].cmd.bindIndexBuffer(
         vertexBuffers.indexBuffer.buffer,
         0,
@@ -272,6 +278,11 @@ struct AppState {
          vertexBuffers.normalBuffer.view.byteOffset});
     bufState[renderIndex].cmd.drawIndexed(
         vertexBuffers.indexBuffer.accessor.elementCount, 1, 0, 0, 0);
+    // bufState[renderIndex].cmd.bindIndexBuffer(
+    //     indexBuffer.get().buffer, 0, VK_INDEX_TYPE_UINT16);
+    // bufState[renderIndex].cmd.bindVertexBuffers(
+    //     0, {positionBuffer.get().buffer, normalBuffer.get().buffer}, {0, 0});
+    // bufState[renderIndex].cmd.drawIndexed(3, 1, 0, 0, 0);
     bufState[renderIndex].cmd.endRenderPass();
     bufState[renderIndex].cmd.end();
     device->queueSubmit(
@@ -289,8 +300,9 @@ struct AppState {
         return;
       case VK_ERROR_OUT_OF_DATE_KHR:
       case VK_SUBOPTIMAL_KHR:
+        device->waitIdle();
         createSwapchain();
-        break;
+        return;
       default:
         MultiLogger::get()->critical(
             "Unrecoverable vulkan error: {}", vka::Results[presentResult]);
@@ -318,6 +330,7 @@ struct AppState {
 
   AppState() {
     mainCamera.setDimensions(5, 5);
+    mainCamera.setNearFar(-5, 5);
 
     vka::InstanceCreateInfo instanceCreateInfo{};
     instanceCreateInfo.appName = "testmain";
@@ -393,6 +406,53 @@ struct AppState {
       assetCmd.end();
       device->queueSubmit({}, {assetCmd}, {}, assetFence);
       assetFence.wait();
+    }
+
+    {
+      auto assetFence = device->createFence(false);
+      auto assetCopyPool = device->createCommandPool();
+      auto assetCmd = assetCopyPool.allocateCommandBuffers(1)[0];
+      auto indexSize = sizeof(uint16_t) * indices.size();
+      auto positionSize = sizeof(glm::vec3) * positions.size();
+      auto normalSize = sizeof(glm::vec3) * normals.size();
+      indexBuffer = device->createAllocatedBuffer(
+          indexSize,
+          VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      positionBuffer = device->createAllocatedBuffer(
+          positionSize,
+          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      normalBuffer = device->createAllocatedBuffer(
+          normalSize,
+          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      void* indexPtr{};
+      vmaMapMemory(
+          device->getAllocator(), indexBuffer.get().allocation, &indexPtr);
+      std::memcpy(indexPtr, indices.data(), indexSize);
+      void* positionPtr{};
+      vmaMapMemory(
+          device->getAllocator(),
+          positionBuffer.get().allocation,
+          &positionPtr);
+      std::memcpy(positionPtr, positions.data(), positionSize);
+      void* normalPtr{};
+      vmaMapMemory(
+          device->getAllocator(), normalBuffer.get().allocation, &normalPtr);
+      std::memcpy(normalPtr, normals.data(), normalSize);
+      vmaFlushAllocation(
+          device->getAllocator(), indexBuffer.get().allocation, 0, indexSize);
+      vmaFlushAllocation(
+          device->getAllocator(),
+          positionBuffer.get().allocation,
+          0,
+          positionSize);
+      vmaFlushAllocation(
+          device->getAllocator(), normalBuffer.get().allocation, 0, normalSize);
+      vmaUnmapMemory(device->getAllocator(), indexBuffer.get().allocation);
+      vmaUnmapMemory(device->getAllocator(), positionBuffer.get().allocation);
+      vmaUnmapMemory(device->getAllocator(), normalBuffer.get().allocation);
     }
 
     VkDescriptorSetLayoutBinding materialBinding = {
@@ -535,7 +595,7 @@ struct AppState {
     vka::RenderPassCreateInfo renderPassCreateInfo;
     auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
         0,
-        VK_FORMAT_B8G8R8A8_UNORM,
+        swapFormat,
         VK_SAMPLE_COUNT_1_BIT,
         VK_ATTACHMENT_LOAD_OP_CLEAR,
         VK_ATTACHMENT_STORE_OP_STORE,
@@ -545,7 +605,7 @@ struct AppState {
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
         0,
-        VK_FORMAT_D32_SFLOAT,
+        depthFormat,
         VK_SAMPLE_COUNT_1_BIT,
         VK_ATTACHMENT_LOAD_OP_CLEAR,
         VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -591,7 +651,14 @@ struct AppState {
         VkBlendFactor(0),
         VkBlendFactor(0),
         VkBlendOp(0),
-        0);
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    pipeline3DInfo.setDepthTestEnable(true);
+    pipeline3DInfo.setDepthWriteEnable(true);
+    pipeline3DInfo.setDepthCompareOp(VK_COMPARE_OP_LESS);
+    pipeline3DInfo.setDepthBounds(0.f, 1.f);
+    pipeline3DInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
+    pipeline3DInfo.setFrontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE);
 
     MultiLogger::get()->info("creating pipeline cache");
     pipelineCache = device->createPipelineCache();
