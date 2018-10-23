@@ -174,10 +174,7 @@ struct AppState {
   void updateCallback(vka::Engine* engine) {
     auto updateIndex = engine->currentUpdateIndex();
     auto lastUpdateIndex = engine->previousUpdateIndex();
-    // MultiLogger::get()->info(
-    //     "Update callback: index {}, prior index {}.",
-    //     updateIndex,
-    //     lastUpdateIndex);
+
     bufState[updateIndex].instanceUniform.resize(
         bufState[lastUpdateIndex].instanceUniform.size());
     for (auto i = 0U; i < bufState[lastUpdateIndex].instanceUniform.size();
@@ -185,15 +182,34 @@ struct AppState {
       bufState[updateIndex].instanceUniform[i] =
           bufState[lastUpdateIndex].instanceUniform[i];
     }
-    bufState[lastUpdateIndex].instanceUniform.flushMemory(device);
+    bufState[updateIndex].instanceUniform.flushMemory(device);
+
+    bufState[updateIndex].dynamicLightsUniform.resize(
+        bufState[lastUpdateIndex].dynamicLightsUniform.size());
+    for (auto i = 0U; i < bufState[updateIndex].dynamicLightsUniform.size();
+         ++i) {
+      bufState[updateIndex].dynamicLightsUniform[i] =
+          bufState[lastUpdateIndex].dynamicLightsUniform[i];
+    }
+    bufState[updateIndex].dynamicLightsUniform.flushMemory(device);
+
+    bufState[updateIndex].lightDataUniform.resize(
+        bufState[lastUpdateIndex].lightDataUniform.size());
+    for (auto i = 0U; i < bufState[updateIndex].lightDataUniform.size(); ++i) {
+      bufState[updateIndex].lightDataUniform[i] =
+          bufState[lastUpdateIndex].lightDataUniform[i];
+    }
+    bufState[updateIndex].lightDataUniform.flushMemory(device);
+
+    bufState[updateIndex].cameraUniform[0].projection =
+        mainCamera.getProjection();
+    bufState[updateIndex].cameraUniform[0].view = mainCamera.getView();
+    bufState[updateIndex].cameraUniform.flushMemory(device);
   }
 
   void renderCallback(vka::Engine* engine) {
     auto renderIndex = engine->currentRenderIndex();
-    // MultiLogger::get()->info("Render callback: index {}.", renderIndex);
-    for (auto& set : bufState[renderIndex].descriptorSets) {
-      set.validate(*device);
-    }
+
     if (auto index =
             swapchain.acquireImage(bufState[renderIndex].frameAcquired)) {
       bufState[renderIndex].swapImageIndex = index.value();
@@ -216,11 +232,10 @@ struct AppState {
     bufState[renderIndex].frameAcquired.reset();
     bufState[renderIndex].bufferExecuted.wait();
     bufState[renderIndex].bufferExecuted.reset();
+    for (auto& set : bufState[renderIndex].descriptorSets) {
+      set.validate(*device);
+    }
     bufState[renderIndex].commandPool.reset();
-    bufState[renderIndex].cameraUniform[0].projection =
-        mainCamera.getProjection();
-    bufState[renderIndex].cameraUniform[0].view = mainCamera.getView();
-    bufState[renderIndex].cameraUniform.flushMemory(device);
 
     auto swapExtent = swapchain.getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
