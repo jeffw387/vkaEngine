@@ -95,8 +95,8 @@ Swapchain::Swapchain(
 
 Swapchain& Swapchain::operator=(Swapchain&& other) {
   if (this != &other) {
-    std::swap(device, other.device);
-    std::swap(swapchainHandle, other.swapchainHandle);
+    device = other.device;
+    swapchainHandle = other.swapchainHandle;
     swapImages = std::move(other.swapImages);
     swapExtent = std::move(other.swapExtent);
     other.device = {};
