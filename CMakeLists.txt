@@ -73,7 +73,12 @@ target_include_directories(vkaEngine PUBLIC
 set_target_properties(vkaEngine PROPERTIES
   CXX_STANDARD 17)
 
-target_compile_definitions(vkaEngine PUBLIC NOMINMAX GLFW_INCLUDE_NONE)
+target_compile_definitions(vkaEngine 
+  PUBLIC 
+  NOMINMAX
+  GLFW_INCLUDE_NONE
+  GLM_FORCE_DEPTH_ZERO_TO_ONE
+  GLM_FORCE_LEFT_HANDED)
 
 add_custom_command(
   TARGET vkaEngine
