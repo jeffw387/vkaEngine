@@ -22,9 +22,9 @@ void OrthoCamera::setDimensions(float width, float height) {
   float halfWidth = width * 0.5f;
   float halfHeight = height * 0.5f;
   left = -halfWidth;
-  top = -halfHeight;
+  top = halfHeight;
   right = halfWidth;
-  bottom = halfHeight;
+  bottom = -halfHeight;
   projection.reset();
 }
 
