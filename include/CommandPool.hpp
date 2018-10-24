@@ -291,8 +291,7 @@ public:
   ~CommandPool();
 
   operator VkCommandPool() { return poolHandle; }
-  std::vector<CommandBuffer> allocateCommandBuffers(
-      size_t count,
+  std::unique_ptr<CommandBuffer> allocateCommandBuffer(
       VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   void reset(bool releaseResources = false);
 
