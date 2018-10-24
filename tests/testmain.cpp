@@ -118,16 +118,8 @@ struct AppState {
   vka::PipelineCache pipelineCache;
   vka::GraphicsPipeline pipeline;
 
-  vka::gltf::Asset shapesAsset;
-  vka::vulkan_vector<Material> materialUniform;
-  std::array<uint16_t, 3> indices{0, 1, 2};
-  vka::UniqueAllocatedBuffer indexBuffer;
-  std::array<glm::vec3, 3> positions{glm::vec3{0.f, -1.f, 0.f},
-                                     glm::vec3{-1.f, 1.f, 0.f},
-                                     glm::vec3{1.f, 1.f, 0.f}};
-  vka::UniqueAllocatedBuffer positionBuffer;
-  std::array<glm::vec3, 3> normals{};
-  vka::UniqueAllocatedBuffer normalBuffer;
+  vka::asset::Collection shapesAsset;
+  vka::asset::Collection terrainAsset;
   std::vector<VkImage> swapImages;
   std::vector<vka::UniqueImageView> swapImageViews;
   vka::UniqueAllocatedImage depthImage;
@@ -390,85 +382,10 @@ struct AppState {
 
     createSwapchain();
 
-    MultiLogger::get()->info("loading shapes.gltf");
-    shapesAsset = vka::gltf::loadGLTF("content/models/shapes.gltf");
-    createAssetBuffers(device, shapesAsset);
-    {
-      auto assetFence = device->createFence(false);
-      auto assetCopyPool = device->createCommandPool();
-      auto assetCmd = assetCopyPool.allocateCommandBuffers(1)[0];
-      auto byteLength = shapesAsset.buffers[0].byteLength;
-      auto assetStageBuffer = device->createAllocatedBuffer(
-          byteLength,
-          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-          VMA_MEMORY_USAGE_CPU_ONLY);
-      void* stagePtr{};
-      vmaMapMemory(
-          device->getAllocator(), assetStageBuffer.get().allocation, &stagePtr);
-      std::memcpy(
-          stagePtr, shapesAsset.buffers[0].bufferData.get(), byteLength);
-      vmaFlushAllocation(
-          device->getAllocator(),
-          assetStageBuffer.get().allocation,
-          0,
-          byteLength);
-
-      assetCmd.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-      assetCmd.copyBuffer(
-          assetStageBuffer.get().buffer,
-          shapesAsset.buffers[0].vulkanBuffer.get().buffer,
-          {{0, 0, byteLength}});
-      assetCmd.end();
-      device->queueSubmit({}, {assetCmd}, {}, assetFence);
-      assetFence.wait();
-    }
-
-    {
-      auto assetFence = device->createFence(false);
-      auto assetCopyPool = device->createCommandPool();
-      auto assetCmd = assetCopyPool.allocateCommandBuffers(1)[0];
-      auto indexSize = sizeof(uint16_t) * indices.size();
-      auto positionSize = sizeof(glm::vec3) * positions.size();
-      auto normalSize = sizeof(glm::vec3) * normals.size();
-      indexBuffer = device->createAllocatedBuffer(
-          indexSize,
-          VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-      positionBuffer = device->createAllocatedBuffer(
-          positionSize,
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-      normalBuffer = device->createAllocatedBuffer(
-          normalSize,
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-      void* indexPtr{};
-      vmaMapMemory(
-          device->getAllocator(), indexBuffer.get().allocation, &indexPtr);
-      std::memcpy(indexPtr, indices.data(), indexSize);
-      void* positionPtr{};
-      vmaMapMemory(
-          device->getAllocator(),
-          positionBuffer.get().allocation,
-          &positionPtr);
-      std::memcpy(positionPtr, positions.data(), positionSize);
-      void* normalPtr{};
-      vmaMapMemory(
-          device->getAllocator(), normalBuffer.get().allocation, &normalPtr);
-      std::memcpy(normalPtr, normals.data(), normalSize);
-      vmaFlushAllocation(
-          device->getAllocator(), indexBuffer.get().allocation, 0, indexSize);
-      vmaFlushAllocation(
-          device->getAllocator(),
-          positionBuffer.get().allocation,
-          0,
-          positionSize);
-      vmaFlushAllocation(
-          device->getAllocator(), normalBuffer.get().allocation, 0, normalSize);
-      vmaUnmapMemory(device->getAllocator(), indexBuffer.get().allocation);
-      vmaUnmapMemory(device->getAllocator(), positionBuffer.get().allocation);
-      vmaUnmapMemory(device->getAllocator(), normalBuffer.get().allocation);
-    }
+    shapesAsset =
+        vka::asset::loadCollection(device, "content/models/shapes.gltf");
+    terrainAsset =
+        vka::asset::loadCollection(device, "content/models/terrain.gltf");
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,

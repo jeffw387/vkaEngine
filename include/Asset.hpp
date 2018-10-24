@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <cstring>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 #include <nlohmann/json.hpp>
@@ -11,8 +12,8 @@
 #include "Device.hpp"
 
 namespace vka {
-namespace gltf {
 namespace fs = std::experimental::filesystem;
+namespace gltf {
 using json = nlohmann::json;
 struct Node {
   size_t meshIndex;
@@ -200,44 +201,68 @@ inline VertexBuffers getVertexBuffers(Asset& asset, size_t nodeIndex) {
   result.indexBuffer = getBufferData(asset, indexAccessorIndex);
   return result;
 }
-// static void theoreticalTestCase(Asset asset) {
-//   VkCommandBuffer cmd{};
-//   for (const auto& node : asset.nodes) {
-//     for (const auto& primitive : asset.meshes[node.meshIndex].primitives) {
-//       const auto& indexAccessor =
-//       asset.accessors[primitive.indexAccessorIndex]; const auto&
-//       indexBufferView =
-//           asset.bufferViews[indexAccessor.bufferViewIndex];
-//       const auto& indexBuffer = asset.buffers[indexBufferView.bufferIndex];
-//       vkCmdBindIndexBuffer(
-//           cmd,
-//           indexBuffer,
-//           indexBufferView.byteOffset,
-//           indexAccessor.componentType);
 
-//       const auto& positionAccessor =
-//           asset.accessors[primitive.positionAccessorIndex];
-//       const auto& positionBufferView =
-//           asset.bufferViews[positionAccessor.bufferViewIndex];
-//       const auto& normalAccessor =
-//           asset.accessors[primitive.normalAccessorIndex];
-//       const auto& normalBufferView =
-//           asset.bufferViews[normalAccessor.bufferViewIndex];
-//       std::vector<VkBuffer> vertexBuffers = {
-//           asset.buffers[positionBufferView.bufferIndex],
-//           asset.buffers[normalBufferView.bufferIndex]};
-//       std::vector<VkDeviceSize> offsets = {positionBufferView.byteOffset,
-//                                            normalBufferView.byteOffset};
-//       vkCmdBindVertexBuffers(
-//           cmd,
-//           0,
-//           static_cast<uint32_t>(vertexBuffers.size()),
-//           vertexBuffers.data(),
-//           offsets.data());
-//       vkCmdDrawIndexed(cmd, indexAccessor.elementCount, 1, 0, 0, 0);
-//     }
-//   }
-// }
 }  // namespace gltf
+
+namespace asset {
+struct Model {
+  std::string name;
+  size_t indexByteOffset;
+  size_t indexCount;
+  size_t positionByteOffset;
+  size_t normalByteOffset;
+};
+struct Collection {
+  UniqueAllocatedBuffer buffer;
+  std::map<uint64_t, Model> models;
+};
+
+inline Collection loadCollection(Device* device, fs::path assetPath) {
+  auto gltfAsset = gltf::loadGLTF(assetPath);
+  Collection result;
+  auto nodeIndex = 0U;
+  for (auto& node : gltfAsset.nodes) {
+    auto vertBuffers = gltf::getVertexBuffers(gltfAsset, nodeIndex);
+    Model model{};
+    model.name = node.name;
+    model.indexByteOffset = vertBuffers.indexBuffer.view.byteOffset;
+    model.indexCount = vertBuffers.indexBuffer.accessor.elementCount;
+    model.positionByteOffset = vertBuffers.positionBuffer.view.byteOffset;
+    model.normalByteOffset = vertBuffers.normalBuffer.view.byteOffset;
+    result.models[nodeIndex] = std::move(model);
+    ++nodeIndex;
+  }
+  result.buffer = device->createAllocatedBuffer(
+      gltfAsset.buffers.at(0).byteLength,
+      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+          VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+      VMA_MEMORY_USAGE_GPU_ONLY);
+  auto stagingBuffer = device->createAllocatedBuffer(
+      gltfAsset.buffers.at(0).byteLength,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      VMA_MEMORY_USAGE_CPU_ONLY);
+
+  auto byteLength = gltfAsset.buffers[0].byteLength;
+  auto copyFence = device->createFence(false);
+
+  void* stagePtr{};
+  vmaMapMemory(
+      device->getAllocator(), stagingBuffer.get().allocation, &stagePtr);
+  std::memcpy(stagePtr, gltfAsset.buffers[0].bufferData.get(), byteLength);
+  vmaFlushAllocation(
+      device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
+  auto cmdPool = device->createCommandPool();
+  auto cmd = cmdPool.allocateCommandBuffers(1)[0];
+  cmd.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+  cmd.copyBuffer(
+      stagingBuffer.get().buffer,
+      result.buffer.get().buffer,
+      {{0U, 0U, byteLength}});
+  cmd.end();
+  device->queueSubmit({}, {cmd}, {}, copyFence);
+  copyFence.wait();
+  return std::move(result);
+}
+}  // namespace asset
 
 }  // namespace vka
