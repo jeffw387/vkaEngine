@@ -14,13 +14,13 @@ public:
   const glm::mat4& getProjection();
 
 private:
-  float left;
-  float top;
-  float right;
-  float bottom;
+  float left = {};
+  float top = {};
+  float right = {};
+  float bottom = {};
   float near = -1;
   float far = 1;
-  glm::vec3 position;
+  glm::vec3 position = {};
   std::optional<glm::mat4> view;
   std::optional<glm::mat4> projection;
 };
