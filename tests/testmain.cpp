@@ -128,6 +128,7 @@ struct AppState {
   struct BufferedState {
     vka::DescriptorPool descriptorPool;
     std::vector<vka::DescriptorSet> descriptorSets;
+    vka::vulkan_vector<Material, vka::StorageBufferDescriptor> materialUniform;
     vka::vulkan_vector<Light, vka::StorageBufferDescriptor>
         dynamicLightsUniform;
     vka::vulkan_vector<LightData> lightDataUniform;
@@ -397,7 +398,7 @@ struct AppState {
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         1,
         VK_SHADER_STAGE_FRAGMENT_BIT,
         nullptr};
@@ -437,15 +438,17 @@ struct AppState {
     descriptorSetLayouts.push_back(
         std::move(device->createSetLayout({instanceBinding})));
 
-    materialUniform = vka::vulkan_vector<Material>(
-        device,
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
-
     for (auto& state : bufState) {
       MultiLogger::get()->info("creating command pool");
       state.commandPool = device->createCommandPool();
       state.cmd = state.commandPool.allocateCommandBuffers(1)[0];
+
+      state.materialUniform =
+          vka::vulkan_vector<Material, vka::StorageBufferDescriptor>(
+              device,
+              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU);
+      state.materialUniform.reserve(1);
 
       state.dynamicLightsUniform =
           vka::vulkan_vector<Light, vka::StorageBufferDescriptor>(
@@ -494,8 +497,8 @@ struct AppState {
       state.descriptorSets.push_back(
           std::move(state.descriptorPool.allocateDescriptorSets(
               {&descriptorSetLayouts[4]})[0]));
-      materialUniform.subscribe(
-          state.descriptorSets[0].getDescriptor<vka::BufferDescriptor>(
+      state.materialUniform.subscribe(
+          state.descriptorSets[0].getDescriptor<vka::StorageBufferDescriptor>(
               {VkDescriptorSet{}, 0, 0}));
       state.dynamicLightsUniform.subscribe(
           state.descriptorSets[1].getDescriptor<vka::StorageBufferDescriptor>(
