@@ -11,7 +11,6 @@
 #include <memory>
 #include "Device.hpp"
 
-namespace vka {
 namespace fs = std::experimental::filesystem;
 namespace gltf {
 using json = nlohmann::json;
@@ -215,6 +214,8 @@ struct Model {
 struct Collection {
   UniqueAllocatedBuffer buffer;
   std::map<uint64_t, Model> models;
+
+  void load(Device*, fs::path);
 };
 
 inline Collection loadCollection(Device* device, fs::path assetPath) {
@@ -264,5 +265,3 @@ inline Collection loadCollection(Device* device, fs::path assetPath) {
   return std::move(result);
 }
 }  // namespace asset
-
-}  // namespace vka
