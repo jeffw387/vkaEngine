@@ -46,7 +46,7 @@ const glm::mat4& OrthoCamera::getProjection() {
   if (projection) {
     return projection.value();
   }
-  projection = glm::ortho(left, right, bottom, top, 0.f, 1.f);
+  projection = glm::ortho(left, right, bottom, top, near, far);
   return projection.value();
 }
 }  // namespace vka
