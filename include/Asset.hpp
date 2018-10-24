@@ -252,14 +252,14 @@ inline Collection loadCollection(Device* device, fs::path assetPath) {
   vmaFlushAllocation(
       device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
   auto cmdPool = device->createCommandPool();
-  auto cmd = cmdPool.allocateCommandBuffers(1)[0];
-  cmd.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-  cmd.copyBuffer(
+  auto cmd = cmdPool.allocateCommandBuffer();
+  cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+  cmd->copyBuffer(
       stagingBuffer.get().buffer,
       result.buffer.get().buffer,
       {{0U, 0U, byteLength}});
-  cmd.end();
-  device->queueSubmit({}, {cmd}, {}, copyFence);
+  cmd->end();
+  device->queueSubmit({}, {*cmd}, {}, copyFence);
   copyFence.wait();
   return std::move(result);
 }
