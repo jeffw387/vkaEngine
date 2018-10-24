@@ -2,11 +2,12 @@
 #include "Device.hpp"
 
 namespace vka {
-CommandPool::CommandPool(VkDevice device, uint32_t gfxQueueIndex)
+
+CommandPool::CommandPool(VkDevice device, uint32_t queueIndex)
     : device(device) {
   VkCommandPoolCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  createInfo.queueFamilyIndex = gfxQueueIndex;
+  createInfo.queueFamilyIndex = queueIndex;
 
   auto poolResult =
       vkCreateCommandPool(device, &createInfo, nullptr, &poolHandle);
