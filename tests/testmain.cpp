@@ -108,8 +108,8 @@ struct AppState {
   vka::Instance* instance;
   vka::Surface* surface;
   vka::Device* device;
-  vka::CommandPool transferCommandPool;
-  vka::CommandBuffer transferCmd;
+  std::unique_ptr<vka::CommandPool> transferCommandPool;
+  std::unique_ptr<vka::CommandBuffer> transferCmd;
   vka::Fence transferFence;
   vka::Swapchain swapchain;
   vka::ShaderModule vertexShader;
@@ -141,8 +141,8 @@ struct AppState {
     vka::Semaphore renderComplete;
     uint32_t swapImageIndex;
     vka::UniqueFramebuffer framebuffer;
-    vka::CommandPool commandPool;
-    vka::CommandBuffer cmd;
+    std::unique_ptr<vka::CommandPool> commandPool;
+    std::unique_ptr<vka::CommandBuffer> cmd;
     entt::DefaultRegistry ecs;
   };
   std::array<BufferedState, vka::BufferCount> bufState;
@@ -251,20 +251,20 @@ struct AppState {
         renderPass,
         swapExtent.width,
         swapExtent.height);
-    render.cmd.begin(
+    render.cmd->begin(
         VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
         renderPass,
         0,
         render.framebuffer.get());
     std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
                                              VkClearValue{{1.f, 0U}}};
-    render.cmd.beginRenderPass(
+    render.cmd->beginRenderPass(
         renderPass,
         render.framebuffer.get(),
         {{0, 0}, swapExtent},
         clearValues,
         VK_SUBPASS_CONTENTS_INLINE);
-    render.cmd.setViewport(
+    render.cmd->setViewport(
         0,
         {{0,
           0,
@@ -272,9 +272,9 @@ struct AppState {
           static_cast<float>(swapExtent.height),
           0,
           1}});
-    render.cmd.setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
-    render.cmd.bindGraphicsPipeline(pipeline);
-    render.cmd.bindGraphicsDescriptorSets(
+    render.cmd->setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
+    render.cmd->bindGraphicsPipeline(pipeline);
+    render.cmd->bindGraphicsDescriptorSets(
         pipelineLayout,
         0,
         {render.descriptorSets[0],
@@ -285,31 +285,31 @@ struct AppState {
         {0});
     auto shapesBuffer = shapesAsset.buffer.get().buffer;
     auto someModel = shapesAsset.models[0];
-    render.cmd.bindIndexBuffer(
+    render.cmd->bindIndexBuffer(
         shapesBuffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
-    render.cmd.bindVertexBuffers(
+    render.cmd->bindVertexBuffers(
         0,
         {shapesBuffer, shapesBuffer},
         {someModel.positionByteOffset, someModel.normalByteOffset});
-    // render.cmd.drawIndexed(someModel.indexCount, 1, 0, 0, 0);
+    // render.cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
     uint32_t matIndex{};
-    render.cmd.pushConstants(
+    render.cmd->pushConstants(
         pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
     auto terrainBuffer = terrainAsset.buffer.get().buffer;
-    render.cmd.bindIndexBuffer(
+    render.cmd->bindIndexBuffer(
         terrainBuffer,
         terrainAsset.models[0].indexByteOffset,
         VK_INDEX_TYPE_UINT16);
-    render.cmd.bindVertexBuffers(
+    render.cmd->bindVertexBuffers(
         0,
         {terrainBuffer, terrainBuffer},
         {terrainAsset.models[0].positionByteOffset,
          terrainAsset.models[0].normalByteOffset});
-    render.cmd.drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
-    render.cmd.endRenderPass();
-    render.cmd.end();
+    render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+    render.cmd->endRenderPass();
+    render.cmd->end();
     device->queueSubmit(
-        {}, {render.cmd}, {render.renderComplete}, render.bufferExecuted);
+        {}, {*render.cmd}, {render.renderComplete}, render.bufferExecuted);
     auto presentResult = device->presentImage(
         swapchain, render.swapImageIndex, render.renderComplete);
 
@@ -377,7 +377,7 @@ struct AppState {
     preCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     preCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     preCopyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    transferCmd.pipelineBarrier(
+    transferCmd->pipelineBarrier(
         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
@@ -388,7 +388,7 @@ struct AppState {
     VkBufferImageCopy copy{};
     copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
     copy.imageSubresource = imageSubresource;
-    transferCmd.copyBufferToImage(
+    transferCmd->copyBufferToImage(
         staging.get().buffer,
         image,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -404,7 +404,7 @@ struct AppState {
     postCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     postCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     postCopyBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    transferCmd.pipelineBarrier(
+    transferCmd->pipelineBarrier(
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
         0,
@@ -511,7 +511,7 @@ struct AppState {
     for (auto& state : bufState) {
       MultiLogger::get()->info("creating command pool");
       state.commandPool = device->createCommandPool();
-      state.cmd = state.commandPool.allocateCommandBuffers(1)[0];
+      state.cmd = state.commandPool.allocateCommandBuffer();
 
       state.materialUniform =
           vka::vulkan_vector<Material, vka::StorageBufferDescriptor>(
