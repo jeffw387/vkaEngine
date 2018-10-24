@@ -1,10 +1,8 @@
 #pragma once
 #include <vector>
-#include "Asset.hpp"
 
 namespace vka {
 struct Chunk {
-  gltf::Asset asset;
 };
 struct Level {
   std::vector<Chunk> chunks;

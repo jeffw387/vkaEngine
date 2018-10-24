@@ -7,7 +7,6 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include "Asset.hpp"
 #include "Logger.hpp"
 
 namespace vka {
