@@ -345,8 +345,9 @@ struct AppState {
   }
 
   AppState() {
-    mainCamera.setDimensions(5, 5);
-    mainCamera.setNearFar(-5, 5);
+    mainCamera.setDimensions(2, 2);
+    mainCamera.setPosition({0.f, 0.f, 0.f});
+    mainCamera.setNearFar(-10, 10);
 
     vka::InstanceCreateInfo instanceCreateInfo{};
     instanceCreateInfo.appName = "testmain";
@@ -461,13 +462,13 @@ struct AppState {
           device,
           VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
           VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.lightDataUniform.resize(1);
+      state.lightDataUniform.reserve(1);
 
       state.cameraUniform = vka::vulkan_vector<Camera>(
           device,
           VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
           VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.cameraUniform.resize(1);
+      state.cameraUniform.reserve(1);
 
       state.instanceUniform =
           vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>(
