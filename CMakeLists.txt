@@ -77,8 +77,7 @@ target_compile_definitions(vkaEngine
   PUBLIC 
   NOMINMAX
   GLFW_INCLUDE_NONE
-  GLM_FORCE_DEPTH_ZERO_TO_ONE
-  GLM_FORCE_LEFT_HANDED)
+  GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 add_custom_command(
   TARGET vkaEngine
