@@ -26,6 +26,7 @@ file(GENERATE OUTPUT "${includeDir}/Config.hpp"
 
 list(APPEND vkaEngineSources 
   "${srcDir}/Logger.cpp"
+  "${srcDir}/vkaGUI.cpp"
   "${srcDir}/Engine.cpp"
   "${srcDir}/Camera.cpp"
   "${srcDir}/Instance.cpp"
@@ -45,6 +46,7 @@ list(APPEND vkaEngineSources
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
   "${includeDir}/Config.hpp"
+  "${includeDir}/vkaGUI.hpp"
   "${includeDir}/Logger.hpp"
   "${includeDir}/Camera.hpp"
   "${includeDir}/Engine.hpp"
@@ -103,7 +105,10 @@ target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
 #add_subdirectory(external/VulkanFunctionLoader)
 #target_link_libraries(vkaEngine PUBLIC VulkanFunctionLoader)
 
-add_library(dear_imgui external/imgui/imgui.cpp)
+add_library(dear_imgui 
+  external/imgui/imgui.cpp
+  external/imgui/imgui_draw.cpp
+  external/imgui/imgui_widgets.cpp)
 target_include_directories(dear_imgui PUBLIC external/imgui)
 target_link_libraries(vkaEngine PUBLIC dear_imgui)
 
