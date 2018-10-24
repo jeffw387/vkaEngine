@@ -146,65 +146,75 @@ struct AppState {
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
     MultiLogger::get()->info("Init Callback");
-    bufState[initialIndex].instanceUniform.push_back({glm::mat4(1.f)});
-    bufState[initialIndex].instanceUniform.flushMemory(device);
+    auto& initial = bufState[initialIndex];
+
+    initial.materialUniform.push_back({glm::vec4(0.8f, 1.f, 0.8f, 1.f)});
+    initial.materialUniform.flushMemory(device);
+
+    initial.dynamicLightsUniform.push_back(
+        {{0.8f, 0.8f, 0.8f, 25.f}, {0.f, 0.f, 2.f, 0.f}});
+    initial.dynamicLightsUniform.flushMemory(device);
 
     LightData lightData;
     lightData.count = 1;
-    lightData.ambient = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    bufState[initialIndex].lightDataUniform.push_back(std::move(lightData));
-    bufState[initialIndex].lightDataUniform.flushMemory(device);
+    lightData.ambient = glm::vec4(0.f, 0.f, 1.f, 10.0f);
+    initial.lightDataUniform.push_back(std::move(lightData));
+    initial.lightDataUniform.flushMemory(device);
 
-    bufState[initialIndex].dynamicLightsUniform.push_back(
-        {glm::vec4(.8f, .8f, .8f, 10), {}});
-    bufState[initialIndex].dynamicLightsUniform.flushMemory(device);
+    Camera camData{};
+    camData.projection = mainCamera.getProjection();
+    camData.view = mainCamera.getView();
+    initial.cameraUniform.push_back(std::move(camData));
+    initial.cameraUniform.flushMemory(device);
 
-    materialUniform.push_back({glm::vec4(1.f, 0.f, 0.f, 1.f)});
-    materialUniform.flushMemory(device);
+    initial.instanceUniform.push_back(
+        {glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f))});
+    initial.instanceUniform.flushMemory(device);
   }
 
   void updateCallback(vka::Engine* engine) {
     auto updateIndex = engine->currentUpdateIndex();
     auto lastUpdateIndex = engine->previousUpdateIndex();
+    auto& last = bufState[lastUpdateIndex];
+    auto& current = bufState[updateIndex];
 
-    bufState[updateIndex].instanceUniform.resize(
-        bufState[lastUpdateIndex].instanceUniform.size());
-    for (auto i = 0U; i < bufState[lastUpdateIndex].instanceUniform.size();
-         ++i) {
-      bufState[updateIndex].instanceUniform[i] =
-          bufState[lastUpdateIndex].instanceUniform[i];
+    auto matSize = last.materialUniform.size();
+    current.materialUniform.resize(matSize);
+    for (auto i = 0U; i < matSize; ++i) {
+      current.materialUniform[i] = last.materialUniform[i];
     }
-    bufState[updateIndex].instanceUniform.flushMemory(device);
+    current.materialUniform.flushMemory(device);
 
-    bufState[updateIndex].dynamicLightsUniform.resize(
-        bufState[lastUpdateIndex].dynamicLightsUniform.size());
-    for (auto i = 0U; i < bufState[updateIndex].dynamicLightsUniform.size();
-         ++i) {
-      bufState[updateIndex].dynamicLightsUniform[i] =
-          bufState[lastUpdateIndex].dynamicLightsUniform[i];
+    auto dynamicLightSize = last.dynamicLightsUniform.size();
+    current.dynamicLightsUniform.resize(dynamicLightSize);
+    for (auto i = 0U; i < dynamicLightSize; ++i) {
+      current.dynamicLightsUniform[i] = last.dynamicLightsUniform[i];
     }
-    bufState[updateIndex].dynamicLightsUniform.flushMemory(device);
+    current.dynamicLightsUniform.flushMemory(device);
 
-    bufState[updateIndex].lightDataUniform.resize(
-        bufState[lastUpdateIndex].lightDataUniform.size());
-    for (auto i = 0U; i < bufState[updateIndex].lightDataUniform.size(); ++i) {
-      bufState[updateIndex].lightDataUniform[i] =
-          bufState[lastUpdateIndex].lightDataUniform[i];
-    }
-    bufState[updateIndex].lightDataUniform.flushMemory(device);
+    current.lightDataUniform.resize(1);
+    current.lightDataUniform[0] = last.lightDataUniform[0];
+    current.lightDataUniform.flushMemory(device);
 
-    bufState[updateIndex].cameraUniform[0].projection =
-        mainCamera.getProjection();
-    bufState[updateIndex].cameraUniform[0].view = mainCamera.getView();
-    bufState[updateIndex].cameraUniform.flushMemory(device);
+    current.cameraUniform.resize(1);
+    current.cameraUniform[0].projection = mainCamera.getProjection();
+    current.cameraUniform[0].view = mainCamera.getView();
+    current.cameraUniform.flushMemory(device);
+
+    auto instanceSize = last.instanceUniform.size();
+    current.instanceUniform.resize(instanceSize);
+    for (auto i = 0U; i < instanceSize; ++i) {
+      current.instanceUniform[i] = last.instanceUniform[i];
+  }
+    current.instanceUniform.flushMemory(device);
   }
 
   void renderCallback(vka::Engine* engine) {
     auto renderIndex = engine->currentRenderIndex();
+    auto& render = bufState[renderIndex];
 
-    if (auto index =
-            swapchain.acquireImage(bufState[renderIndex].frameAcquired)) {
-      bufState[renderIndex].swapImageIndex = index.value();
+    if (auto index = swapchain.acquireImage(render.frameAcquired)) {
+      render.swapImageIndex = index.value();
     } else {
       switch (index.error()) {
         case VK_NOT_READY:
@@ -220,39 +230,38 @@ struct AppState {
           throw std::runtime_error("Unrecoverable vulkan error.");
       }
     }
-    bufState[renderIndex].frameAcquired.wait();
-    bufState[renderIndex].frameAcquired.reset();
-    bufState[renderIndex].bufferExecuted.wait();
-    bufState[renderIndex].bufferExecuted.reset();
-    for (auto& set : bufState[renderIndex].descriptorSets) {
+    render.frameAcquired.wait();
+    render.frameAcquired.reset();
+    render.bufferExecuted.wait();
+    render.bufferExecuted.reset();
+    for (auto& set : render.descriptorSets) {
       set.validate(*device);
     }
-    bufState[renderIndex].commandPool.reset();
+    render.commandPool.reset();
 
     auto swapExtent = swapchain.getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
       return;
     }
-    bufState[renderIndex].framebuffer = device->createFramebuffer(
-        {swapImageViews[bufState[renderIndex].swapImageIndex].get(),
-         depthImageView.get()},
+    render.framebuffer = device->createFramebuffer(
+        {swapImageViews[render.swapImageIndex].get(), depthImageView.get()},
         renderPass,
         swapExtent.width,
         swapExtent.height);
-    bufState[renderIndex].cmd.begin(
+    render.cmd.begin(
         VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
         renderPass,
         0,
-        bufState[renderIndex].framebuffer.get());
+        render.framebuffer.get());
     std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
                                              VkClearValue{{1.f, 0U}}};
-    bufState[renderIndex].cmd.beginRenderPass(
+    render.cmd.beginRenderPass(
         renderPass,
-        bufState[renderIndex].framebuffer.get(),
+        render.framebuffer.get(),
         {{0, 0}, swapExtent},
         clearValues,
         VK_SUBPASS_CONTENTS_INLINE);
-    bufState[renderIndex].cmd.setViewport(
+    render.cmd.setViewport(
         0,
         {{0,
           0,
@@ -260,47 +269,46 @@ struct AppState {
           static_cast<float>(swapExtent.height),
           0,
           1}});
-    bufState[renderIndex].cmd.setScissor(
-        0, {{0, 0, swapExtent.width, swapExtent.height}});
-    bufState[renderIndex].cmd.bindGraphicsPipeline(pipeline);
-    bufState[renderIndex].cmd.bindGraphicsDescriptorSets(
+    render.cmd.setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
+    render.cmd.bindGraphicsPipeline(pipeline);
+    render.cmd.bindGraphicsDescriptorSets(
         pipelineLayout,
         0,
-        {bufState[renderIndex].descriptorSets[0],
-         bufState[renderIndex].descriptorSets[1],
-         bufState[renderIndex].descriptorSets[2],
-         bufState[renderIndex].descriptorSets[3],
-         bufState[renderIndex].descriptorSets[4]},
+        {render.descriptorSets[0],
+         render.descriptorSets[1],
+         render.descriptorSets[2],
+         render.descriptorSets[3],
+         render.descriptorSets[4]},
         {0});
-    auto vertexBuffers = getVertexBuffers(shapesAsset, 0);
-    bufState[renderIndex].cmd.bindIndexBuffer(
-        vertexBuffers.indexBuffer.buffer,
+    auto shapesBuffer = shapesAsset.buffer.get().buffer;
+    auto someModel = shapesAsset.models[0];
+    render.cmd.bindIndexBuffer(
+        shapesBuffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
+    render.cmd.bindVertexBuffers(
         0,
-        vertexBuffers.indexBuffer.accessor.componentType);
-    bufState[renderIndex].cmd.bindVertexBuffers(
+        {shapesBuffer, shapesBuffer},
+        {someModel.positionByteOffset, someModel.normalByteOffset});
+    // render.cmd.drawIndexed(someModel.indexCount, 1, 0, 0, 0);
+    uint32_t matIndex{};
+    render.cmd.pushConstants(
+        pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
+    auto terrainBuffer = terrainAsset.buffer.get().buffer;
+    render.cmd.bindIndexBuffer(
+        terrainBuffer,
+        terrainAsset.models[0].indexByteOffset,
+        VK_INDEX_TYPE_UINT16);
+    render.cmd.bindVertexBuffers(
         0,
-        {vertexBuffers.positionBuffer.buffer,
-         vertexBuffers.normalBuffer.buffer},
-        {vertexBuffers.positionBuffer.view.byteOffset,
-         vertexBuffers.normalBuffer.view.byteOffset});
-    bufState[renderIndex].cmd.drawIndexed(
-        vertexBuffers.indexBuffer.accessor.elementCount, 1, 0, 0, 0);
-    // bufState[renderIndex].cmd.bindIndexBuffer(
-    //     indexBuffer.get().buffer, 0, VK_INDEX_TYPE_UINT16);
-    // bufState[renderIndex].cmd.bindVertexBuffers(
-    //     0, {positionBuffer.get().buffer, normalBuffer.get().buffer}, {0, 0});
-    // bufState[renderIndex].cmd.drawIndexed(3, 1, 0, 0, 0);
-    bufState[renderIndex].cmd.endRenderPass();
-    bufState[renderIndex].cmd.end();
+        {terrainBuffer, terrainBuffer},
+        {terrainAsset.models[0].positionByteOffset,
+         terrainAsset.models[0].normalByteOffset});
+    render.cmd.drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+    render.cmd.endRenderPass();
+    render.cmd.end();
     device->queueSubmit(
-        {},
-        {bufState[renderIndex].cmd},
-        {bufState[renderIndex].renderComplete},
-        bufState[renderIndex].bufferExecuted);
+        {}, {render.cmd}, {render.renderComplete}, render.bufferExecuted);
     auto presentResult = device->presentImage(
-        swapchain,
-        bufState[renderIndex].swapImageIndex,
-        bufState[renderIndex].renderComplete);
+        swapchain, render.swapImageIndex, render.renderComplete);
 
     switch (presentResult) {
       case VK_SUCCESS:
