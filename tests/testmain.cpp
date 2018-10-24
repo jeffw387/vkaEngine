@@ -108,6 +108,10 @@ struct AppState {
   vka::Instance* instance;
   vka::Surface* surface;
   vka::Device* device;
+  vka::CommandPool transferCommandPool;
+  vka::CommandBuffer transferCmd;
+  vka::Fence transferFence;
+  vka::Swapchain swapchain;
   vka::ShaderModule vertexShader;
   vka::ShaderModule fragmentShader;
   vka::Swapchain swapchain;
