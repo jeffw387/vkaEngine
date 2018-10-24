@@ -1,7 +1,5 @@
 #version 450
 
-layout (constant_id = 0) const uint materialCount = 1;
-layout (constant_id = 1) const uint lightCount = 1;
 const float gamma = 2.2;
 
 vec3 Uncharted2Tonemap(vec3 x)
@@ -31,9 +29,9 @@ struct Light {
   vec4 positionViewSpace;
 };
 
-layout (set = 0) uniform Materials
+layout (set = 0) readonly buffer Materials
 {
-  Material[materialCount] data;
+  Material[] data;
 } materials;
 
 layout (set = 1) readonly buffer DynamicLights {
@@ -49,31 +47,21 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
   vec3 diffuseLighting = vec3(0,0,0);
-  vec4 testLightColor = vec4(.1, 0.4, 0.8, 50);
-  vec3 testLightPos = vec3(0.5, 0, -3);
-  vec3 testSurfToLight = testLightPos - inViewPos;
-  vec3 testNormal = inViewNormal;
-  float testCosTheta = dot(testNormal, testSurfToLight)
-    / (length(testSurfToLight) * length(testNormal));
-  float testIntensity = max(testCosTheta, 0) * (testLightColor.a / length(testSurfToLight));
-  diffuseLighting += testLightColor.rgb * testIntensity;
 
-  // for (uint i = 0; i < lightUniform.dynamicLightCount; ++i) {
-  //   vec3 lightViewPos = vec3(dynamicLights.data[i].positionViewSpace);
-  //   vec3 surfaceToLight = lightViewPos - inViewPos;
-  //   float cosTheta = dot(inViewNormal, surfaceToLight) 
-  //     / (length(surfaceToLight) * length(inViewNormal));
-  //   float intensity = dynamicLights.data[i].color.a * max(cosTheta, 0);
-  //   diffuseLighting += dynamicLights.data[i].color.rgb * intensity;
-  // }
-  vec3 diffuse = materials.data[push.materialIndex].diffuse.rgb;
-  vec3 hdrColor = diffuse * (diffuseLighting + vec3(lightUniform.ambient));
-  vec3 x = hdrColor;
-  float A = 0.15;
-	float B = 0.50;
-	float C = 0.10;
-	float D = 0.20;
-	float E = 0.02;
-	float F = 0.30;
-  outColor = vec4(((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F, 1);
+  for (uint i = 0; i < lightUniform.dynamicLightCount; ++i) {
+    vec3 lightViewPos = vec3(dynamicLights.data[i].positionViewSpace);
+    vec3 surfaceToLight = lightViewPos - inViewPos;
+    float cosTheta = dot(inViewNormal, surfaceToLight) 
+      / (length(surfaceToLight) * length(inViewNormal));
+    float intensity = (dynamicLights.data[i].color.a / length(surfaceToLight))
+      * max(cosTheta, 0);
+    diffuseLighting += dynamicLights.data[i].color.rgb * intensity;
+  }
+  vec3 diffuseMaterial = materials.data[push.materialIndex].diffuse.rgb;
+  vec3 scaledAmbient = (lightUniform.ambient.rgb * lightUniform.ambient.a);
+  vec3 hdrColor = diffuseMaterial + diffuseLighting + scaledAmbient;
+
+  outColor = vec4(Uncharted2Tonemap(hdrColor), 1);
+  // outColor = vec4(inViewNormal, 1);
+  // outColor = vec4(dynamicLights.data[0].positionViewSpace.xyz - inViewPos, 1);
 }
