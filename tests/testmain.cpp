@@ -346,9 +346,15 @@ struct AppState {
         depthImage.get().image, depthFormat, vka::ImageAspect::Depth);
   }
 
-  void recordImageUpload(unsigned char* data, size_t bufferSize, VkImage image, VkExtent2D imageExtent) {
+  void recordImageUpload(
+      unsigned char* data,
+      size_t bufferSize,
+      VkImage image,
+      VkExtent2D imageExtent) {
     auto staging = device->createAllocatedBuffer(
-        bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+        bufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY);
     void* stagePtr{};
     vmaMapMemory(device->getAllocator(), staging.get().allocation, &stagePtr);
     std::memcpy(stagePtr, data, bufferSize);
@@ -366,7 +372,7 @@ struct AppState {
     subresourceRange.baseMipLevel = 0;
     subresourceRange.layerCount = 1;
     subresourceRange.levelCount = 1;
-    
+
     VkImageMemoryBarrier preCopyBarrier{};
     preCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     preCopyBarrier.image = image;
@@ -511,7 +517,7 @@ struct AppState {
     for (auto& state : bufState) {
       MultiLogger::get()->info("creating command pool");
       state.commandPool = device->createCommandPool();
-      state.cmd = state.commandPool.allocateCommandBuffer();
+      state.cmd = state.commandPool->allocateCommandBuffer();
 
       state.materialUniform =
           vka::vulkan_vector<Material, vka::StorageBufferDescriptor>(

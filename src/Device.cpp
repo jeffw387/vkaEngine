@@ -259,8 +259,8 @@ ComputePipeline Device::createComputePipeline(
   return ComputePipeline(deviceHandle, pipelineCache, createInfo);
 }
 
-CommandPool Device::createCommandPool() {
-  return CommandPool(deviceHandle, gfxQueueIndex());
+std::unique_ptr<CommandPool> Device::createCommandPool() {
+  return std::make_unique<CommandPool>(deviceHandle, gfxQueueIndex());
 }
 
 DescriptorPool Device::createDescriptorPool(

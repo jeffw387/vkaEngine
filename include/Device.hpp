@@ -200,7 +200,7 @@ public:
   ComputePipeline createComputePipeline(
       VkPipelineCache pipelineCache,
       const VkComputePipelineCreateInfo&);
-  CommandPool createCommandPool();
+  std::unique_ptr<CommandPool> createCommandPool();
   DescriptorPool createDescriptorPool(
       const std::vector<VkDescriptorPoolSize>& poolSizes,
       uint32_t maxSets);
