@@ -348,6 +348,73 @@ struct AppState {
         depthImage.get().image, depthFormat, vka::ImageAspect::Depth);
   }
 
+  void recordImageUpload(unsigned char* data, size_t bufferSize, VkImage image, VkExtent2D imageExtent) {
+    auto staging = device->createAllocatedBuffer(
+        bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+    void* stagePtr{};
+    vmaMapMemory(device->getAllocator(), staging.get().allocation, &stagePtr);
+    std::memcpy(stagePtr, data, bufferSize);
+    vmaFlushAllocation(
+        device->getAllocator(), staging.get().allocation, 0, bufferSize);
+
+    VkImageSubresourceLayers imageSubresource = {};
+    imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageSubresource.baseArrayLayer = 0;
+    imageSubresource.layerCount = 1;
+    imageSubresource.mipLevel = 0;
+    VkImageSubresourceRange subresourceRange{};
+    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresourceRange.baseArrayLayer = 0;
+    subresourceRange.baseMipLevel = 0;
+    subresourceRange.layerCount = 1;
+    subresourceRange.levelCount = 1;
+    
+    VkImageMemoryBarrier preCopyBarrier{};
+    preCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    preCopyBarrier.image = image;
+    preCopyBarrier.subresourceRange = subresourceRange;
+    preCopyBarrier.srcAccessMask = 0;
+    preCopyBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    preCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    preCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    preCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    preCopyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    transferCmd.pipelineBarrier(
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0,
+        {},
+        {},
+        {preCopyBarrier});
+
+    VkBufferImageCopy copy{};
+    copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
+    copy.imageSubresource = imageSubresource;
+    transferCmd.copyBufferToImage(
+        staging.get().buffer,
+        image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        {copy});
+
+    VkImageMemoryBarrier postCopyBarrier{};
+    postCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    postCopyBarrier.image = image;
+    postCopyBarrier.subresourceRange = subresourceRange;
+    postCopyBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    postCopyBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    postCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    postCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    postCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    postCopyBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    transferCmd.pipelineBarrier(
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        0,
+        {},
+        {},
+        {postCopyBarrier});
+  }
+
   AppState() {
     mainCamera.setDimensions(2, 2);
     mainCamera.setPosition({0.f, 0.f, 0.f});
