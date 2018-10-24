@@ -1,19 +1,19 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <memory>
 
 namespace vka {
 class Device;
 
 class CommandBuffer {
 public:
-  CommandBuffer() = default;
   CommandBuffer(VkCommandBuffer commandBuffer)
       : commandBufferHandle(commandBuffer) {}
   CommandBuffer(CommandBuffer&&) = default;
-  CommandBuffer(const CommandBuffer&) = default;
+  CommandBuffer(const CommandBuffer&) = delete;
   CommandBuffer& operator=(CommandBuffer&&) = default;
-  CommandBuffer& operator=(const CommandBuffer&) = default;
+  CommandBuffer& operator=(const CommandBuffer&) = delete;
   ~CommandBuffer() = default;
   operator VkCommandBuffer() { return commandBufferHandle; }
 
