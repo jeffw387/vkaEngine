@@ -114,9 +114,7 @@ struct AppState {
   vka::Swapchain swapchain;
   vka::ShaderModule vertexShader;
   vka::ShaderModule fragmentShader;
-  vka::Swapchain swapchain;
   vka::RenderPass renderPass;
-  std::vector<VkDescriptorSetLayoutBinding> descriptorSetBindings;
   std::vector<vka::DescriptorSetLayout> descriptorSetLayouts;
   vka::PipelineLayout pipelineLayout;
   vka::PipelineCache pipelineCache;
@@ -210,7 +208,7 @@ struct AppState {
     current.instanceUniform.resize(instanceSize);
     for (auto i = 0U; i < instanceSize; ++i) {
       current.instanceUniform[i] = last.instanceUniform[i];
-  }
+    }
     current.instanceUniform.flushMemory(device);
   }
 
