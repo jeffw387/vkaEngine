@@ -1,5 +1,4 @@
 #include "DescriptorSetLayout.hpp"
-#include <GLFW/glfw3.h>
 #include "Device.hpp"
 
 namespace vka {

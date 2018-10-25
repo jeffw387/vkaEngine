@@ -1,6 +1,5 @@
 #pragma once
 #include <vulkan/vulkan.h>
-//#include <GLFW/glfw3.h>
 #include <vector>
 
 namespace vka {
@@ -8,7 +7,6 @@ class Device;
 
 class DescriptorSetLayout {
 public:
-  DescriptorSetLayout() = default;
   DescriptorSetLayout(
       VkDevice device,
       std::vector<VkDescriptorSetLayoutBinding>);

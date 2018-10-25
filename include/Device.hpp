@@ -202,9 +202,9 @@ public:
       const VkComputePipelineCreateInfo&);
   std::unique_ptr<CommandPool> createCommandPool();
   DescriptorPool createDescriptorPool(
-      const std::vector<VkDescriptorPoolSize>& poolSizes,
+      std::vector<VkDescriptorPoolSize> poolSizes,
       uint32_t maxSets);
-  DescriptorSetLayout createSetLayout(
+  std::unique_ptr<DescriptorSetLayout> createSetLayout(
       std::vector<VkDescriptorSetLayoutBinding> bindings);
   PipelineLayout createPipelineLayout(
       std::vector<VkPushConstantRange>,

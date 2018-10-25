@@ -264,14 +264,14 @@ std::unique_ptr<CommandPool> Device::createCommandPool() {
 }
 
 DescriptorPool Device::createDescriptorPool(
-    const std::vector<VkDescriptorPoolSize>& poolSizes,
+    std::vector<VkDescriptorPoolSize> poolSizes,
     uint32_t maxSets) {
   return DescriptorPool(deviceHandle, poolSizes, maxSets);
 }
 
-DescriptorSetLayout Device::createSetLayout(
+std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
     std::vector<VkDescriptorSetLayoutBinding> bindings) {
-  return DescriptorSetLayout(deviceHandle, std::move(bindings));
+  return std::make_unique<DescriptorSetLayout>(deviceHandle, std::move(bindings));
 }
 
 PipelineLayout Device::createPipelineLayout(
