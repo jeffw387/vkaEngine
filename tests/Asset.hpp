@@ -50,7 +50,7 @@ inline void from_json(const json& j, Mesh& mesh) {
   j.at("primitives").get_to(mesh.primitives);
 }
 struct Buffer {
-  UniqueAllocatedBuffer vulkanBuffer;
+  vka::UniqueAllocatedBuffer vulkanBuffer;
   fs::path uri;
   size_t byteLength;
   std::unique_ptr<char[]> bufferData;
@@ -173,33 +173,13 @@ struct BufferData {
   BufferView view;
   VkBuffer buffer;
 };
-inline BufferData getBufferData(Asset& asset, size_t accessorIndex) {
-  BufferData result{};
-  result.accessor = asset.accessors[accessorIndex];
-  result.view = asset.bufferViews[result.accessor.bufferViewIndex];
-  result.buffer = asset.buffers[result.view.bufferIndex];
-  return result;
-}
 
 struct VertexBuffers {
   BufferData positionBuffer;
   BufferData normalBuffer;
   BufferData indexBuffer;
 };
-inline VertexBuffers getVertexBuffers(Asset& asset, size_t nodeIndex) {
-  VertexBuffers result{};
-  auto meshIndex = asset.nodes[nodeIndex].meshIndex;
-  auto positionAccessorIndex =
-      asset.meshes[meshIndex].primitives[0].positionAccessorIndex;
-  auto normalAccessorIndex =
-      asset.meshes[meshIndex].primitives[0].normalAccessorIndex;
-  auto indexAccessorIndex =
-      asset.meshes[meshIndex].primitives[0].indexAccessorIndex;
-  result.positionBuffer = getBufferData(asset, positionAccessorIndex);
-  result.normalBuffer = getBufferData(asset, normalAccessorIndex);
-  result.indexBuffer = getBufferData(asset, indexAccessorIndex);
-  return result;
-}
+
 
 }  // namespace gltf
 
@@ -212,56 +192,7 @@ struct Model {
   size_t normalByteOffset;
 };
 struct Collection {
-  UniqueAllocatedBuffer buffer;
+  vka::UniqueAllocatedBuffer buffer;
   std::map<uint64_t, Model> models;
-
-  void load(Device*, fs::path);
 };
-
-inline Collection loadCollection(Device* device, fs::path assetPath) {
-  auto gltfAsset = gltf::loadGLTF(assetPath);
-  Collection result;
-  auto nodeIndex = 0U;
-  for (auto& node : gltfAsset.nodes) {
-    auto vertBuffers = gltf::getVertexBuffers(gltfAsset, nodeIndex);
-    Model model{};
-    model.name = node.name;
-    model.indexByteOffset = vertBuffers.indexBuffer.view.byteOffset;
-    model.indexCount = vertBuffers.indexBuffer.accessor.elementCount;
-    model.positionByteOffset = vertBuffers.positionBuffer.view.byteOffset;
-    model.normalByteOffset = vertBuffers.normalBuffer.view.byteOffset;
-    result.models[nodeIndex] = std::move(model);
-    ++nodeIndex;
-  }
-  result.buffer = device->createAllocatedBuffer(
-      gltfAsset.buffers.at(0).byteLength,
-      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-          VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VMA_MEMORY_USAGE_GPU_ONLY);
-  auto stagingBuffer = device->createAllocatedBuffer(
-      gltfAsset.buffers.at(0).byteLength,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-      VMA_MEMORY_USAGE_CPU_ONLY);
-
-  auto byteLength = gltfAsset.buffers[0].byteLength;
-  auto copyFence = device->createFence(false);
-
-  void* stagePtr{};
-  vmaMapMemory(
-      device->getAllocator(), stagingBuffer.get().allocation, &stagePtr);
-  std::memcpy(stagePtr, gltfAsset.buffers[0].bufferData.get(), byteLength);
-  vmaFlushAllocation(
-      device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
-  auto cmdPool = device->createCommandPool();
-  auto cmd = cmdPool->allocateCommandBuffer();
-  cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-  cmd->copyBuffer(
-      stagingBuffer.get().buffer,
-      result.buffer.get().buffer,
-      {{0U, 0U, byteLength}});
-  cmd->end();
-  device->queueSubmit({}, {*cmd}, {}, copyFence);
-  copyFence.wait();
-  return std::move(result);
-}
 }  // namespace asset

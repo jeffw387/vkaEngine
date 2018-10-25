@@ -80,16 +80,6 @@ struct PolySize {
   }
 };
 
-inline void createAssetBuffers(vka::Device* device, vka::gltf::Asset& asset) {
-  for (auto& buffer : asset.buffers) {
-    buffer.vulkanBuffer = device->createAllocatedBuffer(
-        buffer.byteLength,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY);
-  }
-}
-
 enum class DescriptorSets {
   Materials,
   DynamicLights,
@@ -120,8 +110,8 @@ struct AppState {
   vka::PipelineCache pipelineCache;
   vka::GraphicsPipeline pipeline;
 
-  vka::asset::Collection shapesAsset;
-  vka::asset::Collection terrainAsset;
+  asset::Collection shapesAsset;
+  asset::Collection terrainAsset;
   std::vector<VkImage> swapImages;
   std::vector<vka::UniqueImageView> swapImageViews;
   vka::UniqueAllocatedImage depthImage;
@@ -146,6 +136,76 @@ struct AppState {
     entt::DefaultRegistry ecs;
   };
   std::array<BufferedState, vka::BufferCount> bufState;
+
+  gltf::BufferData getBufferData(gltf::Asset& asset, size_t accessorIndex) {
+    gltf::BufferData result{};
+    result.accessor = asset.accessors[accessorIndex];
+    result.view = asset.bufferViews[result.accessor.bufferViewIndex];
+    result.buffer = asset.buffers[result.view.bufferIndex];
+    return result;
+  }
+
+  gltf::VertexBuffers getVertexBuffers(gltf::Asset& asset, size_t nodeIndex) {
+    gltf::VertexBuffers result{};
+    auto meshIndex = asset.nodes[nodeIndex].meshIndex;
+    auto positionAccessorIndex =
+        asset.meshes[meshIndex].primitives[0].positionAccessorIndex;
+    auto normalAccessorIndex =
+        asset.meshes[meshIndex].primitives[0].normalAccessorIndex;
+    auto indexAccessorIndex =
+        asset.meshes[meshIndex].primitives[0].indexAccessorIndex;
+    result.positionBuffer = getBufferData(asset, positionAccessorIndex);
+    result.normalBuffer = getBufferData(asset, normalAccessorIndex);
+    result.indexBuffer = getBufferData(asset, indexAccessorIndex);
+    return result;
+  }
+
+  asset::Collection loadCollection(vka::Device* device, fs::path assetPath) {
+    auto gltfAsset = gltf::loadGLTF(assetPath);
+  asset::Collection result;
+  auto nodeIndex = 0U;
+  for (auto& node : gltfAsset.nodes) {
+    auto vertBuffers = getVertexBuffers(gltfAsset, nodeIndex);
+    asset::Model model{};
+    model.name = node.name;
+    model.indexByteOffset = vertBuffers.indexBuffer.view.byteOffset;
+    model.indexCount = vertBuffers.indexBuffer.accessor.elementCount;
+    model.positionByteOffset = vertBuffers.positionBuffer.view.byteOffset;
+    model.normalByteOffset = vertBuffers.normalBuffer.view.byteOffset;
+    result.models[nodeIndex] = std::move(model);
+    ++nodeIndex;
+  }
+  result.buffer = device->createAllocatedBuffer(
+      gltfAsset.buffers.at(0).byteLength,
+      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+          VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+      VMA_MEMORY_USAGE_GPU_ONLY);
+  auto stagingBuffer = device->createAllocatedBuffer(
+      gltfAsset.buffers.at(0).byteLength,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      VMA_MEMORY_USAGE_CPU_ONLY);
+
+  auto byteLength = gltfAsset.buffers[0].byteLength;
+  auto copyFence = device->createFence(false);
+
+  void* stagePtr{};
+  vmaMapMemory(
+      device->getAllocator(), stagingBuffer.get().allocation, &stagePtr);
+  std::memcpy(stagePtr, gltfAsset.buffers[0].bufferData.get(), byteLength);
+  vmaFlushAllocation(
+      device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
+  auto cmdPool = device->createCommandPool();
+  auto cmd = cmdPool->allocateCommandBuffer();
+  cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+  cmd->copyBuffer(
+      stagingBuffer.get().buffer,
+      result.buffer.get().buffer,
+      {{0U, 0U, byteLength}});
+  cmd->end();
+  device->queueSubmit({}, {*cmd}, {}, copyFence);
+  copyFence.wait();
+  return std::move(result);
+  }
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
     MultiLogger::get()->info("Init Callback");
@@ -468,9 +528,9 @@ struct AppState {
     createSwapchain();
 
     shapesAsset =
-        vka::asset::loadCollection(device, "content/models/shapes.gltf");
+        loadCollection(device, "content/models/shapes.gltf");
     terrainAsset =
-        vka::asset::loadCollection(device, "content/models/terrain.gltf");
+        loadCollection(device, "content/models/terrain.gltf");
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,
