@@ -189,7 +189,7 @@ Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
   return UniqueImageView(view, {deviceHandle});
 }
 
-Swapchain Device::createSwapchain(
+std::unique_ptr<Swapchain> Device::createSwapchain(
     VkSwapchainKHR oldSwapchain,
     VkFormat format) {
   auto capabilities = getSurfaceCapabilities();
@@ -243,20 +243,25 @@ Swapchain Device::createSwapchain(
   createInfo.setSurface(surface);
   createInfo.setImageFormat(format);
   createInfo.setOldSwapchain(oldSwapchain);
-  return Swapchain(
+  return std::make_unique<Swapchain>(
       physicalDeviceHandle, deviceHandle, graphicsQueueIndex, createInfo);
 }
+std::unique_ptr<PipelineCache> Device::createPipelineCache() { return std::make_unique<PipelineCache>(deviceHandle); }
 
-GraphicsPipeline Device::createGraphicsPipeline(
+std::unique_ptr<PipelineCache> Device::createPipelineCache(std::vector<char> initialData) {
+    return std::make_unique<PipelineCache>(deviceHandle, std::move(initialData));
+  }
+
+std::unique_ptr<GraphicsPipeline> Device::createGraphicsPipeline(
     VkPipelineCache pipelineCache,
     const VkGraphicsPipelineCreateInfo& createInfo) {
-  return GraphicsPipeline(deviceHandle, pipelineCache, createInfo);
+  return std::make_unique<GraphicsPipeline>(deviceHandle, pipelineCache, createInfo);
 }
 
-ComputePipeline Device::createComputePipeline(
+std::unique_ptr<ComputePipeline> Device::createComputePipeline(
     VkPipelineCache pipelineCache,
     const VkComputePipelineCreateInfo& createInfo) {
-  return ComputePipeline(deviceHandle, pipelineCache, createInfo);
+  return std::make_unique<ComputePipeline>(deviceHandle, pipelineCache, createInfo);
 }
 
 std::unique_ptr<CommandPool> Device::createCommandPool() {
@@ -274,14 +279,14 @@ std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
   return std::make_unique<DescriptorSetLayout>(deviceHandle, std::move(bindings));
 }
 
-PipelineLayout Device::createPipelineLayout(
+std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
     std::vector<VkPushConstantRange> pushRanges,
     std::vector<VkDescriptorSetLayout> setLayouts) {
-  return PipelineLayout(
+  return std::make_unique<PipelineLayout>(
       deviceHandle, std::move(pushRanges), std::move(setLayouts));
 }
 
-ShaderModule Device::createShaderModule(std::string shaderPath) {
+std::unique_ptr<ShaderModule> Device::createShaderModule(std::string shaderPath) {
   try {
     std::vector<char> binaryData;
     std::ifstream shaderFile(
@@ -292,7 +297,7 @@ ShaderModule Device::createShaderModule(std::string shaderPath) {
     shaderFile.seekg(std::ios::beg);
     binaryData.resize(fileLength);
     shaderFile.read(binaryData.data(), fileLength);
-    return ShaderModule(deviceHandle, binaryData);
+    return std::make_unique<ShaderModule>(deviceHandle, binaryData);
   } catch (const std::exception& e) {
     MultiLogger::get()->critical("error while creating shader: {}", e.what());
     throw e;
@@ -317,11 +322,11 @@ UniqueFramebuffer Device::createFramebuffer(
   return UniqueFramebuffer(framebuffer, {deviceHandle});
 }
 
-Fence Device::createFence(bool signaled) {
-  return Fence(deviceHandle, signaled);
+std::unique_ptr<Fence> Device::createFence(bool signaled) {
+  return std::make_unique<Fence>(deviceHandle, signaled);
 }
 
-Semaphore Device::createSemaphore() { return Semaphore(deviceHandle); }
+std::unique_ptr<Semaphore> Device::createSemaphore() { return std::make_unique<Semaphore>(deviceHandle); }
 
 VkResult Device::presentImage(
     VkSwapchainKHR swapchain,
@@ -354,8 +359,8 @@ void Device::queueSubmit(
   vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence);
 }
 
-RenderPass Device::createRenderPass(const VkRenderPassCreateInfo& createInfo) {
-  return RenderPass(deviceHandle, createInfo);
+std::unique_ptr<RenderPass> Device::createRenderPass(const VkRenderPassCreateInfo& createInfo) {
+  return std::make_unique<RenderPass>(deviceHandle, createInfo);
 }
 
 void Device::waitIdle() { vkDeviceWaitIdle(deviceHandle); }

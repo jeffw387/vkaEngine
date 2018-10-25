@@ -186,18 +186,16 @@ public:
       VkImageUsageFlags,
       ImageAspect);
   UniqueImageView createImageView2D(VkImage, VkFormat, ImageAspect);
-  Swapchain createSwapchain(
+  std::unique_ptr<Swapchain> createSwapchain(
       VkSwapchainKHR = VK_NULL_HANDLE,
       VkFormat = VK_FORMAT_B8G8R8A8_UNORM);
-  RenderPass createRenderPass(const VkRenderPassCreateInfo&);
-  PipelineCache createPipelineCache() { return PipelineCache(deviceHandle); }
-  PipelineCache createPipelineCache(const std::vector<char> initialData) {
-    return PipelineCache(deviceHandle, initialData);
-  }
-  GraphicsPipeline createGraphicsPipeline(
+  std::unique_ptr<RenderPass> createRenderPass(const VkRenderPassCreateInfo&);
+  std::unique_ptr<PipelineCache> createPipelineCache();
+  std::unique_ptr<PipelineCache> createPipelineCache(std::vector<char>);
+  std::unique_ptr<GraphicsPipeline> createGraphicsPipeline(
       VkPipelineCache pipelineCache,
       const VkGraphicsPipelineCreateInfo&);
-  ComputePipeline createComputePipeline(
+  std::unique_ptr<ComputePipeline> createComputePipeline(
       VkPipelineCache pipelineCache,
       const VkComputePipelineCreateInfo&);
   std::unique_ptr<CommandPool> createCommandPool();
@@ -206,17 +204,17 @@ public:
       uint32_t maxSets);
   std::unique_ptr<DescriptorSetLayout> createSetLayout(
       std::vector<VkDescriptorSetLayoutBinding> bindings);
-  PipelineLayout createPipelineLayout(
+  std::unique_ptr<PipelineLayout> createPipelineLayout(
       std::vector<VkPushConstantRange>,
       std::vector<VkDescriptorSetLayout>);
-  ShaderModule createShaderModule(std::string shaderPath);
+  std::unique_ptr<ShaderModule> createShaderModule(std::string shaderPath);
   UniqueFramebuffer createFramebuffer(
       std::vector<VkImageView> attachments,
       VkRenderPass renderPass,
       uint32_t width,
       uint32_t height);
-  Fence createFence(bool signaled = true);
-  Semaphore createSemaphore();
+  std::unique_ptr<Fence> createFence(bool signaled = true);
+  std::unique_ptr<Semaphore> createSemaphore();
 
   VkResult presentImage(
       VkSwapchainKHR swapchain,
