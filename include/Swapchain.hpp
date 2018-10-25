@@ -1,6 +1,5 @@
 #pragma once
 #include <vulkan/vulkan.h>
-//#include <GLFW/glfw3.h>
 #include <vector>
 #include <map>
 #include <string>
@@ -58,7 +57,6 @@ private:
 
 class Swapchain {
 public:
-  Swapchain() = default;
   Swapchain(
       VkPhysicalDevice physicalDevice,
       VkDevice device,
@@ -75,7 +73,6 @@ public:
   std::vector<VkImage> getSwapImages() const noexcept;
   outcome::result<uint32_t, VkResult> acquireImage(VkFence fence);
   VkExtent2D getSwapExtent() const noexcept;
-  void reset();
 
 private:
   VkDevice device = VK_NULL_HANDLE;

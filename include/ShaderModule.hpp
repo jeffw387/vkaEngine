@@ -1,6 +1,5 @@
 #pragma once
 #include <vulkan/vulkan.h>
-//#include <GLFW/glfw3.h>
 #include <vector>
 
 namespace vka {
@@ -8,7 +7,6 @@ class Device;
 
 class ShaderModule {
 public:
-  ShaderModule() = default;
   ShaderModule(VkDevice device, std::vector<char> shaderBytes);
   ShaderModule(ShaderModule&&);
   ShaderModule& operator=(ShaderModule&&);

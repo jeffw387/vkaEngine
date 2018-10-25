@@ -3,7 +3,6 @@
 namespace vka {
 class Semaphore {
 public:
-  Semaphore() = default;
   Semaphore(VkDevice);
   Semaphore(Semaphore&&);
   Semaphore(const Semaphore&) = delete;

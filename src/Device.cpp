@@ -246,22 +246,27 @@ std::unique_ptr<Swapchain> Device::createSwapchain(
   return std::make_unique<Swapchain>(
       physicalDeviceHandle, deviceHandle, graphicsQueueIndex, createInfo);
 }
-std::unique_ptr<PipelineCache> Device::createPipelineCache() { return std::make_unique<PipelineCache>(deviceHandle); }
+std::unique_ptr<PipelineCache> Device::createPipelineCache() {
+  return std::make_unique<PipelineCache>(deviceHandle);
+}
 
-std::unique_ptr<PipelineCache> Device::createPipelineCache(std::vector<char> initialData) {
-    return std::make_unique<PipelineCache>(deviceHandle, std::move(initialData));
-  }
+std::unique_ptr<PipelineCache> Device::createPipelineCache(
+    std::vector<char> initialData) {
+  return std::make_unique<PipelineCache>(deviceHandle, std::move(initialData));
+}
 
 std::unique_ptr<GraphicsPipeline> Device::createGraphicsPipeline(
     VkPipelineCache pipelineCache,
     const VkGraphicsPipelineCreateInfo& createInfo) {
-  return std::make_unique<GraphicsPipeline>(deviceHandle, pipelineCache, createInfo);
+  return std::make_unique<GraphicsPipeline>(
+      deviceHandle, pipelineCache, createInfo);
 }
 
 std::unique_ptr<ComputePipeline> Device::createComputePipeline(
     VkPipelineCache pipelineCache,
     const VkComputePipelineCreateInfo& createInfo) {
-  return std::make_unique<ComputePipeline>(deviceHandle, pipelineCache, createInfo);
+  return std::make_unique<ComputePipeline>(
+      deviceHandle, pipelineCache, createInfo);
 }
 
 std::unique_ptr<CommandPool> Device::createCommandPool() {
@@ -271,12 +276,14 @@ std::unique_ptr<CommandPool> Device::createCommandPool() {
 std::unique_ptr<DescriptorPool> Device::createDescriptorPool(
     std::vector<VkDescriptorPoolSize> poolSizes,
     uint32_t maxSets) {
-  return std::make_unique<DescriptorPool>(deviceHandle, std::move(poolSizes), maxSets);
+  return std::make_unique<DescriptorPool>(
+      deviceHandle, std::move(poolSizes), maxSets);
 }
 
 std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
     std::vector<VkDescriptorSetLayoutBinding> bindings) {
-  return std::make_unique<DescriptorSetLayout>(deviceHandle, std::move(bindings));
+  return std::make_unique<DescriptorSetLayout>(
+      deviceHandle, std::move(bindings));
 }
 
 std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
@@ -286,7 +293,8 @@ std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
       deviceHandle, std::move(pushRanges), std::move(setLayouts));
 }
 
-std::unique_ptr<ShaderModule> Device::createShaderModule(std::string shaderPath) {
+std::unique_ptr<ShaderModule> Device::createShaderModule(
+    std::string shaderPath) {
   try {
     std::vector<char> binaryData;
     std::ifstream shaderFile(
@@ -326,7 +334,9 @@ std::unique_ptr<Fence> Device::createFence(bool signaled) {
   return std::make_unique<Fence>(deviceHandle, signaled);
 }
 
-std::unique_ptr<Semaphore> Device::createSemaphore() { return std::make_unique<Semaphore>(deviceHandle); }
+std::unique_ptr<Semaphore> Device::createSemaphore() {
+  return std::make_unique<Semaphore>(deviceHandle);
+}
 
 VkResult Device::presentImage(
     VkSwapchainKHR swapchain,
@@ -359,7 +369,8 @@ void Device::queueSubmit(
   vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence);
 }
 
-std::unique_ptr<RenderPass> Device::createRenderPass(const VkRenderPassCreateInfo& createInfo) {
+std::unique_ptr<RenderPass> Device::createRenderPass(
+    const VkRenderPassCreateInfo& createInfo) {
   return std::make_unique<RenderPass>(deviceHandle, createInfo);
 }
 

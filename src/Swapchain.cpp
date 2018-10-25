@@ -127,11 +127,9 @@ outcome::result<uint32_t, VkResult> Swapchain::acquireImage(VkFence fence) {
 
 VkExtent2D Swapchain::getSwapExtent() const noexcept { return swapExtent; }
 
-void Swapchain::reset() {
+Swapchain::~Swapchain() {
   if (device != VK_NULL_HANDLE && swapchainHandle != VK_NULL_HANDLE) {
     vkDestroySwapchainKHR(device, swapchainHandle, nullptr);
   }
 }
-
-Swapchain::~Swapchain() { reset(); }
 }  // namespace vka

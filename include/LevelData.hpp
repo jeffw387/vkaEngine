@@ -2,8 +2,7 @@
 #include <vector>
 
 namespace vka {
-struct Chunk {
-};
+struct Chunk {};
 struct Level {
   std::vector<Chunk> chunks;
   int width;

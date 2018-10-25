@@ -4,6 +4,7 @@
 #include <variant>
 #include <optional>
 #include <map>
+#include <memory>
 
 namespace vka {
 class DescriptorSetLayout;
@@ -119,8 +120,8 @@ public:
   ~DescriptorPool();
   operator VkDescriptorPool() { return poolHandle; }
 
-  std::vector<DescriptorSet> allocateDescriptorSets(
-      std::vector<DescriptorSetLayout*> layouts);
+  std::unique_ptr<DescriptorSet> allocateDescriptorSet(
+      DescriptorSetLayout* layouts);
   void reset();
 
 private:

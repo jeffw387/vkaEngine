@@ -15,7 +15,6 @@ struct ShaderStageData {
 
 class PipelineCache {
 public:
-  PipelineCache() = default;
   PipelineCache(VkDevice device, std::vector<char> initialData);
   PipelineCache(VkDevice device);
   PipelineCache(const PipelineCache&) = delete;
@@ -165,7 +164,6 @@ private:
 
 class GraphicsPipeline {
 public:
-  GraphicsPipeline() = default;
   GraphicsPipeline(
       VkDevice device,
       VkPipelineCache cache,
@@ -185,7 +183,6 @@ private:
 
 class ComputePipeline {
 public:
-  ComputePipeline() = default;
   ComputePipeline(
       VkDevice device,
       VkPipelineCache cache,

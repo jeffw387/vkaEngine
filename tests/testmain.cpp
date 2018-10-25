@@ -100,15 +100,15 @@ struct AppState {
   vka::Device* device;
   std::unique_ptr<vka::CommandPool> transferCommandPool;
   std::unique_ptr<vka::CommandBuffer> transferCmd;
-  vka::Fence transferFence;
-  vka::Swapchain swapchain;
-  vka::ShaderModule vertexShader;
-  vka::ShaderModule fragmentShader;
-  vka::RenderPass renderPass;
-  std::vector<vka::DescriptorSetLayout> descriptorSetLayouts;
-  vka::PipelineLayout pipelineLayout;
-  vka::PipelineCache pipelineCache;
-  vka::GraphicsPipeline pipeline;
+  std::unique_ptr<vka::Fence> transferFence;
+  std::unique_ptr<vka::Swapchain> swapchain;
+  std::unique_ptr<vka::ShaderModule> vertexShader;
+  std::unique_ptr<vka::ShaderModule> fragmentShader;
+  std::unique_ptr<vka::RenderPass> renderPass;
+  std::vector<std::unique_ptr<vka::DescriptorSetLayout>> descriptorSetLayouts;
+  std::unique_ptr<vka::PipelineLayout> pipelineLayout;
+  std::unique_ptr<vka::PipelineCache> pipelineCache;
+  std::unique_ptr<vka::GraphicsPipeline> pipeline;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
@@ -118,17 +118,17 @@ struct AppState {
   vka::UniqueImageView depthImageView;
 
   struct BufferedState {
-    vka::DescriptorPool descriptorPool;
-    std::vector<vka::DescriptorSet> descriptorSets;
+    std::unique_ptr<vka::DescriptorPool> descriptorPool;
+    std::vector<std::unique_ptr<vka::DescriptorSet>> descriptorSets;
     vka::vulkan_vector<Material, vka::StorageBufferDescriptor> materialUniform;
     vka::vulkan_vector<Light, vka::StorageBufferDescriptor>
         dynamicLightsUniform;
     vka::vulkan_vector<LightData> lightDataUniform;
     vka::vulkan_vector<Camera> cameraUniform;
     vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor> instanceUniform;
-    vka::Fence frameAcquired;
-    vka::Fence bufferExecuted;
-    vka::Semaphore renderComplete;
+    std::unique_ptr<vka::Fence> frameAcquired;
+    std::unique_ptr<vka::Fence> bufferExecuted;
+    std::unique_ptr<vka::Semaphore> renderComplete;
     uint32_t swapImageIndex;
     vka::UniqueFramebuffer framebuffer;
     std::unique_ptr<vka::CommandPool> commandPool;
@@ -162,49 +162,49 @@ struct AppState {
 
   asset::Collection loadCollection(vka::Device* device, fs::path assetPath) {
     auto gltfAsset = gltf::loadGLTF(assetPath);
-  asset::Collection result;
-  auto nodeIndex = 0U;
-  for (auto& node : gltfAsset.nodes) {
-    auto vertBuffers = getVertexBuffers(gltfAsset, nodeIndex);
-    asset::Model model{};
-    model.name = node.name;
-    model.indexByteOffset = vertBuffers.indexBuffer.view.byteOffset;
-    model.indexCount = vertBuffers.indexBuffer.accessor.elementCount;
-    model.positionByteOffset = vertBuffers.positionBuffer.view.byteOffset;
-    model.normalByteOffset = vertBuffers.normalBuffer.view.byteOffset;
-    result.models[nodeIndex] = std::move(model);
-    ++nodeIndex;
-  }
-  result.buffer = device->createAllocatedBuffer(
-      gltfAsset.buffers.at(0).byteLength,
-      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-          VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VMA_MEMORY_USAGE_GPU_ONLY);
-  auto stagingBuffer = device->createAllocatedBuffer(
-      gltfAsset.buffers.at(0).byteLength,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-      VMA_MEMORY_USAGE_CPU_ONLY);
+    asset::Collection result;
+    auto nodeIndex = 0U;
+    for (auto& node : gltfAsset.nodes) {
+      auto vertBuffers = getVertexBuffers(gltfAsset, nodeIndex);
+      asset::Model model{};
+      model.name = node.name;
+      model.indexByteOffset = vertBuffers.indexBuffer.view.byteOffset;
+      model.indexCount = vertBuffers.indexBuffer.accessor.elementCount;
+      model.positionByteOffset = vertBuffers.positionBuffer.view.byteOffset;
+      model.normalByteOffset = vertBuffers.normalBuffer.view.byteOffset;
+      result.models[nodeIndex] = std::move(model);
+      ++nodeIndex;
+    }
+    result.buffer = device->createAllocatedBuffer(
+        gltfAsset.buffers.at(0).byteLength,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY);
+    auto stagingBuffer = device->createAllocatedBuffer(
+        gltfAsset.buffers.at(0).byteLength,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY);
 
-  auto byteLength = gltfAsset.buffers[0].byteLength;
-  auto copyFence = device->createFence(false);
+    auto byteLength = gltfAsset.buffers[0].byteLength;
+    auto copyFence = device->createFence(false);
 
-  void* stagePtr{};
-  vmaMapMemory(
-      device->getAllocator(), stagingBuffer.get().allocation, &stagePtr);
-  std::memcpy(stagePtr, gltfAsset.buffers[0].bufferData.get(), byteLength);
-  vmaFlushAllocation(
-      device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
-  auto cmdPool = device->createCommandPool();
-  auto cmd = cmdPool->allocateCommandBuffer();
-  cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-  cmd->copyBuffer(
-      stagingBuffer.get().buffer,
-      result.buffer.get().buffer,
-      {{0U, 0U, byteLength}});
-  cmd->end();
-  device->queueSubmit({}, {*cmd}, {}, copyFence);
-  copyFence.wait();
-  return std::move(result);
+    void* stagePtr{};
+    vmaMapMemory(
+        device->getAllocator(), stagingBuffer.get().allocation, &stagePtr);
+    std::memcpy(stagePtr, gltfAsset.buffers[0].bufferData.get(), byteLength);
+    vmaFlushAllocation(
+        device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
+    auto cmdPool = device->createCommandPool();
+    auto cmd = cmdPool->allocateCommandBuffer();
+    cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    cmd->copyBuffer(
+        stagingBuffer.get().buffer,
+        result.buffer.get().buffer,
+        {{0U, 0U, byteLength}});
+    cmd->end();
+    device->queueSubmit({}, {*cmd}, {}, *copyFence);
+    copyFence->wait();
+    return std::move(result);
   }
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
@@ -276,7 +276,7 @@ struct AppState {
     auto renderIndex = engine->currentRenderIndex();
     auto& render = bufState[renderIndex];
 
-    if (auto index = swapchain.acquireImage(render.frameAcquired)) {
+    if (auto index = swapchain->acquireImage(*render.frameAcquired)) {
       render.swapImageIndex = index.value();
     } else {
       switch (index.error()) {
@@ -293,33 +293,33 @@ struct AppState {
           throw std::runtime_error("Unrecoverable vulkan error.");
       }
     }
-    render.frameAcquired.wait();
-    render.frameAcquired.reset();
-    render.bufferExecuted.wait();
-    render.bufferExecuted.reset();
+    render.frameAcquired->wait();
+    render.frameAcquired->reset();
+    render.bufferExecuted->wait();
+    render.bufferExecuted->reset();
     for (auto& set : render.descriptorSets) {
-      set.validate(*device);
+      set->validate(*device);
     }
     render.commandPool.reset();
 
-    auto swapExtent = swapchain.getSwapExtent();
+    auto swapExtent = swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
       return;
     }
     render.framebuffer = device->createFramebuffer(
         {swapImageViews[render.swapImageIndex].get(), depthImageView.get()},
-        renderPass,
+        *renderPass,
         swapExtent.width,
         swapExtent.height);
     render.cmd->begin(
         VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        renderPass,
+        *renderPass,
         0,
         render.framebuffer.get());
     std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
                                              VkClearValue{{1.f, 0U}}};
     render.cmd->beginRenderPass(
-        renderPass,
+        *renderPass,
         render.framebuffer.get(),
         {{0, 0}, swapExtent},
         clearValues,
@@ -333,15 +333,15 @@ struct AppState {
           0,
           1}});
     render.cmd->setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
-    render.cmd->bindGraphicsPipeline(pipeline);
+    render.cmd->bindGraphicsPipeline(*pipeline);
     render.cmd->bindGraphicsDescriptorSets(
-        pipelineLayout,
+        *pipelineLayout,
         0,
-        {render.descriptorSets[0],
-         render.descriptorSets[1],
-         render.descriptorSets[2],
-         render.descriptorSets[3],
-         render.descriptorSets[4]},
+        {*render.descriptorSets[0],
+         *render.descriptorSets[1],
+         *render.descriptorSets[2],
+         *render.descriptorSets[3],
+         *render.descriptorSets[4]},
         {0});
     auto shapesBuffer = shapesAsset.buffer.get().buffer;
     auto someModel = shapesAsset.models[0];
@@ -354,7 +354,7 @@ struct AppState {
     // render.cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
     uint32_t matIndex{};
     render.cmd->pushConstants(
-        pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
+        *pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
     auto terrainBuffer = terrainAsset.buffer.get().buffer;
     render.cmd->bindIndexBuffer(
         terrainBuffer,
@@ -369,9 +369,9 @@ struct AppState {
     render.cmd->endRenderPass();
     render.cmd->end();
     device->queueSubmit(
-        {}, {*render.cmd}, {render.renderComplete}, render.bufferExecuted);
+        {}, {*render.cmd}, {*render.renderComplete}, *render.bufferExecuted);
     auto presentResult = device->presentImage(
-        swapchain, render.swapImageIndex, render.renderComplete);
+        *swapchain, render.swapImageIndex, *render.renderComplete);
 
     switch (presentResult) {
       case VK_SUCCESS:
@@ -392,13 +392,13 @@ struct AppState {
     swapImageViews.clear();
     swapchain.reset();
     swapchain = device->createSwapchain();
-    swapImages = std::move(swapchain.getSwapImages());
+    swapImages = std::move(swapchain->getSwapImages());
     for (const auto& swapImage : swapImages) {
       swapImageViews.push_back(device->createImageView2D(
           swapImage, swapFormat, vka::ImageAspect::Color));
     }
     depthImage = device->createAllocatedImage2D(
-        swapchain.getSwapExtent(),
+        swapchain->getSwapExtent(),
         depthFormat,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         vka::ImageAspect::Depth);
@@ -527,10 +527,8 @@ struct AppState {
 
     createSwapchain();
 
-    shapesAsset =
-        loadCollection(device, "content/models/shapes.gltf");
-    terrainAsset =
-        loadCollection(device, "content/models/terrain.gltf");
+    shapesAsset = loadCollection(device, "content/models/shapes.gltf");
+    terrainAsset = loadCollection(device, "content/models/terrain.gltf");
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,
@@ -618,35 +616,25 @@ struct AppState {
            {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
            {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
           5);
-      state.descriptorSets.push_back(
-          std::move(state.descriptorPool.allocateDescriptorSets(
-              {&descriptorSetLayouts[0]})[0]));
-      state.descriptorSets.push_back(
-          std::move(state.descriptorPool.allocateDescriptorSets(
-              {&descriptorSetLayouts[1]})[0]));
-      state.descriptorSets.push_back(
-          std::move(state.descriptorPool.allocateDescriptorSets(
-              {&descriptorSetLayouts[2]})[0]));
-      state.descriptorSets.push_back(
-          std::move(state.descriptorPool.allocateDescriptorSets(
-              {&descriptorSetLayouts[3]})[0]));
-      state.descriptorSets.push_back(
-          std::move(state.descriptorPool.allocateDescriptorSets(
-              {&descriptorSetLayouts[4]})[0]));
+      for (auto& setLayout : descriptorSetLayouts) {
+        state.descriptorSets.push_back(
+            state.descriptorPool->allocateDescriptorSet(setLayout.get()));
+      }
+
       state.materialUniform.subscribe(
-          state.descriptorSets[0].getDescriptor<vka::StorageBufferDescriptor>(
+          state.descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
               {VkDescriptorSet{}, 0, 0}));
       state.dynamicLightsUniform.subscribe(
-          state.descriptorSets[1].getDescriptor<vka::StorageBufferDescriptor>(
+          state.descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
               {VkDescriptorSet{}, 0, 0}));
       state.lightDataUniform.subscribe(
-          state.descriptorSets[2].getDescriptor<vka::BufferDescriptor>(
+          state.descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
               {VkDescriptorSet{}, 0, 0}));
       state.cameraUniform.subscribe(
-          state.descriptorSets[3].getDescriptor<vka::BufferDescriptor>(
+          state.descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
               {VkDescriptorSet{}, 0, 0}));
       state.instanceUniform.subscribe(
-          state.descriptorSets[4].getDescriptor<vka::DynamicBufferDescriptor>(
+          state.descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
               {VkDescriptorSet{}, 0, 0}));
 
       state.frameAcquired = device->createFence(false);
@@ -665,11 +653,11 @@ struct AppState {
     MultiLogger::get()->info("creating pipeline layout");
     pipelineLayout = device->createPipelineLayout(
         {{VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}},
-        {descriptorSetLayouts[0],
-         descriptorSetLayouts[1],
-         descriptorSetLayouts[2],
-         descriptorSetLayouts[3],
-         descriptorSetLayouts[4]});
+        {*descriptorSetLayouts[0],
+         *descriptorSetLayouts[1],
+         *descriptorSetLayouts[2],
+         *descriptorSetLayouts[3],
+         *descriptorSetLayouts[4]});
 
     vka::RenderPassCreateInfo renderPassCreateInfo;
     auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
@@ -702,18 +690,18 @@ struct AppState {
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
     auto pipeline3DInfo =
-        vka::GraphicsPipelineCreateInfo(pipelineLayout, renderPass, 0);
+        vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);
     pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
     pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
     pipeline3DInfo.addShaderStage(
-        VK_SHADER_STAGE_VERTEX_BIT, {}, 0, nullptr, vertexShader, "main");
+        VK_SHADER_STAGE_VERTEX_BIT, {}, 0, nullptr, *vertexShader, "main");
     FragmentSpecData fragmentSpecData{1, 1};
     pipeline3DInfo.addShaderStage(
         VK_SHADER_STAGE_FRAGMENT_BIT,
         {{0, 0, 4}, {1, 4, 4}},
         sizeof(FragmentSpecData),
         &fragmentSpecData,
-        fragmentShader,
+        *fragmentShader,
         "main");
     pipeline3DInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0);
     pipeline3DInfo.addVertexAttribute(1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0);
@@ -742,7 +730,7 @@ struct AppState {
     MultiLogger::get()->info("creating pipeline cache");
     pipelineCache = device->createPipelineCache();
     MultiLogger::get()->info("creating pipeline");
-    pipeline = device->createGraphicsPipeline(pipelineCache, pipeline3DInfo);
+    pipeline = device->createGraphicsPipeline(*pipelineCache, pipeline3DInfo);
 
     engine->run();
   }

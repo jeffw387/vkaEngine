@@ -4,7 +4,6 @@
 namespace vka {
 class Fence {
 public:
-  Fence() = default;
   Fence(VkDevice device, bool signaled = true);
   Fence(const Fence&) = delete;
   Fence& operator=(const Fence&) = delete;
