@@ -108,7 +108,6 @@ private:
 
 class DescriptorPool {
 public:
-  DescriptorPool() = default;
   DescriptorPool(
       VkDevice device,
       std::vector<VkDescriptorPoolSize> poolSizes,

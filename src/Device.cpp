@@ -263,10 +263,10 @@ std::unique_ptr<CommandPool> Device::createCommandPool() {
   return std::make_unique<CommandPool>(deviceHandle, gfxQueueIndex());
 }
 
-DescriptorPool Device::createDescriptorPool(
+std::unique_ptr<DescriptorPool> Device::createDescriptorPool(
     std::vector<VkDescriptorPoolSize> poolSizes,
     uint32_t maxSets) {
-  return DescriptorPool(deviceHandle, poolSizes, maxSets);
+  return std::make_unique<DescriptorPool>(deviceHandle, std::move(poolSizes), maxSets);
 }
 
 std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
