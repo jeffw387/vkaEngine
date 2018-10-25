@@ -19,6 +19,7 @@
 #include "vulkan_vector.hpp"
 #include <experimental/filesystem>
 #include "VkEnumStrings.hpp"
+#include "vkaGUI.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -109,6 +110,8 @@ struct AppState {
   std::unique_ptr<vka::PipelineLayout> pipelineLayout;
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::unique_ptr<vka::GraphicsPipeline> pipeline;
+  vka::GUIData guiData;
+  std::unique_ptr<vka::GUI> gui;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
