@@ -3,13 +3,15 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <chrono>
+#include <memory>
+#include "Image.hpp"
 #include "Device.hpp"
 
 namespace vka {
 
 struct GUIData {
-  UniqueAllocatedImage fontImage;
-  UniqueAllocatedBuffer vertexBuffer;
+  std::unique_ptr<Image> fontImage;
+  // std::unique_ptr<Buffer> vertexBuffer;
   size_t vertexByteOffset;
   size_t indexByteOffset;
   std::unique_ptr<DescriptorSetLayout> setLayout;

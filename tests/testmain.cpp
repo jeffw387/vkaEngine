@@ -116,9 +116,9 @@ struct AppState {
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
   std::vector<VkImage> swapImages;
-  std::vector<vka::UniqueImageView> swapImageViews;
-  vka::UniqueAllocatedImage depthImage;
-  vka::UniqueImageView depthImageView;
+  std::vector<std::unique_ptr<vka::ImageView>> swapImageViews;
+  std::unique_ptr<vka::Image> depthImage;
+  std::unique_ptr<vka::ImageView> depthImageView;
 
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
@@ -310,7 +310,7 @@ struct AppState {
       return;
     }
     render.framebuffer = device->createFramebuffer(
-        {swapImageViews[render.swapImageIndex].get(), depthImageView.get()},
+        {*swapImageViews[render.swapImageIndex], *depthImageView},
         *renderPass,
         swapExtent.width,
         swapExtent.height);
@@ -400,13 +400,13 @@ struct AppState {
       swapImageViews.push_back(device->createImageView2D(
           swapImage, swapFormat, vka::ImageAspect::Color));
     }
-    depthImage = device->createAllocatedImage2D(
+    depthImage = device->createImage2D(
         swapchain->getSwapExtent(),
         depthFormat,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         vka::ImageAspect::Depth);
     depthImageView = device->createImageView2D(
-        depthImage.get().image, depthFormat, vka::ImageAspect::Depth);
+        *depthImage, depthFormat, vka::ImageAspect::Depth);
   }
 
   void recordImageUpload(
@@ -541,10 +541,11 @@ struct AppState {
       int width{};
       int height{};
       io.Fonts->GetTexDataAsRGBA32(&guiFontPixels, &width, &height);
-      recordImageUpload(guiFontPixels, width*height*4, guiData.fontImage.get().image, {
-        static_cast<uint32_t>(width),
-        static_cast<uint32_t>(height)
-      });
+      recordImageUpload(
+          guiFontPixels,
+          width * height * 4,
+          *guiData.fontImage,
+          {static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
       transferCmd->end();
       device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
       transferFence->wait();

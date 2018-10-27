@@ -20,6 +20,7 @@
 #include "Swapchain.hpp"
 #include "Fence.hpp"
 #include "Semaphore.hpp"
+#include "Image.hpp"
 
 namespace vka {
 
@@ -101,43 +102,6 @@ struct AllocatedBufferDeleter {
 using UniqueAllocatedBuffer =
     std::unique_ptr<AllocatedBuffer, AllocatedBufferDeleter>;
 
-enum class ImageAspect {
-  Color = VK_IMAGE_ASPECT_COLOR_BIT,
-  Depth = VK_IMAGE_ASPECT_DEPTH_BIT
-};
-
-struct AllocatedImage {
-  VkImage image;
-  VmaAllocation allocation;
-  VmaAllocationInfo allocInfo;
-
-  bool operator!=(std::nullptr_t) { return image != 0 || allocation != 0; }
-  bool operator!=(const AllocatedImage& other) {
-    return image != other.image || allocation != other.allocation;
-  }
-};
-struct AllocatedImageDeleter {
-  using pointer = AllocatedImage;
-
-  void operator()(AllocatedImage allocImage) {
-    vmaDestroyImage(allocator, allocImage.image, allocImage.allocation);
-  }
-  VmaAllocator allocator;
-};
-using UniqueAllocatedImage =
-    std::unique_ptr<AllocatedImage, AllocatedImageDeleter>;
-
-struct ImageViewDeleter {
-  using pointer = VkImageView;
-
-  void operator()(VkImageView view) {
-    vkDestroyImageView(device, view, nullptr);
-  }
-
-  VkDevice device;
-};
-using UniqueImageView = std::unique_ptr<VkImageView, ImageViewDeleter>;
-
 struct FramebufferDeleter {
   using pointer = VkFramebuffer;
 
@@ -180,12 +144,9 @@ public:
   VmaAllocator getAllocator() { return allocator; }
   UniqueAllocatedBuffer
       createAllocatedBuffer(VkDeviceSize, VkBufferUsageFlags, VmaMemoryUsage);
-  UniqueAllocatedImage createAllocatedImage2D(
-      VkExtent2D,
-      VkFormat,
-      VkImageUsageFlags,
-      ImageAspect);
-  UniqueImageView createImageView2D(VkImage, VkFormat, ImageAspect);
+  std::unique_ptr<Image>
+      createImage2D(VkExtent2D, VkFormat, VkImageUsageFlags, ImageAspect);
+  std::unique_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
   std::unique_ptr<Swapchain> createSwapchain(
       VkSwapchainKHR = VK_NULL_HANDLE,
       VkFormat = VK_FORMAT_B8G8R8A8_UNORM);

@@ -12,6 +12,7 @@
 #include "Pipeline.hpp"
 #include "Logger.hpp"
 #include <fstream>
+#include <vector>
 
 namespace vka {
 PhysicalDeviceData::PhysicalDeviceData(VkInstance instance) {
@@ -141,52 +142,24 @@ UniqueAllocatedBuffer Device::createAllocatedBuffer(
   return bufferUnique;
 }
 
-UniqueAllocatedImage Device::createAllocatedImage2D(
+std::unique_ptr<Image> Device::createImage2D(
     VkExtent2D extent,
     VkFormat format,
     VkImageUsageFlags usage,
     ImageAspect aspect) {
-  VkImageCreateInfo imageCreateInfo{};
-  imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  imageCreateInfo.usage = usage;
-  imageCreateInfo.format = format;
-  imageCreateInfo.extent = {extent.width, extent.height, 1};
-  imageCreateInfo.mipLevels = 1;
-  imageCreateInfo.arrayLayers = 1;
-  imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  imageCreateInfo.pQueueFamilyIndices = &graphicsQueueIndex;
-  imageCreateInfo.queueFamilyIndexCount = 1;
-  imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-  imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-  imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-
-  VmaAllocationCreateInfo allocationCreateInfo{};
-  allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-  AllocatedImage result{};
-  vmaCreateImage(
+  std::vector<uint32_t> queueIndices = {graphicsQueueIndex};
+  return std::make_unique<Image>(
       allocator,
-      &imageCreateInfo,
-      &allocationCreateInfo,
-      &result.image,
-      &result.allocation,
-      &result.allocInfo);
-  return UniqueAllocatedImage(result, {allocator});
+      std::move(queueIndices),
+      VkExtent3D{extent.width, extent.height, 1U},
+      std::move(format),
+      std::move(usage),
+      std::move(aspect));
 }
 
-UniqueImageView
+std::unique_ptr<ImageView>
 Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
-  VkImageViewCreateInfo createInfo{};
-  createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  createInfo.subresourceRange = {
-      static_cast<VkImageAspectFlags>(aspect), 0, 1, 0, 1};
-  createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  createInfo.image = image;
-  createInfo.format = format;
-
-  VkImageView view{};
-  vkCreateImageView(deviceHandle, &createInfo, nullptr, &view);
-  return UniqueImageView(view, {deviceHandle});
+  return std::make_unique<ImageView>(deviceHandle, image, format, aspect);
 }
 
 std::unique_ptr<Swapchain> Device::createSwapchain(
