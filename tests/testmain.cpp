@@ -529,7 +529,27 @@ struct AppState {
         });
 
     createSwapchain();
+    gui = std::make_unique<vka::GUI>();
 
+    [this]() {
+      transferCommandPool = device->createCommandPool();
+      transferCmd = transferCommandPool->allocateCommandBuffer();
+      transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+      transferFence = device->createFence(false);
+      auto& io = ImGui::GetIO();
+      unsigned char* guiFontPixels{};
+      int width{};
+      int height{};
+      io.Fonts->GetTexDataAsRGBA32(&guiFontPixels, &width, &height);
+      recordImageUpload(guiFontPixels, width*height*4, guiData.fontImage.get().image, {
+        static_cast<uint32_t>(width),
+        static_cast<uint32_t>(height)
+      });
+      transferCmd->end();
+      device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
+      transferFence->wait();
+      transferFence->reset();
+    }();
     shapesAsset = loadCollection(device, "content/models/shapes.gltf");
     terrainAsset = loadCollection(device, "content/models/terrain.gltf");
 
