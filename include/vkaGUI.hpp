@@ -22,10 +22,7 @@ struct GUIData {
 };
 class GUI {
 public:
-  GUI(VkImage);
+  GUI();
   ~GUI();
-  ImGuiIO& getIO();
-  void newFrame();
-  ImDrawData* render();
 };
 }  // namespace vka
