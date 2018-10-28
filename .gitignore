@@ -36,3 +36,4 @@
 build/
 version.hpp
 vkaEngineLog.txt
+~/Development/vkaEngine/compile-commands.json
