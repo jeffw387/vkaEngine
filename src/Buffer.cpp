@@ -52,5 +52,18 @@ VkDeviceSize Buffer::offset() {
   return getAllocationInfo().offset;
 }
 
-VkDeviceSize Buffer::size
+VkDeviceSize Buffer::size() {
+  return getAllocationInfo().size;
+}
+
+void* Buffer::map() {
+  void* result{};
+  vmaMapMemory(allocator, allocation, &result);
+  return result;
+}
+
+void Buffer::unmap() {
+  vmaUnmapMemory(allocator, allocation);
+}
+
 }
