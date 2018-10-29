@@ -1,24 +1,15 @@
-[submodule "external/VulkanFunctionLoader"]
-	path = external/VulkanFunctionLoader
-	url = https://github.com/jeffw387/VulkanFunctionLoader.git
 [submodule "external/glm"]
 	path = external/glm
 	url = https://github.com/g-truc/glm.git
-[submodule "external/assimp"]
-	path = external/assimp
-	url = https://github.com/assimp/assimp.git
 [submodule "external/gli"]
 	path = external/gli
 	url = https://github.com/g-truc/gli.git
 [submodule "external/bullet3"]
 	path = external/bullet3
-	url = https://github.com/bulletphysics/bullet3.git
+	url = https://github.com/jeffw387/bullet3.git
 [submodule "external/glfw"]
 	path = external/glfw
-	url = https://github.com/glfw/glfw.git
-[submodule "external/tbb"]
-	path = external/tbb
-	url = https://github.com/wjakob/tbb.git
+	url = https://github.com/jeffw387/glfw.git
 [submodule "external/VulkanMemoryAllocator"]
 	path = external/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
