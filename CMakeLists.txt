@@ -16,7 +16,6 @@ configure_file("${includeDir}/version.hpp.in"
   "${includeDir}/version.hpp" @ONLY)
 
 set(DebugBool "$<$<CONFIG:Debug>:true>")
-message("DebugBool: ${DebugBool}")
 
 configure_file("${includeDir}/Config.hpp.in" 
     "${includeDir}/Config.hpp.cfg" @ONLY)
@@ -80,7 +79,11 @@ target_compile_definitions(vkaEngine
   PUBLIC 
   NOMINMAX
   GLFW_INCLUDE_NONE
-  GLM_FORCE_DEPTH_ZERO_TO_ONE)
+  GLM_FORCE_DEPTH_ZERO_TO_ONE
+  _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING
+  _CRT_SECURE_NO_WARNINGS)
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "force static build" FORCE)
 
 add_custom_command(
   TARGET vkaEngine
@@ -103,30 +106,28 @@ message("vk include dirs: ${Vulkan_INCLUDE_DIRS}")
 message("vk libs: ${Vulkan_LIBRARIES}")
 target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
-#add_subdirectory(external/VulkanFunctionLoader)
-#target_link_libraries(vkaEngine PUBLIC VulkanFunctionLoader)
 
 add_library(dear_imgui 
-  external/imgui/imgui.cpp
-  external/imgui/imgui_draw.cpp
-  external/imgui/imgui_widgets.cpp)
+external/imgui/imgui.cpp
+external/imgui/imgui_draw.cpp
+external/imgui/imgui_widgets.cpp)
 target_include_directories(dear_imgui PUBLIC external/imgui)
 target_link_libraries(vkaEngine PUBLIC dear_imgui)
 
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator 
-  INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/external/VulkanMemoryAllocator/src")
+INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/external/VulkanMemoryAllocator/src")
 target_link_libraries(vkaEngine PUBLIC VulkanMemoryAllocator)
 
 add_subdirectory(external/glm)
 if(NOT TARGET glm)
-  message(FATAL_ERROR "glm target not found")
+message(FATAL_ERROR "glm target not found")
 endif()
 target_link_libraries(vkaEngine PUBLIC glm)
 
 add_subdirectory(external/gli)
 if(NOT TARGET gli)
-  message(FATAL_ERROR "gli target not found")
+message(FATAL_ERROR "gli target not found")
 endif()
 target_link_libraries(vkaEngine PUBLIC gli)
 
@@ -135,37 +136,21 @@ target_include_directories(
   json_nlohmann
   INTERFACE
   external/json/single_include)
-target_link_libraries(vkaEngine PUBLIC json_nlohmann)
-
-#add_subdirectory(external/assimp)
-#if(NOT TARGET assimp)
-#  message(FATAL_ERROR "assimp target not found")
-#endif()
-#target_link_libraries(vkaEngine PUBLIC assimp)
-
-add_subdirectory(external/glfw)
-if(NOT TARGET glfw)
+  target_link_libraries(vkaEngine PUBLIC json_nlohmann)
+  
+  add_subdirectory(external/glfw)
+  if(NOT TARGET glfw)
   message(FATAL_ERROR "glfw target not found")
-endif()
-target_link_libraries(vkaEngine PUBLIC glfw)
-
-add_subdirectory(external/bullet3)
-set(RequiredBulletComponents Bullet3Common BulletDynamics BulletCollision LinearMath)
-foreach(component ${RequiredBulletComponents})
-  if(NOT TARGET ${component})
-    message(FATAL_ERROR "${component} target from BulletPhysics not found")
   endif()
-  target_link_libraries(vkaEngine PUBLIC ${RequiredBulletComponents})
-endforeach()
-
-#add_subdirectory(external/tbb)
-#if(NOT TARGET tbb_static)
-#  message(FATAL_ERROR "tbb_static target not found")
-#  endif()
-#target_link_libraries(vkaEngine PUBLIC tbb_static)
-
-add_subdirectory(external/spdlog)
-add_library(spdlog::spdlog ALIAS spdlog)
-target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
-
-add_subdirectory(tests)
+  target_link_libraries(vkaEngine PUBLIC glfw)
+  
+  add_subdirectory(external/spdlog)
+  add_library(spdlog::spdlog ALIAS spdlog)
+  target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
+  
+  add_library(tinygltf INTERFACE)
+  target_include_directories(tinygltf INTERFACE external/tinygltf)
+  target_link_libraries(tinygltf INTERFACE json_nlohmann)
+  target_link_libraries(vkaEngine PUBLIC tinygltf)
+  
+  add_subdirectory(tests)
