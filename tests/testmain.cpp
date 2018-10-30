@@ -505,6 +505,10 @@ struct AppState {
 
     createSwapchain();
     gui = std::make_unique<vka::GUI>();
+    guiData.descriptorPool = device->createDescriptorPool({
+      { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+      { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}
+      }, 1);
 
     [this]() {
       transferCommandPool = device->createCommandPool();
