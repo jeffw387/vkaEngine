@@ -19,7 +19,6 @@ public:
   VkDeviceMemory deviceMemory();
   VkDeviceSize offset();
   VkDeviceSize size();
-  //void* mapPtr();
   void* map();
   void unmap();
 private:
