@@ -11,6 +11,7 @@ namespace vka {
 
 struct GUIData {
   std::unique_ptr<Image> fontImage;
+  std::unique_ptr<Sampler> fontSampler;
   // std::unique_ptr<Buffer> vertexBuffer;
   size_t vertexByteOffset;
   size_t indexByteOffset;
