@@ -510,12 +510,14 @@ struct AppState {
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
         1);
 
+    guiData.fontSampler = ;
+
     guiData.setLayout =
         device->createSetLayout({{0,
                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                   1,
                                   VK_SHADER_STAGE_FRAGMENT_BIT,
-                                  nullptr},  //*guiData.fontSampler},
+                                  *guiData.fontSampler},
                                  {1,
                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                   1,
