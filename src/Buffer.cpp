@@ -65,4 +65,12 @@ void* Buffer::map() {
 
 void Buffer::unmap() { vmaUnmapMemory(allocator, allocation); }
 
+void Buffer::flush() {
+  vmaFlushAllocation(allocator, allocation, 0, size());
+}
+
+void Buffer::invalidate() {
+  vmaInvalidateAllocation(allocator, allocation, 0, size());
+}
+
 }  // namespace vka

@@ -21,6 +21,8 @@ public:
   VkDeviceSize size();
   void* map();
   void unmap();
+  void flush();
+  void invalidate();
 
 private:
   VmaAllocator allocator;
