@@ -57,8 +57,7 @@ Device::Device(
 
   physicalDevice = selectCallback(physicalDeviceData);
   deviceProperties = physicalDeviceData.properties.at(physicalDevice);
-  memoryProperties =
-      physicalDeviceData.memoryProperties.at(physicalDevice);
+  memoryProperties = physicalDeviceData.memoryProperties.at(physicalDevice);
   queueFamilyProperties =
       physicalDeviceData.queueFamilyProperties.at(physicalDevice);
 
@@ -90,8 +89,8 @@ Device::Device(
   deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
   deviceCreateInfo.queueCreateInfoCount = 1;
   deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
-  auto deviceResult = vkCreateDevice(
-      physicalDevice, &deviceCreateInfo, nullptr, &device);
+  auto deviceResult =
+      vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
   if (deviceResult != VK_SUCCESS) {
     MultiLogger::get()->error(
         "Device not created, result code {}.", deviceResult);
@@ -117,12 +116,11 @@ std::unique_ptr<Buffer> Device::createBuffer(
     VkBufferUsageFlags usage,
     VmaMemoryUsage memoryUsage) {
   return std::make_unique<Buffer>(
-    allocator,
-    size,
-    usage,
-    memoryUsage,
-    std::vector<uint32_t>{graphicsQueueIndex}
-  );
+      allocator,
+      size,
+      usage,
+      memoryUsage,
+      std::vector<uint32_t>{graphicsQueueIndex});
 }
 
 std::unique_ptr<Image> Device::createImage2D(
@@ -214,15 +212,13 @@ std::unique_ptr<PipelineCache> Device::createPipelineCache(
 std::unique_ptr<GraphicsPipeline> Device::createGraphicsPipeline(
     VkPipelineCache pipelineCache,
     const VkGraphicsPipelineCreateInfo& createInfo) {
-  return std::make_unique<GraphicsPipeline>(
-      device, pipelineCache, createInfo);
+  return std::make_unique<GraphicsPipeline>(device, pipelineCache, createInfo);
 }
 
 std::unique_ptr<ComputePipeline> Device::createComputePipeline(
     VkPipelineCache pipelineCache,
     const VkComputePipelineCreateInfo& createInfo) {
-  return std::make_unique<ComputePipeline>(
-      device, pipelineCache, createInfo);
+  return std::make_unique<ComputePipeline>(device, pipelineCache, createInfo);
 }
 
 std::unique_ptr<CommandPool> Device::createCommandPool() {
@@ -238,8 +234,7 @@ std::unique_ptr<DescriptorPool> Device::createDescriptorPool(
 
 std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
     std::vector<VkDescriptorSetLayoutBinding> bindings) {
-  return std::make_unique<DescriptorSetLayout>(
-      device, std::move(bindings));
+  return std::make_unique<DescriptorSetLayout>(device, std::move(bindings));
 }
 
 std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
