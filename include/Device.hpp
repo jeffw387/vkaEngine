@@ -21,6 +21,7 @@
 #include "Fence.hpp"
 #include "Semaphore.hpp"
 #include "Image.hpp"
+#include "Buffer.hpp"
 
 namespace vka {
 
@@ -65,43 +66,6 @@ inline VkPhysicalDeviceFeatures makeVkFeatures(
   return vkFeatures;
 }
 
-struct DeviceDeleter {
-  using pointer = VkDevice;
-  void operator()(VkDevice deviceHandle) {
-    vkDestroyDevice(deviceHandle, nullptr);
-  }
-};
-using DeviceOwner = std::unique_ptr<VkDevice, DeviceDeleter>;
-
-struct AllocatorDeleter {
-  using pointer = VmaAllocator;
-  void operator()(VmaAllocator allocator) { vmaDestroyAllocator(allocator); }
-};
-using AllocatorOwner = std::unique_ptr<VmaAllocator, AllocatorDeleter>;
-
-struct AllocatedBuffer {
-  VkBuffer buffer;
-  VmaAllocation allocation;
-  VmaAllocationInfo allocInfo;
-
-  bool operator!=(std::nullptr_t) { return buffer != 0 || allocation != 0; }
-  bool operator!=(const AllocatedBuffer& other) {
-    return buffer != other.buffer || allocation != other.allocation;
-  }
-};
-
-struct AllocatedBufferDeleter {
-  using pointer = AllocatedBuffer;
-
-  void operator()(AllocatedBuffer allocBuffer) {
-    vmaDestroyBuffer(allocator, allocBuffer.buffer, allocBuffer.allocation);
-  }
-
-  VmaAllocator allocator;
-};
-using UniqueAllocatedBuffer =
-    std::unique_ptr<AllocatedBuffer, AllocatedBufferDeleter>;
-
 struct FramebufferDeleter {
   using pointer = VkFramebuffer;
 
@@ -136,14 +100,14 @@ public:
       DeviceSelectCallback);
   Device(Device&&) = default;
   Device& operator=(Device&&) = default;
-  ~Device() = default;
+  ~Device();
 
-  operator VkPhysicalDevice() { return physicalDeviceHandle; }
-  operator VkDevice() { return deviceHandle; }
+  operator VkPhysicalDevice() { return physicalDevice; }
+  operator VkDevice() { return device; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  UniqueAllocatedBuffer
-      createAllocatedBuffer(VkDeviceSize, VkBufferUsageFlags, VmaMemoryUsage);
+  std::unique_ptr<Buffer>
+      createBuffer(VkDeviceSize, VkBufferUsageFlags, VmaMemoryUsage);
   std::unique_ptr<Image>
       createImage2D(VkExtent2D, VkFormat, VkImageUsageFlags, ImageAspect);
   std::unique_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
@@ -204,15 +168,13 @@ public:
 private:
   VkSurfaceKHR surface;
   PhysicalDeviceData physicalDeviceData;
-  VkPhysicalDevice physicalDeviceHandle;
+  VkPhysicalDevice physicalDevice;
   VkPhysicalDeviceProperties deviceProperties;
   VkPhysicalDeviceMemoryProperties memoryProperties;
   std::vector<VkQueueFamilyProperties> queueFamilyProperties;
 
-  VkDevice deviceHandle;
-  DeviceOwner deviceOwner;
+  VkDevice device;
   VmaAllocator allocator;
-  AllocatorOwner allocatorOwner;
   uint32_t graphicsQueueIndex = UINT32_MAX;
   VkDeviceQueueCreateInfo queueCreateInfo = {
       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};

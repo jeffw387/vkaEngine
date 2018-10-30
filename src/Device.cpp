@@ -55,12 +55,12 @@ Device::Device(
     : surface(surface), physicalDeviceData(instance) {
   MultiLogger::get()->info("Creating device.");
 
-  physicalDeviceHandle = selectCallback(physicalDeviceData);
-  deviceProperties = physicalDeviceData.properties.at(physicalDeviceHandle);
+  physicalDevice = selectCallback(physicalDeviceData);
+  deviceProperties = physicalDeviceData.properties.at(physicalDevice);
   memoryProperties =
-      physicalDeviceData.memoryProperties.at(physicalDeviceHandle);
+      physicalDeviceData.memoryProperties.at(physicalDevice);
   queueFamilyProperties =
-      physicalDeviceData.queueFamilyProperties.at(physicalDeviceHandle);
+      physicalDeviceData.queueFamilyProperties.at(physicalDevice);
 
   graphicsQueueIndex = [&]() {
     for (uint32_t i = 0U; i < queueFamilyProperties.size(); ++i) {
@@ -91,55 +91,38 @@ Device::Device(
   deviceCreateInfo.queueCreateInfoCount = 1;
   deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
   auto deviceResult = vkCreateDevice(
-      physicalDeviceHandle, &deviceCreateInfo, nullptr, &deviceHandle);
+      physicalDevice, &deviceCreateInfo, nullptr, &device);
   if (deviceResult != VK_SUCCESS) {
     MultiLogger::get()->error(
         "Device not created, result code {}.", deviceResult);
   }
-  deviceOwner = DeviceOwner(deviceHandle);
 
-  // LoadDeviceLevelEntryPoints(deviceHandle);
-
-  vkGetDeviceQueue(deviceHandle, graphicsQueueIndex, 0, &graphicsQueue);
+  vkGetDeviceQueue(device, graphicsQueueIndex, 0, &graphicsQueue);
 
   VmaAllocatorCreateInfo allocatorCreateInfo{};
-  allocatorCreateInfo.physicalDevice = physicalDeviceHandle;
-  allocatorCreateInfo.device = deviceHandle;
+  allocatorCreateInfo.physicalDevice = physicalDevice;
+  allocatorCreateInfo.device = device;
   vmaCreateAllocator(&allocatorCreateInfo, &allocator);
-  allocatorOwner = AllocatorOwner(allocator);
 }
 
 VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {
   VkSurfaceCapabilitiesKHR capabilities{};
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-      physicalDeviceHandle, surface, &capabilities);
+      physicalDevice, surface, &capabilities);
   return capabilities;
 }
 
-UniqueAllocatedBuffer Device::createAllocatedBuffer(
+std::unique_ptr<Buffer> Device::createBuffer(
     VkDeviceSize size,
     VkBufferUsageFlags usage,
     VmaMemoryUsage memoryUsage) {
-  AllocatedBuffer result{};
-  VkBufferCreateInfo bufferCreateInfo{};
-  bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-  bufferCreateInfo.usage = usage;
-  bufferCreateInfo.queueFamilyIndexCount = 1;
-  bufferCreateInfo.pQueueFamilyIndices = &graphicsQueueIndex;
-  bufferCreateInfo.size = size;
-
-  VmaAllocationCreateInfo allocationCreateInfo{};
-  allocationCreateInfo.usage = memoryUsage;
-  vmaCreateBuffer(
-      allocator,
-      &bufferCreateInfo,
-      &allocationCreateInfo,
-      &result.buffer,
-      &result.allocation,
-      &result.allocInfo);
-  auto bufferUnique =
-      UniqueAllocatedBuffer(result, AllocatedBufferDeleter{allocator});
-  return bufferUnique;
+  return std::make_unique<Buffer>(
+    allocator,
+    size,
+    usage,
+    memoryUsage,
+    std::vector<uint32_t>{graphicsQueueIndex}
+  );
 }
 
 std::unique_ptr<Image> Device::createImage2D(
@@ -159,7 +142,7 @@ std::unique_ptr<Image> Device::createImage2D(
 
 std::unique_ptr<ImageView>
 Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
-  return std::make_unique<ImageView>(deviceHandle, image, format, aspect);
+  return std::make_unique<ImageView>(device, image, format, aspect);
 }
 
 std::unique_ptr<Swapchain> Device::createSwapchain(
@@ -201,11 +184,11 @@ std::unique_ptr<Swapchain> Device::createSwapchain(
 
   uint32_t presentModeCount{};
   vkGetPhysicalDeviceSurfacePresentModesKHR(
-      physicalDeviceHandle, surface, &presentModeCount, nullptr);
+      physicalDevice, surface, &presentModeCount, nullptr);
   std::vector<VkPresentModeKHR> supportedModes;
   supportedModes.resize(presentModeCount);
   vkGetPhysicalDeviceSurfacePresentModesKHR(
-      physicalDeviceHandle, surface, &presentModeCount, supportedModes.data());
+      physicalDevice, surface, &presentModeCount, supportedModes.data());
   for (const auto& mode : supportedModes) {
     MultiLogger::get()->info("Supported present mode: {}.", PresentModes[mode]);
   }
@@ -217,53 +200,53 @@ std::unique_ptr<Swapchain> Device::createSwapchain(
   createInfo.setImageFormat(format);
   createInfo.setOldSwapchain(oldSwapchain);
   return std::make_unique<Swapchain>(
-      physicalDeviceHandle, deviceHandle, graphicsQueueIndex, createInfo);
+      physicalDevice, device, graphicsQueueIndex, createInfo);
 }
 std::unique_ptr<PipelineCache> Device::createPipelineCache() {
-  return std::make_unique<PipelineCache>(deviceHandle);
+  return std::make_unique<PipelineCache>(device);
 }
 
 std::unique_ptr<PipelineCache> Device::createPipelineCache(
     std::vector<char> initialData) {
-  return std::make_unique<PipelineCache>(deviceHandle, std::move(initialData));
+  return std::make_unique<PipelineCache>(device, std::move(initialData));
 }
 
 std::unique_ptr<GraphicsPipeline> Device::createGraphicsPipeline(
     VkPipelineCache pipelineCache,
     const VkGraphicsPipelineCreateInfo& createInfo) {
   return std::make_unique<GraphicsPipeline>(
-      deviceHandle, pipelineCache, createInfo);
+      device, pipelineCache, createInfo);
 }
 
 std::unique_ptr<ComputePipeline> Device::createComputePipeline(
     VkPipelineCache pipelineCache,
     const VkComputePipelineCreateInfo& createInfo) {
   return std::make_unique<ComputePipeline>(
-      deviceHandle, pipelineCache, createInfo);
+      device, pipelineCache, createInfo);
 }
 
 std::unique_ptr<CommandPool> Device::createCommandPool() {
-  return std::make_unique<CommandPool>(deviceHandle, gfxQueueIndex());
+  return std::make_unique<CommandPool>(device, gfxQueueIndex());
 }
 
 std::unique_ptr<DescriptorPool> Device::createDescriptorPool(
     std::vector<VkDescriptorPoolSize> poolSizes,
     uint32_t maxSets) {
   return std::make_unique<DescriptorPool>(
-      deviceHandle, std::move(poolSizes), maxSets);
+      device, std::move(poolSizes), maxSets);
 }
 
 std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
     std::vector<VkDescriptorSetLayoutBinding> bindings) {
   return std::make_unique<DescriptorSetLayout>(
-      deviceHandle, std::move(bindings));
+      device, std::move(bindings));
 }
 
 std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
     std::vector<VkPushConstantRange> pushRanges,
     std::vector<VkDescriptorSetLayout> setLayouts) {
   return std::make_unique<PipelineLayout>(
-      deviceHandle, std::move(pushRanges), std::move(setLayouts));
+      device, std::move(pushRanges), std::move(setLayouts));
 }
 
 std::unique_ptr<ShaderModule> Device::createShaderModule(
@@ -278,7 +261,7 @@ std::unique_ptr<ShaderModule> Device::createShaderModule(
     shaderFile.seekg(std::ios::beg);
     binaryData.resize(fileLength);
     shaderFile.read(binaryData.data(), fileLength);
-    return std::make_unique<ShaderModule>(deviceHandle, binaryData);
+    return std::make_unique<ShaderModule>(device, binaryData);
   } catch (const std::exception& e) {
     MultiLogger::get()->critical("error while creating shader: {}", e.what());
     throw e;
@@ -299,16 +282,16 @@ UniqueFramebuffer Device::createFramebuffer(
   createInfo.width = width;
   createInfo.height = height;
   createInfo.layers = 1;
-  vkCreateFramebuffer(deviceHandle, &createInfo, nullptr, &framebuffer);
-  return UniqueFramebuffer(framebuffer, {deviceHandle});
+  vkCreateFramebuffer(device, &createInfo, nullptr, &framebuffer);
+  return UniqueFramebuffer(framebuffer, {device});
 }
 
 std::unique_ptr<Fence> Device::createFence(bool signaled) {
-  return std::make_unique<Fence>(deviceHandle, signaled);
+  return std::make_unique<Fence>(device, signaled);
 }
 
 std::unique_ptr<Semaphore> Device::createSemaphore() {
-  return std::make_unique<Semaphore>(deviceHandle);
+  return std::make_unique<Semaphore>(device);
 }
 
 VkResult Device::presentImage(
@@ -344,8 +327,13 @@ void Device::queueSubmit(
 
 std::unique_ptr<RenderPass> Device::createRenderPass(
     const VkRenderPassCreateInfo& createInfo) {
-  return std::make_unique<RenderPass>(deviceHandle, createInfo);
+  return std::make_unique<RenderPass>(device, createInfo);
 }
 
-void Device::waitIdle() { vkDeviceWaitIdle(deviceHandle); }
+void Device::waitIdle() { vkDeviceWaitIdle(device); }
+
+Device::~Device() {
+  vmaDestroyAllocator(allocator);
+  vkDestroyDevice(device, nullptr);
+}
 }  // namespace vka
