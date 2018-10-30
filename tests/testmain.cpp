@@ -510,6 +510,14 @@ struct AppState {
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
         1);
 
+    ImGui::GetIO().Fonts->GetTexDataAsRGBA32(
+        &guiData.fontPixels, &guiData.width, &guiData.height);
+    guiData.fontImage = device->createImage2D(
+        {static_cast<uint32_t>(guiData.width),
+         static_cast<uint32_t>(guiData.height)},
+        guiData.fontFormat,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        vka::ImageAspect::Color);
     guiData.fontSampler = device->createSampler();
 
     guiData.setLayout =
