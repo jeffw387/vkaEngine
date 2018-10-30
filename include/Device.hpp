@@ -133,6 +133,22 @@ public:
       std::vector<VkPushConstantRange>,
       std::vector<VkDescriptorSetLayout>);
   std::unique_ptr<ShaderModule> createShaderModule(std::string shaderPath);
+  std::unique_ptr<Sampler> createSampler(
+      VkFilter magFilter = VK_FILTER_NEAREST,
+      VkFilter minFilter = VK_FILTER_NEAREST,
+      VkSamplerMipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+      VkSamplerAddressMode U = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      VkSamplerAddressMode V = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      VkSamplerAddressMode W = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      float mipLodBias = 0.f,
+      VkBool32 anisotropyEnable = false,
+      float maxAnisotropy = 0.f,
+      VkBool32 compareEnable = false,
+      VkCompareOp compareOp = VK_COMPARE_OP_NEVER,
+      float minLod = 0.f,
+      float maxLod = 0.f,
+      VkBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+      VkBool32 unnormalizedCoordinates = false);
   UniqueFramebuffer createFramebuffer(
       std::vector<VkImageView> attachments,
       VkRenderPass renderPass,
