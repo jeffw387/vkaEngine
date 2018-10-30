@@ -132,4 +132,6 @@ Sampler::~Sampler() {
 }
 
 Sampler::operator VkSampler() const noexcept { return sampler; }
+
+Sampler::operator const VkSampler*() const noexcept { return &sampler; }
 }  // namespace vka
