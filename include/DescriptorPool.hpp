@@ -121,7 +121,7 @@ public:
   operator VkDescriptorPool() { return poolHandle; }
 
   std::unique_ptr<DescriptorSet> allocateDescriptorSet(
-      DescriptorSetLayout* layouts);
+      DescriptorSetLayout* layout);
   void reset();
 
 private:
