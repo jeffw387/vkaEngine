@@ -582,16 +582,12 @@ struct AppState {
       transferCmd = transferCommandPool->allocateCommandBuffer();
       transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
       transferFence = device->createFence(false);
-      auto& io = ImGui::GetIO();
-      unsigned char* guiFontPixels{};
-      int width{};
-      int height{};
-      io.Fonts->GetTexDataAsRGBA32(&guiFontPixels, &width, &height);
       recordImageUpload(
-          guiFontPixels,
-          width * height * 4,
+          guiData.fontPixels,
+          guiData.width * guiData.height * 4,
           *guiData.fontImage,
-          {static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
+          {static_cast<uint32_t>(guiData.width),
+           static_cast<uint32_t>(guiData.height)});
       transferCmd->end();
       device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
       transferFence->wait();
