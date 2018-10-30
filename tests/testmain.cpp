@@ -140,7 +140,8 @@ struct AppState {
     tinygltf::Model gltfModel;
     std::string loadWarning;
     std::string loadError;
-    auto loadResult = modelLoader.LoadASCIIFromFile(&gltfModel, &loadError, &loadWarning, assetPath.c_str());
+    auto loadResult = modelLoader.LoadASCIIFromFile(
+        &gltfModel, &loadError, &loadWarning, assetPath.c_str());
     asset::Collection result;
     auto nodeIndex = 0U;
     for (auto& node : gltfModel.nodes) {
@@ -148,10 +149,12 @@ struct AppState {
       model.name = node.name;
       auto primitive = gltfModel.meshes[node.mesh].primitives.at(0);
       auto indexAccessor = gltfModel.accessors[primitive.indices];
-      auto positionAccessor = gltfModel.accessors[primitive.attributes["POSITION"]];
+      auto positionAccessor =
+          gltfModel.accessors[primitive.attributes["POSITION"]];
       auto normalAccessor = gltfModel.accessors[primitive.attributes["NORMAL"]];
       auto indexBufferView = gltfModel.bufferViews[indexAccessor.bufferView];
-      auto positionBufferView = gltfModel.bufferViews[positionAccessor.bufferView];
+      auto positionBufferView =
+          gltfModel.bufferViews[positionAccessor.bufferView];
       auto normalBufferView = gltfModel.bufferViews[normalAccessor.bufferView];
       model.indexByteOffset = indexBufferView.byteOffset;
       model.indexCount = indexAccessor.count;
@@ -163,8 +166,8 @@ struct AppState {
     auto bufferSize = gltfModel.buffers.at(0).data.size();
     result.buffer = device->createBuffer(
         bufferSize,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-        | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VMA_MEMORY_USAGE_GPU_ONLY);
     auto stagingBuffer = device->createBuffer(
         bufferSize,
@@ -174,19 +177,13 @@ struct AppState {
     auto copyFence = device->createFence(false);
 
     void* stagePtr{};
-    vmaMapMemory(
-        device->getAllocator(), *stagingBuffer, &stagePtr);
+    vmaMapMemory(device->getAllocator(), *stagingBuffer, &stagePtr);
     std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
-    vmaFlushAllocation(
-        device->getAllocator(), *stagingBuffer, 0,
-        bufferSize);
+    vmaFlushAllocation(device->getAllocator(), *stagingBuffer, 0, bufferSize);
     auto cmdPool = device->createCommandPool();
     auto cmd = cmdPool->allocateCommandBuffer();
     cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-    cmd->copyBuffer(
-        *stagingBuffer,
-        *result.buffer,
-        {{0U, 0U, bufferSize}});
+    cmd->copyBuffer(*stagingBuffer, *result.buffer, {{0U, 0U, bufferSize}});
     cmd->end();
     device->queueSubmit({}, {*cmd}, {}, *copyFence);
     copyFence->wait();
