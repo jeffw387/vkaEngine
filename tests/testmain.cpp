@@ -517,14 +517,14 @@ struct AppState {
                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                   1,
                                   VK_SHADER_STAGE_FRAGMENT_BIT,
-                                  *guiData.fontSampler}
-                                 });
+                                  *guiData.fontSampler}});
 
     guiData.descriptorSet =
         guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
 
-    guiData.pipelineLayout =
-        device->createPipelineLayout({VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}}, {*guiData.setLayout});
+    guiData.pipelineLayout = device->createPipelineLayout(
+        {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}},
+        {*guiData.setLayout});
 
     guiData.vertexShader =
         device->createShaderModule("content/shaders/imgui.vert.spv");
