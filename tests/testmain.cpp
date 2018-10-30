@@ -505,25 +505,25 @@ struct AppState {
 
     createSwapchain();
     gui = std::make_unique<vka::GUI>();
-    guiData.descriptorPool = device->createDescriptorPool({
-      { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-      { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}
-      }, 1);
+    guiData.descriptorPool = device->createDescriptorPool(
+        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+         {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
+        1);
 
-    guiData.setLayout = device->createSetLayout({
-      {0,
-      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-      1,
-      VK_SHADER_STAGE_FRAGMENT_BIT,
-      nullptr},//*guiData.fontSampler},
-      {1,
-      VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-      1,
-      VK_SHADER_STAGE_VERTEX_BIT,
-      nullptr}
-    });
+    guiData.setLayout =
+        device->createSetLayout({{0,
+                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                  1,
+                                  VK_SHADER_STAGE_FRAGMENT_BIT,
+                                  nullptr},  //*guiData.fontSampler},
+                                 {1,
+                                  VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                  1,
+                                  VK_SHADER_STAGE_VERTEX_BIT,
+                                  nullptr}});
 
-    guiData.descriptorSet = guiData.descriptorPool->allocateDescriptorSet({guiData.setLayout.get()});
+    guiData.descriptorSet =
+        guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
 
     [this]() {
       transferCommandPool = device->createCommandPool();
