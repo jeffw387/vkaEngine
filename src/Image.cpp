@@ -31,7 +31,9 @@ Image::Image(
   imageCreateInfo.imageType = imageType;
   imageCreateInfo.tiling = tiling;
   imageCreateInfo.samples = samples;
-  imageCreateInfo.sharingMode = queueIndices.size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+  imageCreateInfo.sharingMode = queueIndices.size() > 1
+                                    ? VK_SHARING_MODE_CONCURRENT
+                                    : VK_SHARING_MODE_EXCLUSIVE;
 
   VmaAllocationCreateInfo allocationCreateInfo{};
   allocationCreateInfo.usage = memoryUsage;
