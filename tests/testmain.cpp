@@ -526,8 +526,8 @@ struct AppState {
       transferFence->wait();
       transferFence->reset();
     }();
-    // shapesAsset = loadCollection(device, "content/models/shapes.gltf");
-    // terrainAsset = loadCollection(device, "content/models/terrain.gltf");
+    shapesAsset = loadCollection("content/models/shapes.gltf");
+    terrainAsset = loadCollection("content/models/terrain.gltf");
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,
