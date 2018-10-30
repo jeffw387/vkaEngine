@@ -242,10 +242,7 @@ public:
 
   void flushMemory(Device* device) {
     vmaFlushAllocation(
-        device->getAllocator(),
-        m_vulkan_buffer.get().allocation,
-        0,
-        size() * m_alignment);
+        device->getAllocator(), *m_vulkan_buffer, 0, size() * m_alignment);
   }
 
   VkDeviceSize getDynamicOffset(size_t index) { return index * m_alignment; }
@@ -280,18 +277,17 @@ public:
 
   void notify() {
     for (auto subscriber : m_subscribers) {
-      (*subscriber)(m_vulkan_buffer.get().buffer, size() * m_alignment);
+      (*subscriber)(*m_vulkan_buffer, size() * m_alignment);
     }
   }
 
   void reserve(size_t new_cap) {
     auto actualNewCap = new_cap < N ? N : new_cap;
     if (actualNewCap > m_capacity) {
-      auto newBuffer = m_device->createAllocatedBuffer(
+      auto newBuffer = m_device->createBuffer(
           actualNewCap * m_alignment, m_buffer_usage, m_memory_usage);
       void* newStoragePtr{};
-      vmaMapMemory(
-          m_device->getAllocator(), newBuffer.get().allocation, &newStoragePtr);
+      vmaMapMemory(m_device->getAllocator(), *newBuffer, &newStoragePtr);
       std::memcpy(newStoragePtr, m_storage, m_size * m_alignment);
       m_vulkan_buffer = std::move(newBuffer);
       m_storage = reinterpret_cast<T*>(newStoragePtr);
@@ -364,7 +360,7 @@ private:
   size_t m_capacity = 0U;
   Device* m_device;
   VkDeviceSize m_alignment;
-  UniqueAllocatedBuffer m_vulkan_buffer;
+  std::unique_ptr<Buffer> m_vulkan_buffer;
   VkBufferUsageFlags m_buffer_usage = 0;
   VmaMemoryUsage m_memory_usage = VmaMemoryUsage(0);
   std::vector<subscriber_type> m_subscribers;
