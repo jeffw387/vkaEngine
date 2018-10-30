@@ -58,7 +58,7 @@ copy_content(
   "${CMAKE_CURRENT_SOURCE_DIR}/content/models"
   "${CMAKE_CURRENT_BINARY_DIR}/content/models")
 
-list(APPEND shaderFileNames shader.vert shader.frag)
+list(APPEND shaderFileNames shader.vert shader.frag imgui.vert imgui.frag)
 process_shader(
   shaderFileNames
   "${CMAKE_CURRENT_SOURCE_DIR}/content/shaders"
