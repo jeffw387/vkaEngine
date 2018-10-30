@@ -529,6 +529,8 @@ struct AppState {
 
     guiData.pipelineLayout =
         device->createPipelineLayout({}, {*guiData.setLayout});
+    vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
+        *guiData.pipelineLayout, *renderPass, 1};
     imguiPipelineCreateInfo.addColorBlendAttachment(
         true,
         VK_BLEND_FACTOR_SRC_ALPHA,
