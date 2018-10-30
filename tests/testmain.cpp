@@ -582,7 +582,7 @@ struct AppState {
     guiData.pipeline =
         device->createGraphicsPipeline(*pipelineCache, imguiPipelineCreateInfo);
 
-    [this]() {
+    auto resourceUpload = [this]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
       transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
@@ -597,7 +597,8 @@ struct AppState {
       device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
       transferFence->wait();
       transferFence->reset();
-    }();
+    };
+    resourceUpload();
     shapesAsset = loadCollection("content/models/shapes.gltf");
     terrainAsset = loadCollection("content/models/terrain.gltf");
 
