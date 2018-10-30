@@ -518,6 +518,8 @@ struct AppState {
         guiData.fontFormat,
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         vka::ImageAspect::Color);
+    guiData.fontImageView = device->createImageView2D(
+        *guiData.fontImage, guiData.fontFormat, vka::ImageAspect::Color);
     guiData.fontSampler = device->createSampler();
 
     guiData.setLayout =
