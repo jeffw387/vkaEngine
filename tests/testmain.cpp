@@ -510,6 +510,8 @@ struct AppState {
       { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}
       }, 1);
 
+    guiData.descriptorSet = guiData.descriptorPool->allocateDescriptorSet({guiData.setLayout.get()});
+
     [this]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
