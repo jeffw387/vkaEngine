@@ -7,11 +7,11 @@ namespace vka {
 class Buffer {
 public:
   Buffer(
-    VmaAllocator allocator,
-    VkDeviceSize size,
-    VkBufferUsageFlags usage,
-    VmaMemoryUsage memoryUsage,
-    std::vector<uint32_t> queueIndices);
+      VmaAllocator allocator,
+      VkDeviceSize size,
+      VkBufferUsageFlags usage,
+      VmaMemoryUsage memoryUsage,
+      std::vector<uint32_t> queueIndices);
   ~Buffer();
   operator VkBuffer() const noexcept;
   operator VmaAllocation() const noexcept;
@@ -21,10 +21,11 @@ public:
   VkDeviceSize size();
   void* map();
   void unmap();
+
 private:
   VmaAllocator allocator;
   VkBuffer buffer;
   VmaAllocation allocation;
   VmaAllocationInfo getAllocationInfo();
 };
-}
+}  // namespace vka

@@ -1,23 +1,29 @@
 #include "Buffer.hpp"
 
 namespace vka {
-Buffer::Buffer(VmaAllocator allocator,
+Buffer::Buffer(
+    VmaAllocator allocator,
     VkDeviceSize size,
     VkBufferUsageFlags usage,
     VmaMemoryUsage memoryUsage,
-    std::vector<uint32_t> queueIndices) : allocator(allocator) {
+    std::vector<uint32_t> queueIndices)
+    : allocator(allocator) {
       VkBufferCreateInfo bufferCreateInfo{};
       bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
       bufferCreateInfo.usage = usage;
       bufferCreateInfo.size = size;
-      bufferCreateInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueIndices.size());
+  bufferCreateInfo.queueFamilyIndexCount =
+      static_cast<uint32_t>(queueIndices.size());
       bufferCreateInfo.pQueueFamilyIndices = queueIndices.data();
-      bufferCreateInfo.sharingMode = queueIndices.size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+  bufferCreateInfo.sharingMode = queueIndices.size() > 1
+                                     ? VK_SHARING_MODE_CONCURRENT
+                                     : VK_SHARING_MODE_EXCLUSIVE;
       
       VmaAllocationCreateInfo allocationCreateInfo{};
       allocationCreateInfo.usage = memoryUsage;
       
-      vmaCreateBuffer(allocator,
+  vmaCreateBuffer(
+      allocator,
         &bufferCreateInfo,
         &allocationCreateInfo,
         &buffer,
@@ -26,7 +32,8 @@ Buffer::Buffer(VmaAllocator allocator,
     }
 
 Buffer::~Buffer() {
-  if (allocator != nullptr && buffer != VK_NULL_HANDLE && allocation != nullptr) {
+  if (allocator != nullptr && buffer != VK_NULL_HANDLE &&
+      allocation != nullptr) {
     vmaDestroyBuffer(allocator, buffer, allocation);
   }
 }
@@ -48,13 +55,9 @@ VkDeviceMemory Buffer::deviceMemory() {
   return getAllocationInfo().deviceMemory;
 }
 
-VkDeviceSize Buffer::offset() {
-  return getAllocationInfo().offset;
-}
+VkDeviceSize Buffer::offset() { return getAllocationInfo().offset; }
 
-VkDeviceSize Buffer::size() {
-  return getAllocationInfo().size;
-}
+VkDeviceSize Buffer::size() { return getAllocationInfo().size; }
 
 void* Buffer::map() {
   void* result{};
@@ -62,8 +65,6 @@ void* Buffer::map() {
   return result;
 }
 
-void Buffer::unmap() {
-  vmaUnmapMemory(allocator, allocation);
-}
+void Buffer::unmap() { vmaUnmapMemory(allocator, allocation); }
 
-}
+}  // namespace vka
