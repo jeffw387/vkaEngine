@@ -524,7 +524,7 @@ struct AppState {
         guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
 
     guiData.pipelineLayout =
-        device->createPipelineLayout({}, {*guiData.setLayout});
+        device->createPipelineLayout({VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}}, {*guiData.setLayout});
 
     guiData.vertexShader =
         device->createShaderModule("content/shaders/imgui.vert.spv");
