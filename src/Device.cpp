@@ -159,24 +159,24 @@ std::unique_ptr<Sampler> Device::createSampler(
     float maxLod,
     VkBorderColor borderColor,
     VkBool32 unnormalizedCoordinates) {
-      return std::make_unique<Sampler>(
-        device,
-        magFilter,
-        minFilter,
-        mipmapMode,
-        U,
-        V,
-        W,
-        mipLodBias,
-        anisotropyEnable,
-        maxAnisotropy,
-        compareEnable,
-        compareOp,
-        minLod,
-        maxLod,
-        borderColor,
-        unnormalizedCoordinates);
-    }
+  return std::make_unique<Sampler>(
+      device,
+      magFilter,
+      minFilter,
+      mipmapMode,
+      U,
+      V,
+      W,
+      mipLodBias,
+      anisotropyEnable,
+      maxAnisotropy,
+      compareEnable,
+      compareOp,
+      minLod,
+      maxLod,
+      borderColor,
+      unnormalizedCoordinates);
+}
 
 std::unique_ptr<Swapchain> Device::createSwapchain(
     VkSwapchainKHR oldSwapchain,
