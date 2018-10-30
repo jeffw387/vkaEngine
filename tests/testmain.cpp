@@ -529,6 +529,11 @@ struct AppState {
 
     guiData.pipelineLayout =
         device->createPipelineLayout({}, {*guiData.setLayout});
+
+    guiData.vertexShader =
+        device->createShaderModule("content/shaders/imgui.vert.spv");
+    guiData.fragmentShader =
+        device->createShaderModule("content/shaders/imgui.frag.spv");
     vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
         *guiData.pipelineLayout, *renderPass, 1};
     imguiPipelineCreateInfo.addColorBlendAttachment(
@@ -543,23 +548,26 @@ struct AppState {
             VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
     imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
     imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
-    imguiPipelineCreateInfo.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT,
-      {},
-      0,
-      nullptr,
-      *guiData.vertexShader,
-      "main");
-    imguiPipelineCreateInfo.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT,
-      {},
-      0,
-      nullptr,
-      *guiData.fragmentShader,
-      "main");
-    imguiPipelineCreateInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
+    imguiPipelineCreateInfo.addShaderStage(
+        VK_SHADER_STAGE_VERTEX_BIT,
+        {},
+        0,
+        nullptr,
+        *guiData.vertexShader,
+        "main");
+    imguiPipelineCreateInfo.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        {},
+        0,
+        nullptr,
+        *guiData.fragmentShader,
+        "main");
+    imguiPipelineCreateInfo.addVertexAttribute(
+        0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
     imguiPipelineCreateInfo.addVertexBinding(0, 8, VK_VERTEX_INPUT_RATE_VERTEX);
     imguiPipelineCreateInfo.addViewportScissor({}, {});
     imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
-    //imguiPipelineCreateInfo.
+
     guiData.pipeline =
         device->createGraphicsPipeline(*pipelineCache, imguiPipelineCreateInfo);
 
