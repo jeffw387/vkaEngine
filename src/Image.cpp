@@ -86,4 +86,50 @@ ImageView::~ImageView() {
 
 ImageView::operator VkImageView() const noexcept { return view; }
 
+Sampler::Sampler(
+    VkDevice device,
+    VkFilter magFilter,
+    VkFilter minFilter,
+    VkSamplerMipmapMode mipmapMode,
+    VkSamplerAddressMode U,
+    VkSamplerAddressMode V,
+    VkSamplerAddressMode W,
+    float mipLodBias,
+    VkBool32 anisotropyEnable,
+    float maxAnisotropy,
+    VkBool32 compareEnable,
+    VkCompareOp compareOp,
+    float minLod,
+    float maxLod,
+    VkBorderColor borderColor,
+    VkBool32 unnormalizedCoordinates)
+    : device(device) {
+  VkSamplerCreateInfo createInfo{};
+  createInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  createInfo.magFilter = magFilter;
+  createInfo.minFilter = minFilter;
+  createInfo.mipmapMode = mipmapMode;
+  createInfo.addressModeU = U;
+  createInfo.addressModeV = V;
+  createInfo.addressModeW = W;
+  createInfo.mipLodBias = mipLodBias;
+  createInfo.anisotropyEnable = anisotropyEnable;
+  createInfo.maxAnisotropy = maxAnisotropy;
+  createInfo.compareEnable = compareEnable;
+  createInfo.compareOp = compareOp;
+  createInfo.minLod = minLod;
+  createInfo.maxLod = maxLod;
+  createInfo.borderColor = borderColor;
+  createInfo.unnormalizedCoordinates = unnormalizedCoordinates;
+
+  vkCreateSampler(device, &createInfo, nullptr, &sampler);
+}
+
+Sampler::~Sampler() {
+  if (device != VK_NULL_HANDLE && sampler != VK_NULL_HANDLE) {
+    vkDestroySampler(device, sampler, nullptr);
+  }
+}
+
+Sampler::operator VkSampler() const noexcept { return sampler; }
 }  // namespace vka
