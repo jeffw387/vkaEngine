@@ -539,6 +539,9 @@ struct AppState {
         VK_BLEND_OP_ADD,
         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
             VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    guiData.pipeline =
+        device->createGraphicsPipeline(*pipelineCache, imguiPipelineCreateInfo);
+
     [this]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
