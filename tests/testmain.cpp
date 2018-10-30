@@ -527,6 +527,8 @@ struct AppState {
     guiData.descriptorSet =
         guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
 
+    guiData.pipelineLayout =
+        device->createPipelineLayout({}, {*guiData.setLayout});
     [this]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
