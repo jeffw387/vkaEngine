@@ -143,6 +143,41 @@ Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
   return std::make_unique<ImageView>(device, image, format, aspect);
 }
 
+std::unique_ptr<Sampler> Device::createSampler(
+    VkFilter magFilter,
+    VkFilter minFilter,
+    VkSamplerMipmapMode mipmapMode,
+    VkSamplerAddressMode U,
+    VkSamplerAddressMode V,
+    VkSamplerAddressMode W,
+    float mipLodBias,
+    VkBool32 anisotropyEnable,
+    float maxAnisotropy,
+    VkBool32 compareEnable,
+    VkCompareOp compareOp,
+    float minLod,
+    float maxLod,
+    VkBorderColor borderColor,
+    VkBool32 unnormalizedCoordinates) {
+      return std::make_unique<Sampler>(
+        device,
+        magFilter,
+        minFilter,
+        mipmapMode,
+        U,
+        V,
+        W,
+        mipLodBias,
+        anisotropyEnable,
+        maxAnisotropy,
+        compareEnable,
+        compareOp,
+        minLod,
+        maxLod,
+        borderColor,
+        unnormalizedCoordinates);
+    }
+
 std::unique_ptr<Swapchain> Device::createSwapchain(
     VkSwapchainKHR oldSwapchain,
     VkFormat format) {
