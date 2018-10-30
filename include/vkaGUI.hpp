@@ -10,6 +10,10 @@
 namespace vka {
 
 struct GUIData {
+  const VkFormat fontFormat = VK_FORMAT_R8G8B8A8_UNORM;
+  int width;
+  int height;
+  unsigned char* fontPixels;
   std::unique_ptr<Image> fontImage;
   std::unique_ptr<ImageView> fontImageView;
   std::unique_ptr<Sampler> fontSampler;
