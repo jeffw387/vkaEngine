@@ -570,7 +570,12 @@ struct AppState {
         "main");
     imguiPipelineCreateInfo.addVertexAttribute(
         0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
-    imguiPipelineCreateInfo.addVertexBinding(0, 8, VK_VERTEX_INPUT_RATE_VERTEX);
+    imguiPipelineCreateInfo.addVertexAttribute(
+        1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
+    imguiPipelineCreateInfo.addVertexAttribute(
+        2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+    imguiPipelineCreateInfo.addVertexBinding(
+        0, 32, VK_VERTEX_INPUT_RATE_VERTEX);
     imguiPipelineCreateInfo.addViewportScissor({}, {});
     imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
 
