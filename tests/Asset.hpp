@@ -28,5 +28,4 @@ struct Collection {
   std::map<uint64_t, Model> models;
 };
 
-Collection loadCollection(fs::path);
 }  // namespace asset

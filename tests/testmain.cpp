@@ -9,8 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "entt/entt.hpp"
-#include "btBulletCollisionCommon.h"
-#include "btBulletDynamicsCommon.h"
 #include <memory>
 #include <cstring>
 #include <vector>
@@ -58,10 +56,7 @@ struct Mesh {
 struct Material {
   uint32_t materialIndex;
 };
-struct Physics {
-  btRigidBody* rigidBody;
-  btCollisionShape* shape;
-};
+struct Physics {};
 }  // namespace Components
 
 struct FragmentSpecData {
@@ -99,6 +94,7 @@ struct AppState {
   vka::Instance* instance;
   vka::Surface* surface;
   vka::Device* device;
+  tinygltf::TinyGLTF modelLoader;
   std::unique_ptr<vka::CommandPool> transferCommandPool;
   std::unique_ptr<vka::CommandBuffer> transferCmd;
   std::unique_ptr<vka::Fence> transferFence;
@@ -140,70 +136,57 @@ struct AppState {
   };
   std::array<BufferedState, vka::BufferCount> bufState;
 
-  gltf::BufferData getBufferData(gltf::Asset& asset, size_t accessorIndex) {
-    gltf::BufferData result{};
-    result.accessor = asset.accessors[accessorIndex];
-    result.view = asset.bufferViews[result.accessor.bufferViewIndex];
-    result.buffer = asset.buffers[result.view.bufferIndex];
-    return result;
-  }
-
-  gltf::VertexBuffers getVertexBuffers(gltf::Asset& asset, size_t nodeIndex) {
-    gltf::VertexBuffers result{};
-    auto meshIndex = asset.nodes[nodeIndex].meshIndex;
-    auto positionAccessorIndex =
-        asset.meshes[meshIndex].primitives[0].positionAccessorIndex;
-    auto normalAccessorIndex =
-        asset.meshes[meshIndex].primitives[0].normalAccessorIndex;
-    auto indexAccessorIndex =
-        asset.meshes[meshIndex].primitives[0].indexAccessorIndex;
-    result.positionBuffer = getBufferData(asset, positionAccessorIndex);
-    result.normalBuffer = getBufferData(asset, normalAccessorIndex);
-    result.indexBuffer = getBufferData(asset, indexAccessorIndex);
-    return result;
-  }
-
-  asset::Collection loadCollection(vka::Device* device, fs::path assetPath) {
-    auto gltfAsset = gltf::loadGLTF(assetPath);
+  asset::Collection loadCollection(fs::path assetPath) {
+    tinygltf::Model gltfModel;
+    std::string loadWarning;
+    std::string loadError;
+    auto loadResult = modelLoader.LoadASCIIFromFile(&gltfModel, &loadError, &loadWarning, assetPath.c_str());
     asset::Collection result;
     auto nodeIndex = 0U;
-    for (auto& node : gltfAsset.nodes) {
-      auto vertBuffers = getVertexBuffers(gltfAsset, nodeIndex);
+    for (auto& node : gltfModel.nodes) {
       asset::Model model{};
       model.name = node.name;
-      model.indexByteOffset = vertBuffers.indexBuffer.view.byteOffset;
-      model.indexCount = vertBuffers.indexBuffer.accessor.elementCount;
-      model.positionByteOffset = vertBuffers.positionBuffer.view.byteOffset;
-      model.normalByteOffset = vertBuffers.normalBuffer.view.byteOffset;
+      auto primitive = gltfModel.meshes[node.mesh].primitives.at(0);
+      auto indexAccessor = gltfModel.accessors[primitive.indices];
+      auto positionAccessor = gltfModel.accessors[primitive.attributes["POSITION"]];
+      auto normalAccessor = gltfModel.accessors[primitive.attributes["NORMAL"]];
+      auto indexBufferView = gltfModel.bufferViews[indexAccessor.bufferView];
+      auto positionBufferView = gltfModel.bufferViews[positionAccessor.bufferView];
+      auto normalBufferView = gltfModel.bufferViews[normalAccessor.bufferView];
+      model.indexByteOffset = indexBufferView.byteOffset;
+      model.indexCount = indexAccessor.count;
+      model.positionByteOffset = positionBufferView.byteOffset;
+      model.normalByteOffset = normalBufferView.byteOffset;
       result.models[nodeIndex] = std::move(model);
       ++nodeIndex;
     }
-    result.buffer = device->createAllocatedBuffer(
-        gltfAsset.buffers.at(0).byteLength,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    auto bufferSize = gltfModel.buffers.at(0).data.size();
+    result.buffer = device->createBuffer(
+        bufferSize,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VMA_MEMORY_USAGE_GPU_ONLY);
-    auto stagingBuffer = device->createAllocatedBuffer(
-        gltfAsset.buffers.at(0).byteLength,
+    auto stagingBuffer = device->createBuffer(
+        bufferSize,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VMA_MEMORY_USAGE_CPU_ONLY);
 
-    auto byteLength = gltfAsset.buffers[0].byteLength;
     auto copyFence = device->createFence(false);
 
     void* stagePtr{};
     vmaMapMemory(
-        device->getAllocator(), stagingBuffer.get().allocation, &stagePtr);
-    std::memcpy(stagePtr, gltfAsset.buffers[0].bufferData.get(), byteLength);
+        device->getAllocator(), *stagingBuffer, &stagePtr);
+    std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
     vmaFlushAllocation(
-        device->getAllocator(), stagingBuffer.get().allocation, 0, byteLength);
+        device->getAllocator(), *stagingBuffer, 0,
+        bufferSize);
     auto cmdPool = device->createCommandPool();
     auto cmd = cmdPool->allocateCommandBuffer();
     cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmd->copyBuffer(
-        stagingBuffer.get().buffer,
-        result.buffer.get().buffer,
-        {{0U, 0U, byteLength}});
+        *stagingBuffer,
+        *result.buffer,
+        {{0U, 0U, bufferSize}});
     cmd->end();
     device->queueSubmit({}, {*cmd}, {}, *copyFence);
     copyFence->wait();
@@ -346,19 +329,18 @@ struct AppState {
          *render.descriptorSets[3],
          *render.descriptorSets[4]},
         {0});
-    auto shapesBuffer = shapesAsset.buffer.get().buffer;
     auto someModel = shapesAsset.models[0];
     render.cmd->bindIndexBuffer(
-        shapesBuffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
+        *shapesAsset.buffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
     render.cmd->bindVertexBuffers(
         0,
-        {shapesBuffer, shapesBuffer},
+        {*shapesAsset.buffer, *shapesAsset.buffer},
         {someModel.positionByteOffset, someModel.normalByteOffset});
     // render.cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
     uint32_t matIndex{};
     render.cmd->pushConstants(
         *pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
-    auto terrainBuffer = terrainAsset.buffer.get().buffer;
+    auto terrainBuffer = *terrainAsset.buffer;
     render.cmd->bindIndexBuffer(
         terrainBuffer,
         terrainAsset.models[0].indexByteOffset,
@@ -414,15 +396,14 @@ struct AppState {
       size_t bufferSize,
       VkImage image,
       VkExtent2D imageExtent) {
-    auto staging = device->createAllocatedBuffer(
+    auto staging = device->createBuffer(
         bufferSize,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VMA_MEMORY_USAGE_CPU_ONLY);
     void* stagePtr{};
-    vmaMapMemory(device->getAllocator(), staging.get().allocation, &stagePtr);
+    vmaMapMemory(device->getAllocator(), *staging, &stagePtr);
     std::memcpy(stagePtr, data, bufferSize);
-    vmaFlushAllocation(
-        device->getAllocator(), staging.get().allocation, 0, bufferSize);
+    vmaFlushAllocation(device->getAllocator(), *staging, 0, bufferSize);
 
     VkImageSubresourceLayers imageSubresource = {};
     imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -458,10 +439,7 @@ struct AppState {
     copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
     copy.imageSubresource = imageSubresource;
     transferCmd->copyBufferToImage(
-        staging.get().buffer,
-        image,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        {copy});
+        *staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
 
     VkImageMemoryBarrier postCopyBarrier{};
     postCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -551,8 +529,8 @@ struct AppState {
       transferFence->wait();
       transferFence->reset();
     }();
-    shapesAsset = loadCollection(device, "content/models/shapes.gltf");
-    terrainAsset = loadCollection(device, "content/models/terrain.gltf");
+    // shapesAsset = loadCollection(device, "content/models/shapes.gltf");
+    // terrainAsset = loadCollection(device, "content/models/terrain.gltf");
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,
@@ -647,19 +625,19 @@ struct AppState {
 
       state.materialUniform.subscribe(
           state.descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
-              {VkDescriptorSet{}, 0, 0}));
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
       state.dynamicLightsUniform.subscribe(
           state.descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
-              {VkDescriptorSet{}, 0, 0}));
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
       state.lightDataUniform.subscribe(
           state.descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
-              {VkDescriptorSet{}, 0, 0}));
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
       state.cameraUniform.subscribe(
           state.descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
-              {VkDescriptorSet{}, 0, 0}));
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
       state.instanceUniform.subscribe(
           state.descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
-              {VkDescriptorSet{}, 0, 0}));
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
 
       state.frameAcquired = device->createFence(false);
       state.bufferExecuted = device->createFence(true);
