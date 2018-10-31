@@ -136,7 +136,7 @@ struct AppState {
   };
   std::array<BufferedState, vka::BufferCount> bufState;
 
-  asset::Collection loadCollection(fs::path assetPath) {
+  asset::Collection loadCollection(const std::string& assetPath) {
     tinygltf::Model gltfModel;
     std::string loadWarning;
     std::string loadError;
