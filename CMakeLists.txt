@@ -92,7 +92,7 @@ add_custom_command(
   POST_BUILD
   COMMAND clang-format -i -style=file ${vkaEngineSources} ${vkaEngineIncludes})
 
-target_link_libraries(vkaEngine PUBLIC stdc++fs)
+#target_link_libraries(vkaEngine PUBLIC stdc++fs)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
