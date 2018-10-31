@@ -157,8 +157,8 @@ public:
   operator const VkComputePipelineCreateInfo&() { return computeCreateInfo; }
 
 private:
-  ShaderStageData stageData;
-  VkPipelineShaderStageCreateInfo stage;
+  // ShaderStageData stageData;
+  // VkPipelineShaderStageCreateInfo stage;
   VkComputePipelineCreateInfo computeCreateInfo;
 };
 

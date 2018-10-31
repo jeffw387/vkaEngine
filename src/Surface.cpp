@@ -6,8 +6,7 @@
 #include "Engine.hpp"
 
 namespace vka {
-Surface::Surface(VkInstance instance, SurfaceCreateInfo surfaceCreateInfo)
-    : instance(instance) {
+Surface::Surface(VkInstance instance, SurfaceCreateInfo surfaceCreateInfo) {
   MultiLogger::get()->info("Creating surface.");
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   windowHandle = glfwCreateWindow(

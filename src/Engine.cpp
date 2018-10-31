@@ -19,17 +19,20 @@ namespace vka {
 
 static void
 keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  // auto enginePtr =
+  // reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
 }
 
 static void
 cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  // auto enginePtr =
+  // reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
 }
 
 static void
 mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  // auto enginePtr =
+  // reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
 }
 
 Engine::Engine(EngineCreateInfo engineCreateInfo)

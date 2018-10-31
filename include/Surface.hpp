@@ -48,7 +48,7 @@ public:
   ~Surface() = default;
 
 private:
-  VkInstance instance;
+  // VkInstance instance;
   VkSurfaceKHR surfaceHandle;
   SurfaceOwner surfaceOwner;
   GLFWwindow* windowHandle;
