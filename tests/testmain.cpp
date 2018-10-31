@@ -381,6 +381,10 @@ struct AppState {
         *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
     uint32_t guiIndexOffset{};
     uint32_t guiVertexOffset{};
+
+    render.cmd->setViewport(0, {viewport});
+    auto pos = draw_data->DisplayPos;
+    auto size = draw_data->DisplaySize;
     glm::mat4 mvp = glm::ortho(pos.x, pos.x + size.x, pos.y + size.y, pos.y);
     render.cmd->pushConstants(
         *guiData.pipelineLayout,
@@ -388,21 +392,22 @@ struct AppState {
         0,
         sizeof(glm::mat4),
         &mvp);
+    for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
+      auto cmdList = draw_data->CmdLists[i];
     render.cmd->bindIndexBuffer(
         *guiData.indexBuffer[renderIndex],
         guiIndexOffset,
         VK_INDEX_TYPE_UINT16);
+      guiIndexOffset += sizeof(ImguiIndex) * cmdList->IdxBuffer.Size;
     render.cmd->bindVertexBuffers(
         0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
-    render.cmd->setViewport(0, {viewport});
-    auto pos = draw_data->DisplayPos;
-    // auto size = draw_data->DisplaySize;
-    for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
-      auto cmdList = draw_data->CmdLists[i];
+      guiVertexOffset += sizeof(ImguiVertex) * cmdList->VtxBuffer.Size;
+      uint32_t drawIndexOffset{};
       for (const auto& drawCmd : cmdList->CmdBuffer) {
-        //  MyEngineScissor((int)(pcmd->ClipRect.x - pos.x),
-        //  (int)(pcmd->ClipRect.y - pos.y), (int)(pcmd->ClipRect.z - pos.x),
-        //  (int)(pcmd->ClipRect.w - pos.y));
+        if (drawCmd.UserCallback) {
+          drawCmd.UserCallback(cmdList, &drawCmd);
+          continue;
+        }
         VkOffset2D scissorOffset{
             static_cast<int32_t>(drawCmd.ClipRect.w - pos.x),
             static_cast<int32_t>(drawCmd.ClipRect.x - pos.y)};
@@ -413,7 +418,9 @@ struct AppState {
                 drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y)};
 
         VkRect2D guiScissor{std::move(scissorOffset), std::move(scissorExtent)};
-        render.cmd->setScissor(0, {guiScissor});
+        render.cmd->setScissor(0, {std::move(guiScissor)});
+        render.cmd->drawIndexed(drawCmd.ElemCount, 1, drawIndexOffset, 0, 0);
+        drawIndexOffset += drawCmd.ElemCount;
       }
     }
   }
@@ -461,6 +468,7 @@ struct AppState {
 
     std::vector<VkClearValue> clearValues = {
         VkClearValue{{{0.f, 0.f, 0.f, 1.f}}}, VkClearValue{{{1.f, 0U}}}};
+
     render.cmd->beginRenderPass(
         *renderPass,
         render.framebuffer.get(),
