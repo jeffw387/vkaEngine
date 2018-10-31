@@ -394,13 +394,13 @@ struct AppState {
         &mvp);
     for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
       auto cmdList = draw_data->CmdLists[i];
-    render.cmd->bindIndexBuffer(
-        *guiData.indexBuffer[renderIndex],
-        guiIndexOffset,
-        VK_INDEX_TYPE_UINT16);
+      render.cmd->bindIndexBuffer(
+          *guiData.indexBuffer[renderIndex],
+          guiIndexOffset,
+          VK_INDEX_TYPE_UINT16);
       guiIndexOffset += sizeof(ImguiIndex) * cmdList->IdxBuffer.Size;
-    render.cmd->bindVertexBuffers(
-        0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
+      render.cmd->bindVertexBuffers(
+          0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
       guiVertexOffset += sizeof(ImguiVertex) * cmdList->VtxBuffer.Size;
       uint32_t drawIndexOffset{};
       for (const auto& drawCmd : cmdList->CmdBuffer) {
