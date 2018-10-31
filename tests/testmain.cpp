@@ -301,6 +301,12 @@ struct AppState {
         render.framebuffer.get());
     std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
                                              VkClearValue{{1.f, 0U}}};
+    auto viewport = VkViewport{0,
+          0,
+          static_cast<float>(swapExtent.width),
+          static_cast<float>(swapExtent.height),
+          0,
+          1};                                             
     render.cmd->beginRenderPass(
         *renderPass,
         render.framebuffer.get(),
@@ -309,12 +315,7 @@ struct AppState {
         VK_SUBPASS_CONTENTS_INLINE);
     render.cmd->setViewport(
         0,
-        {{0,
-          0,
-          static_cast<float>(swapExtent.width),
-          static_cast<float>(swapExtent.height),
-          0,
-          1}});
+        {viewport});
     render.cmd->setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
     render.cmd->bindGraphicsPipeline(*pipeline);
     render.cmd->bindGraphicsDescriptorSets(
@@ -348,6 +349,16 @@ struct AppState {
         {terrainAsset.models[0].positionByteOffset,
          terrainAsset.models[0].normalByteOffset});
     render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+
+    render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
+    render.cmd->bindGraphicsPipeline(*guiData.pipeline);
+    render.cmd->bindGraphicsDescriptorSets(*guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
+    uint32_t guiIndexOffset{};
+    uint32_t guiVertexOffset{};
+    render.cmd->bindIndexBuffer(*guiData.indexBuffer, guiIndexOffset, VK_INDEX_TYPE_UINT16);
+    render.cmd->bindVertexBuffers(0, {*guiData.vertexBuffer}, {guiVertexOffset});
+    render.cmd->setViewport(0, {viewport});
+    render.cmd->setScissor(0, {guiScissor});
     render.cmd->endRenderPass();
     render.cmd->end();
     device->queueSubmit(
@@ -762,6 +773,17 @@ struct AppState {
         {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
     subpass3D->setDepthRef({depthAttachmentDesc,
                             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+    auto subpassGui = renderPassCreateInfo.addGraphicsSubpass();
+    subpassGui->addColorRef(
+      {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    renderPassCreateInfo.addSubpassDependency(
+      subpass3D,
+      subpassGui,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+      VK_DEPENDENCY_BY_REGION_BIT);
 
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
