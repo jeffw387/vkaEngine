@@ -381,6 +381,12 @@ struct AppState {
         *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
     uint32_t guiIndexOffset{};
     uint32_t guiVertexOffset{};
+    render.cmd->pushConstants(
+        *guiData.pipelineLayout,
+        VK_SHADER_STAGE_VERTEX_BIT,
+        0,
+        sizeof(glm::mat4),
+        &mvp);
     render.cmd->bindIndexBuffer(
         *guiData.indexBuffer[renderIndex],
         guiIndexOffset,
