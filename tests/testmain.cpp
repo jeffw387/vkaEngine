@@ -191,7 +191,7 @@ struct AppState {
     cmd->end();
     device->queueSubmit({}, {*cmd}, {}, *copyFence);
     copyFence->wait();
-    return std::move(result);
+    return result;
   }
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
@@ -479,7 +479,7 @@ struct AppState {
     swapImageViews.clear();
     swapchain.reset();
     swapchain = device->createSwapchain();
-    swapImages = std::move(swapchain->getSwapImages());
+    swapImages = swapchain->getSwapImages();
     for (const auto& swapImage : swapImages) {
       swapImageViews.push_back(device->createImageView2D(
           swapImage, swapFormat, vka::ImageAspect::Color));
@@ -745,16 +745,12 @@ struct AppState {
         VK_SHADER_STAGE_VERTEX_BIT,
         nullptr};
     MultiLogger::get()->info("creating set layout");
+    descriptorSetLayouts.push_back(device->createSetLayout({materialBinding}));
     descriptorSetLayouts.push_back(
-        std::move(device->createSetLayout({materialBinding})));
-    descriptorSetLayouts.push_back(
-        std::move(device->createSetLayout({dynamicLightBinding})));
-    descriptorSetLayouts.push_back(
-        std::move(device->createSetLayout({lightDataBinding})));
-    descriptorSetLayouts.push_back(
-        std::move(device->createSetLayout({cameraBinding})));
-    descriptorSetLayouts.push_back(
-        std::move(device->createSetLayout({instanceBinding})));
+        device->createSetLayout({dynamicLightBinding}));
+    descriptorSetLayouts.push_back(device->createSetLayout({lightDataBinding}));
+    descriptorSetLayouts.push_back(device->createSetLayout({cameraBinding}));
+    descriptorSetLayouts.push_back(device->createSetLayout({instanceBinding}));
 
     for (auto& state : bufState) {
       MultiLogger::get()->info("creating command pool");
