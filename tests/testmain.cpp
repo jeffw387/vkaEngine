@@ -141,7 +141,11 @@ struct AppState {
     std::string loadWarning;
     std::string loadError;
     auto loadResult = modelLoader.LoadASCIIFromFile(
-        &gltfModel, &loadError, &loadWarning, assetPath.c_str());
+        &gltfModel, &loadError, &loadWarning, assetPath);
+    if (!loadResult) {
+      MultiLogger::get()->error(
+          "Error while loading {}: {}", assetPath, loadError);
+    }
     asset::Collection result;
     auto nodeIndex = 0U;
     for (auto& node : gltfModel.nodes) {
