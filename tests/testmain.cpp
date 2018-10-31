@@ -21,6 +21,13 @@
 
 namespace fs = std::experimental::filesystem;
 
+using ImguiIndex = uint16_t;
+struct ImguiVertex {
+  glm::vec2 pos;
+  glm::vec2 uv;
+  glm::vec4 color;
+};
+
 struct Material {
   glm::vec4 diffuse;
 };
