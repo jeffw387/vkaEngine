@@ -381,6 +381,7 @@ struct AppState {
         *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
     uint32_t guiIndexOffset{};
     uint32_t guiVertexOffset{};
+    glm::mat4 mvp = glm::ortho(pos.x, pos.x + size.x, pos.y + size.y, pos.y);
     render.cmd->pushConstants(
         *guiData.pipelineLayout,
         VK_SHADER_STAGE_VERTEX_BIT,
