@@ -18,8 +18,8 @@ private:
   float top = {};
   float right = {};
   float bottom = {};
-  float near = -1;
-  float far = 1;
+  float nearClip = {};
+  float farClip = {};
   glm::vec3 position = {};
   std::optional<glm::mat4> view;
   std::optional<glm::mat4> projection;
