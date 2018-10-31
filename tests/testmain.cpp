@@ -267,15 +267,16 @@ struct AppState {
     auto verticesByteLength = draw_data->TotalVtxCount * vertexSize;
     if ((!imguiIndexBuffer) || (imguiIndexBuffer->size() < indicesByteLength)) {
       imguiIndexBuffer = device->createBuffer(
-        indicesByteLength,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
+          indicesByteLength,
+          VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
     }
-    if ((!imguiVertexBuffer) || (imguiVertexBuffer->size() < verticesByteLength)) {
+    if ((!imguiVertexBuffer) ||
+        (imguiVertexBuffer->size() < verticesByteLength)) {
       imguiVertexBuffer = device->createBuffer(
-        verticesByteLength,
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_CPU_TO_GPU);
+          verticesByteLength,
+          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
     }
     auto indexPtr = imguiIndexBuffer->map();
     auto vertexPtr = imguiVertexBuffer->map();
@@ -285,11 +286,17 @@ struct AppState {
       auto cmdList = draw_data->CmdLists[i];
 
       auto newIndicesSize = cmdList->IdxBuffer.Size * indexSize;
-      std::memcpy((char*)indexPtr + indexOffset, cmdList->IdxBuffer.Data, newIndicesSize);
+      std::memcpy(
+          (char*)indexPtr + indexOffset,
+          cmdList->IdxBuffer.Data,
+          newIndicesSize);
       indexOffset += newIndicesSize;
 
       auto newVerticesSize = cmdList->VtxBuffer.Size * vertexSize;
-      std::memcpy((char*)vertexPtr + vertexOffset, cmdList->VtxBuffer.Data, newVerticesSize);
+      std::memcpy(
+          (char*)vertexPtr + vertexOffset,
+          cmdList->VtxBuffer.Data,
+          newVerticesSize);
       vertexOffset += newVerticesSize;
     }
 
@@ -303,15 +310,13 @@ struct AppState {
     auto& render = bufState[renderIndex];
 
     auto viewport = VkViewport{0,
-          0,
-          static_cast<float>(swapExtent.width),
-          static_cast<float>(swapExtent.height),
-          0,
-          1};  
+                               0,
+                               static_cast<float>(swapExtent.width),
+                               static_cast<float>(swapExtent.height),
+                               0,
+                               1};
 
-    render.cmd->setViewport(
-        0,
-        {viewport});
+    render.cmd->setViewport(0, {viewport});
     render.cmd->setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
     render.cmd->bindGraphicsPipeline(*pipeline);
     render.cmd->bindGraphicsDescriptorSets(
@@ -354,11 +359,11 @@ struct AppState {
     auto& render = bufState[renderIndex];
 
     auto viewport = VkViewport{0,
-          0,
-          static_cast<float>(swapExtent.width),
-          static_cast<float>(swapExtent.height),
-          0,
-          1};
+                               0,
+                               static_cast<float>(swapExtent.width),
+                               static_cast<float>(swapExtent.height),
+                               0,
+                               1};
     render.cmd->bindGraphicsPipeline(*guiData.pipeline);
     render.cmd->bindGraphicsDescriptorSets(
         *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
@@ -383,8 +388,8 @@ struct AppState {
         VkExtent2D scissorExtent{drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x, drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y};
 
         VkRect2D guiScissor{std::move(scissorOffset), std::move(scissorExtent)};
-    render.cmd->setScissor(0, {guiScissor});
-  }
+        render.cmd->setScissor(0, {guiScissor});
+      }
     }
   }
 
@@ -417,7 +422,7 @@ struct AppState {
       set->validate(*device);
     }
     render.commandPool.reset();
-    prepareImguiRender(render.swapImageIndex);
+    auto draw_data = prepareImguiRender(render.swapImageIndex);
     auto swapExtent = swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
       return;
@@ -427,9 +432,8 @@ struct AppState {
         *renderPass,
         swapExtent.width,
         swapExtent.height);
-    render.cmd->begin(
-        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-                                               
+    render.cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
     std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
                                              VkClearValue{{1.f, 0U}}};
     render.cmd->beginRenderPass(
@@ -438,13 +442,13 @@ struct AppState {
         {{0, 0}, swapExtent},
         clearValues,
         VK_SUBPASS_CONTENTS_INLINE);
-    
+
     pipeline3DRender(renderIndex, swapExtent);
 
     render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
 
-    pipelineGuiRender(renderIndex, swapExtent);
-    
+    pipelineGuiRender(renderIndex, swapExtent, draw_data);
+
     render.cmd->endRenderPass();
     render.cmd->end();
     device->queueSubmit(
@@ -864,15 +868,15 @@ struct AppState {
                             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
     auto subpassGui = renderPassCreateInfo.addGraphicsSubpass();
     subpassGui->addColorRef(
-      {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
     renderPassCreateInfo.addSubpassDependency(
-      subpass3D,
-      subpassGui,
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
-      VK_DEPENDENCY_BY_REGION_BIT);
+        subpass3D,
+        subpassGui,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
 
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
