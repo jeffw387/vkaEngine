@@ -382,7 +382,7 @@ struct AppState {
         0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
     render.cmd->setViewport(0, {viewport});
     auto pos = draw_data->DisplayPos;
-    auto size = draw_data->DisplaySize;
+    // auto size = draw_data->DisplaySize;
     for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
       auto cmdList = draw_data->CmdLists[i];
       for (const auto& drawCmd : cmdList->CmdBuffer) {
