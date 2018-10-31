@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <chrono>
 #include <memory>
+#include <array>
 #include "Image.hpp"
 #include "Device.hpp"
 
@@ -17,8 +18,8 @@ struct GUIData {
   std::unique_ptr<Image> fontImage;
   std::unique_ptr<ImageView> fontImageView;
   std::unique_ptr<Sampler> fontSampler;
-  std::unique_ptr<Buffer> indexBuffer;
-  std::unique_ptr<Buffer> vertexBuffer;
+  std::array<std::unique_ptr<Buffer>, BufferCount> indexBuffer;
+  std::array<std::unique_ptr<Buffer>, BufferCount> vertexBuffer;
   std::unique_ptr<DescriptorSetLayout> setLayout;
   std::unique_ptr<DescriptorPool> descriptorPool;
   std::unique_ptr<DescriptorSet> descriptorSet;
