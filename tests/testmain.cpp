@@ -347,7 +347,10 @@ struct AppState {
     render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
   }
 
-  void pipelineGuiRender(uint32_t renderIndex, VkExtent2D swapExtent) {
+  void pipelineGuiRender(
+      uint32_t renderIndex,
+      VkExtent2D swapExtent,
+      ImDrawData* draw_data) {
     auto& render = bufState[renderIndex];
 
     auto viewport = VkViewport{0,
@@ -357,14 +360,32 @@ struct AppState {
           0,
           1};
     render.cmd->bindGraphicsPipeline(*guiData.pipeline);
-    render.cmd->bindGraphicsDescriptorSets(*guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
+    render.cmd->bindGraphicsDescriptorSets(
+        *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
     uint32_t guiIndexOffset{};
     uint32_t guiVertexOffset{};
-    render.cmd->bindIndexBuffer(*guiData.indexBuffer[renderIndex], guiIndexOffset, VK_INDEX_TYPE_UINT16);
-    render.cmd->bindVertexBuffers(0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
+    render.cmd->bindIndexBuffer(
+        *guiData.indexBuffer[renderIndex],
+        guiIndexOffset,
+        VK_INDEX_TYPE_UINT16);
+    render.cmd->bindVertexBuffers(
+        0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
     render.cmd->setViewport(0, {viewport});
-    VkRect2D guiScissor{};
+    auto pos = draw_data->DisplayPos;
+    auto size = draw_data->DisplaySize;
+    for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
+      auto cmdList = draw_data->CmdLists[i];
+      for (const auto& drawCmd : cmdList->CmdBuffer) {
+        //  MyEngineScissor((int)(pcmd->ClipRect.x - pos.x),
+        //  (int)(pcmd->ClipRect.y - pos.y), (int)(pcmd->ClipRect.z - pos.x),
+        //  (int)(pcmd->ClipRect.w - pos.y));
+        VkOffset2D scissorOffset{drawCmd.ClipRect.w - pos.x, drawCmd.ClipRect.x - pos.y};
+        VkExtent2D scissorExtent{drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x, drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y};
+
+        VkRect2D guiScissor{std::move(scissorOffset), std::move(scissorExtent)};
     render.cmd->setScissor(0, {guiScissor});
+  }
+    }
   }
 
   void renderCallback(vka::Engine* engine) {
