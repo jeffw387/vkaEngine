@@ -629,8 +629,11 @@ struct AppState {
     guiData.descriptorSet =
         guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
 
-    auto fontImageDescriptor = guiData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(vka::DescriptorReference{});
-    (*fontImageDescriptor)(*guiData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    auto fontImageDescriptor =
+        guiData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
+            vka::DescriptorReference{});
+    (*fontImageDescriptor)(
+        *guiData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     guiData.descriptorSet->validate(*device);
 
     guiData.pipelineLayout = device->createPipelineLayout(
