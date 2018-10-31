@@ -321,7 +321,8 @@ struct AppState {
                                1};
 
     render.cmd->setViewport(0, {viewport});
-    render.cmd->setScissor(0, {{0, 0, swapExtent.width, swapExtent.height}});
+    render.cmd->setScissor(
+        0, {{{0, 0}, {swapExtent.width, swapExtent.height}}});
     render.cmd->bindGraphicsPipeline(*pipeline);
     render.cmd->bindGraphicsDescriptorSets(
         *pipelineLayout,
@@ -388,8 +389,14 @@ struct AppState {
         //  MyEngineScissor((int)(pcmd->ClipRect.x - pos.x),
         //  (int)(pcmd->ClipRect.y - pos.y), (int)(pcmd->ClipRect.z - pos.x),
         //  (int)(pcmd->ClipRect.w - pos.y));
-        VkOffset2D scissorOffset{drawCmd.ClipRect.w - pos.x, drawCmd.ClipRect.x - pos.y};
-        VkExtent2D scissorExtent{drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x, drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y};
+        VkOffset2D scissorOffset{
+            static_cast<int32_t>(drawCmd.ClipRect.w - pos.x),
+            static_cast<int32_t>(drawCmd.ClipRect.x - pos.y)};
+        VkExtent2D scissorExtent{
+            static_cast<uint32_t>(
+                drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x),
+            static_cast<uint32_t>(
+                drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y)};
 
         VkRect2D guiScissor{std::move(scissorOffset), std::move(scissorExtent)};
         render.cmd->setScissor(0, {guiScissor});
@@ -438,8 +445,8 @@ struct AppState {
         swapExtent.height);
     render.cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-    std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
-                                             VkClearValue{{1.f, 0U}}};
+    std::vector<VkClearValue> clearValues = {
+        VkClearValue{{{0.f, 0.f, 0.f, 1.f}}}, VkClearValue{{{1.f, 0U}}}};
     render.cmd->beginRenderPass(
         *renderPass,
         render.framebuffer.get(),
