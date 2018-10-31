@@ -255,64 +255,60 @@ struct AppState {
     current.instanceUniform.flushMemory(device);
   }
 
-  void renderCallback(vka::Engine* engine) {
-    auto renderIndex = engine->currentRenderIndex();
+  ImDrawData* prepareImguiRender(uint32_t imageIndex) {
+    ImGui::EndFrame();
+    ImGui::Render();
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    auto& imguiIndexBuffer = guiData.indexBuffer[imageIndex];
+    auto& imguiVertexBuffer = guiData.vertexBuffer[imageIndex];
+    constexpr auto indexSize = 2U;
+    constexpr auto vertexSize = 8U;
+    auto indicesByteLength = draw_data->TotalIdxCount * indexSize;
+    auto verticesByteLength = draw_data->TotalVtxCount * vertexSize;
+    if ((!imguiIndexBuffer) || (imguiIndexBuffer->size() < indicesByteLength)) {
+      imguiIndexBuffer = device->createBuffer(
+        indicesByteLength,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_CPU_TO_GPU);
+    }
+    if ((!imguiVertexBuffer) || (imguiVertexBuffer->size() < verticesByteLength)) {
+      imguiVertexBuffer = device->createBuffer(
+        verticesByteLength,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_CPU_TO_GPU);
+    }
+    auto indexPtr = imguiIndexBuffer->map();
+    auto vertexPtr = imguiVertexBuffer->map();
+    auto indexOffset = 0U;
+    auto vertexOffset = 0U;
+    for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
+      auto cmdList = draw_data->CmdLists[i];
+
+      auto newIndicesSize = cmdList->IdxBuffer.Size * indexSize;
+      std::memcpy((char*)indexPtr + indexOffset, cmdList->IdxBuffer.Data, newIndicesSize);
+      indexOffset += newIndicesSize;
+
+      auto newVerticesSize = cmdList->VtxBuffer.Size * vertexSize;
+      std::memcpy((char*)vertexPtr + vertexOffset, cmdList->VtxBuffer.Data, newVerticesSize);
+      vertexOffset += newVerticesSize;
+    }
+
+    imguiIndexBuffer->flush();
+    imguiVertexBuffer->flush();
+
+    return draw_data;
+  }
+
+  void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
     auto& render = bufState[renderIndex];
 
-    if (auto index = swapchain->acquireImage(*render.frameAcquired)) {
-      render.swapImageIndex = index.value();
-    } else {
-      switch (index.error()) {
-        case VK_NOT_READY:
-          return;
-        case VK_ERROR_OUT_OF_DATE_KHR:
-        case VK_SUBOPTIMAL_KHR:
-          device->waitIdle();
-          createSwapchain();
-          return;
-        default:
-          MultiLogger::get()->critical(
-              "Unrecoverable vulkan error: {}", vka::Results[index.error()]);
-          throw std::runtime_error("Unrecoverable vulkan error.");
-      }
-    }
-    render.frameAcquired->wait();
-    render.frameAcquired->reset();
-    render.bufferExecuted->wait();
-    render.bufferExecuted->reset();
-    for (auto& set : render.descriptorSets) {
-      set->validate(*device);
-    }
-    render.commandPool.reset();
-
-    auto swapExtent = swapchain->getSwapExtent();
-    if (swapExtent.width == 0 || swapExtent.height == 0) {
-      return;
-    }
-    render.framebuffer = device->createFramebuffer(
-        {*swapImageViews[render.swapImageIndex], *depthImageView},
-        *renderPass,
-        swapExtent.width,
-        swapExtent.height);
-    render.cmd->begin(
-        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        *renderPass,
-        0,
-        render.framebuffer.get());
-    std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
-                                             VkClearValue{{1.f, 0U}}};
     auto viewport = VkViewport{0,
           0,
           static_cast<float>(swapExtent.width),
           static_cast<float>(swapExtent.height),
           0,
-          1};                                             
-    render.cmd->beginRenderPass(
-        *renderPass,
-        render.framebuffer.get(),
-        {{0, 0}, swapExtent},
-        clearValues,
-        VK_SUBPASS_CONTENTS_INLINE);
+          1};  
+
     render.cmd->setViewport(
         0,
         {viewport});
@@ -349,16 +345,85 @@ struct AppState {
         {terrainAsset.models[0].positionByteOffset,
          terrainAsset.models[0].normalByteOffset});
     render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+  }
 
-    render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
+  void pipelineGuiRender(uint32_t renderIndex, VkExtent2D swapExtent) {
+    auto& render = bufState[renderIndex];
+
+    auto viewport = VkViewport{0,
+          0,
+          static_cast<float>(swapExtent.width),
+          static_cast<float>(swapExtent.height),
+          0,
+          1};
     render.cmd->bindGraphicsPipeline(*guiData.pipeline);
     render.cmd->bindGraphicsDescriptorSets(*guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
     uint32_t guiIndexOffset{};
     uint32_t guiVertexOffset{};
-    render.cmd->bindIndexBuffer(*guiData.indexBuffer, guiIndexOffset, VK_INDEX_TYPE_UINT16);
-    render.cmd->bindVertexBuffers(0, {*guiData.vertexBuffer}, {guiVertexOffset});
+    render.cmd->bindIndexBuffer(*guiData.indexBuffer[renderIndex], guiIndexOffset, VK_INDEX_TYPE_UINT16);
+    render.cmd->bindVertexBuffers(0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
     render.cmd->setViewport(0, {viewport});
+    VkRect2D guiScissor{};
     render.cmd->setScissor(0, {guiScissor});
+  }
+
+  void renderCallback(vka::Engine* engine) {
+    auto renderIndex = engine->currentRenderIndex();
+    auto& render = bufState[renderIndex];
+
+    if (auto index = swapchain->acquireImage(*render.frameAcquired)) {
+      render.swapImageIndex = index.value();
+    } else {
+      switch (index.error()) {
+        case VK_NOT_READY:
+          return;
+        case VK_ERROR_OUT_OF_DATE_KHR:
+        case VK_SUBOPTIMAL_KHR:
+          device->waitIdle();
+          createSwapchain();
+          return;
+        default:
+          MultiLogger::get()->critical(
+              "Unrecoverable vulkan error: {}", vka::Results[index.error()]);
+          throw std::runtime_error("Unrecoverable vulkan error.");
+      }
+    }
+    render.frameAcquired->wait();
+    render.frameAcquired->reset();
+    render.bufferExecuted->wait();
+    render.bufferExecuted->reset();
+    for (auto& set : render.descriptorSets) {
+      set->validate(*device);
+    }
+    render.commandPool.reset();
+    prepareImguiRender(render.swapImageIndex);
+    auto swapExtent = swapchain->getSwapExtent();
+    if (swapExtent.width == 0 || swapExtent.height == 0) {
+      return;
+    }
+    render.framebuffer = device->createFramebuffer(
+        {*swapImageViews[render.swapImageIndex], *depthImageView},
+        *renderPass,
+        swapExtent.width,
+        swapExtent.height);
+    render.cmd->begin(
+        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+                                               
+    std::vector<VkClearValue> clearValues = {VkClearValue{{0.f, 0.f, 0.f, 1.f}},
+                                             VkClearValue{{1.f, 0U}}};
+    render.cmd->beginRenderPass(
+        *renderPass,
+        render.framebuffer.get(),
+        {{0, 0}, swapExtent},
+        clearValues,
+        VK_SUBPASS_CONTENTS_INLINE);
+    
+    pipeline3DRender(renderIndex, swapExtent);
+
+    render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
+
+    pipelineGuiRender(renderIndex, swapExtent);
+    
     render.cmd->endRenderPass();
     render.cmd->end();
     device->queueSubmit(
