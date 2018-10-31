@@ -7,6 +7,7 @@
 #include <array>
 #include "Image.hpp"
 #include "Device.hpp"
+#include "Engine.hpp"
 
 namespace vka {
 
