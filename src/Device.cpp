@@ -13,7 +13,9 @@
 #include "Logger.hpp"
 #include <fstream>
 #include <vector>
+#include <filesystem>
 
+namespace fs = std::experimental::filesystem;
 namespace vka {
 PhysicalDeviceData::PhysicalDeviceData(VkInstance instance) {
   uint32_t physicalDeviceCount = 0;
@@ -281,6 +283,7 @@ std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
 
 std::unique_ptr<ShaderModule> Device::createShaderModule(
     std::string shaderPath) {
+  auto cwd = fs::current_path();
   try {
     std::vector<char> binaryData;
     std::ifstream shaderFile(
@@ -294,7 +297,7 @@ std::unique_ptr<ShaderModule> Device::createShaderModule(
     return std::make_unique<ShaderModule>(device, binaryData);
   } catch (const std::exception& e) {
     MultiLogger::get()->critical("error while creating shader: {}", e.what());
-    throw e;
+    // throw e;
   }
 }
 
