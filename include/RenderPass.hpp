@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <map>
+#include <optional>
 #include <memory>
 
 namespace vka {
@@ -22,7 +23,7 @@ private:
   std::vector<VkAttachmentReference> inputRefs;
   std::vector<VkAttachmentReference> colorRefs;
   std::vector<VkAttachmentReference> resolveRefs;
-  VkAttachmentReference depthRef;
+  std::optional<VkAttachmentReference> depthRef;
   std::vector<uint32_t> preserveRefs;
 };
 

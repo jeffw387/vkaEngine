@@ -36,7 +36,8 @@ Subpass::operator VkSubpassDescription() {
   result.pInputAttachments = inputRefs.data();
   result.pColorAttachments = colorRefs.data();
   result.pResolveAttachments = resolveRefs.data();
-  result.pDepthStencilAttachment = &depthRef;
+  result.pDepthStencilAttachment =
+      depthRef.has_value() ? &depthRef.value() : nullptr;
   result.pPreserveAttachments = preserveRefs.data();
   return result;
 }
