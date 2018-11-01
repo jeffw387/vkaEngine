@@ -34,6 +34,7 @@ Buffer::Buffer(
 Buffer::~Buffer() {
   if (allocator != nullptr && buffer != VK_NULL_HANDLE &&
       allocation != nullptr) {
+    unmap();
     vmaDestroyBuffer(allocator, buffer, allocation);
   }
 }
@@ -44,7 +45,7 @@ Buffer::operator VmaAllocation() const noexcept { return allocation; }
 VmaAllocationInfo Buffer::getAllocationInfo() {
   VmaAllocationInfo info{};
   vmaGetAllocationInfo(allocator, allocation, &info);
-  return std::move(info);
+  return info;
 }
 
 uint32_t Buffer::memType() { return getAllocationInfo().memoryType; }

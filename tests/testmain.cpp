@@ -11,6 +11,7 @@
 #include "entt/entt.hpp"
 #include <memory>
 #include <cstring>
+#include <mutex>
 #include <vector>
 #include "Camera.hpp"
 #include "Asset.hpp"
@@ -115,6 +116,8 @@ struct AppState {
   std::unique_ptr<vka::GraphicsPipeline> pipeline;
   vka::GUIData guiData;
   std::unique_ptr<vka::GUI> gui;
+  std::mutex guiMutex;
+  bool guiFrameStarted;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
@@ -869,6 +872,9 @@ struct AppState {
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
 
+    MultiLogger::get()->info("creating pipeline cache");
+    pipelineCache = device->createPipelineCache();
+
     vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
         *guiData.pipelineLayout, *renderPass, 1};
     imguiPipelineCreateInfo.addColorBlendAttachment(
@@ -949,8 +955,6 @@ struct AppState {
     pipeline3DInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
     pipeline3DInfo.setFrontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE);
 
-    MultiLogger::get()->info("creating pipeline cache");
-    pipelineCache = device->createPipelineCache();
     MultiLogger::get()->info("creating pipeline");
     pipeline = device->createGraphicsPipeline(*pipelineCache, pipeline3DInfo);
 
