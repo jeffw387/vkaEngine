@@ -237,6 +237,13 @@ struct AppState {
     auto lastUpdateIndex = engine->previousUpdateIndex();
     auto& last = bufState[lastUpdateIndex];
     auto& current = bufState[updateIndex];
+    {
+      std::lock_guard<std::mutex> guiLock(guiMutex);
+      if (!guiFrameStarted) {
+        guiFrameStarted = true;
+        ImGui::NewFrame();
+      }
+    }
 
     auto matSize = last.materialUniform.size();
     current.materialUniform.resize(matSize);
