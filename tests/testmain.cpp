@@ -681,47 +681,6 @@ struct AppState {
         device->createShaderModule("content/shaders/imgui.vert.spv");
     guiData.fragmentShader =
         device->createShaderModule("content/shaders/imgui.frag.spv");
-    vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
-        *guiData.pipelineLayout, *renderPass, 1};
-    imguiPipelineCreateInfo.addColorBlendAttachment(
-        true,
-        VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        VK_BLEND_OP_ADD,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        VK_BLEND_FACTOR_ZERO,
-        VK_BLEND_OP_ADD,
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
-    imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
-    imguiPipelineCreateInfo.addShaderStage(
-        VK_SHADER_STAGE_VERTEX_BIT,
-        {},
-        0,
-        nullptr,
-        *guiData.vertexShader,
-        "main");
-    imguiPipelineCreateInfo.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        {},
-        0,
-        nullptr,
-        *guiData.fragmentShader,
-        "main");
-    imguiPipelineCreateInfo.addVertexAttribute(
-        0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
-    imguiPipelineCreateInfo.addVertexAttribute(
-        1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
-    imguiPipelineCreateInfo.addVertexAttribute(
-        2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
-    imguiPipelineCreateInfo.addVertexBinding(
-        0, 32, VK_VERTEX_INPUT_RATE_VERTEX);
-    imguiPipelineCreateInfo.addViewportScissor({}, {});
-    imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
-
-    guiData.pipeline =
-        device->createGraphicsPipeline(*pipelineCache, imguiPipelineCreateInfo);
 
     auto resourceUpload = [this]() {
       transferCommandPool = device->createCommandPool();
@@ -909,6 +868,49 @@ struct AppState {
 
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
+
+    vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
+        *guiData.pipelineLayout, *renderPass, 1};
+    imguiPipelineCreateInfo.addColorBlendAttachment(
+        true,
+        VK_BLEND_FACTOR_SRC_ALPHA,
+        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_OP_ADD,
+        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_FACTOR_ZERO,
+        VK_BLEND_OP_ADD,
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
+    imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
+    imguiPipelineCreateInfo.addShaderStage(
+        VK_SHADER_STAGE_VERTEX_BIT,
+        {},
+        0,
+        nullptr,
+        *guiData.vertexShader,
+        "main");
+    imguiPipelineCreateInfo.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        {},
+        0,
+        nullptr,
+        *guiData.fragmentShader,
+        "main");
+    imguiPipelineCreateInfo.addVertexAttribute(
+        0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
+    imguiPipelineCreateInfo.addVertexAttribute(
+        1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
+    imguiPipelineCreateInfo.addVertexAttribute(
+        2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+    imguiPipelineCreateInfo.addVertexBinding(
+        0, 32, VK_VERTEX_INPUT_RATE_VERTEX);
+    imguiPipelineCreateInfo.addViewportScissor({}, {});
+    imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
+
+    guiData.pipeline =
+        device->createGraphicsPipeline(*pipelineCache, imguiPipelineCreateInfo);
+
     auto pipeline3DInfo =
         vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);
     pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
