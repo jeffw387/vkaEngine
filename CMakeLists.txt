@@ -95,7 +95,9 @@ add_custom_command(
 #target_link_libraries(vkaEngine PUBLIC stdc++fs)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/freetype2")
-target_link_libraries(vkaEngine PRIVATE freetype)
+target_link_libraries(vkaEngine PUBLIC freetype)
+get_target_property(freetypeIncludes freetype INTERFACE_INCLUDE_DIRECTORIES)
+message("Freetype interface includes: ${freetypeIncludes}")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
