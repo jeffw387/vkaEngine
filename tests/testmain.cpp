@@ -19,6 +19,7 @@
 #include <experimental/filesystem>
 #include "VkEnumStrings.hpp"
 #include "vkaGUI.hpp"
+#include "Text.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -115,9 +116,7 @@ struct AppState {
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::unique_ptr<vka::GraphicsPipeline> pipeline;
   vka::GUIData guiData;
-  std::unique_ptr<vka::GUI> gui;
-  std::mutex guiMutex;
-  bool guiFrameStarted;
+  std::unique_ptr<FreeType::Library> textLibrary;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
@@ -237,13 +236,6 @@ struct AppState {
     auto lastUpdateIndex = engine->previousUpdateIndex();
     auto& last = bufState[lastUpdateIndex];
     auto& current = bufState[updateIndex];
-    {
-      std::lock_guard<std::mutex> guiLock(guiMutex);
-      if (!guiFrameStarted) {
-        guiFrameStarted = true;
-        ImGui::NewFrame();
-      }
-    }
 
     auto matSize = last.materialUniform.size();
     current.materialUniform.resize(matSize);
@@ -648,7 +640,8 @@ struct AppState {
         });
 
     createSwapchain();
-    gui = std::make_unique<vka::GUI>();
+    
+    textLibrary = std::make_unique<FreeType::Library>();
     guiData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
