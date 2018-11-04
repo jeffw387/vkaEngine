@@ -59,7 +59,10 @@ gsl::span<unsigned char> Glyph::render() {
 BBox Glyph::getBoundingBox() {
   FT_BBox bbox{};
   FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
-  BBox myBBox{bbox.xMin, bbox.yMin, bbox.xMax, bbox.yMax};
+  BBox myBBox{static_cast<int>(bbox.xMin),
+              static_cast<int>(bbox.yMin),
+              static_cast<int>(bbox.xMax),
+              static_cast<int>(bbox.yMax)};
   return myBBox;
 }
 
