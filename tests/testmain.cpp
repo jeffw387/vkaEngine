@@ -655,6 +655,11 @@ struct AppState {
     createSwapchain();
 
     textLibrary = std::make_unique<Text::Library>();
+    textData.descriptorPool = device->createDescriptorPool(
+        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+         {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
+        1);
+
     // guiData.descriptorPool = device->createDescriptorPool(
     //     {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
     //      {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
