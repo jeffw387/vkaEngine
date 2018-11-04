@@ -1,6 +1,41 @@
 #include "Text.hpp"
 
-namespace FreeType {
+namespace Text {
+Tileset::Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth)
+    : m_tiles(std::move(tiles)) {
+  auto tileWidth = m_tiles.at(0).pitch;
+  auto tileHeight = m_tiles.at(0).rowcount;
+
+  int maxTilesPerRow = maxTilesetWidth / tileWidth;
+  // range of tiles (range of rows (range of pixels))
+  auto bitmapsView = view::transform(m_tiles, [=](Tile tile) {
+    return tile.tileData | view::chunk(tileWidth);
+  });
+
+  auto tileRows = bitmapsView | view::chunk(maxTilesPerRow);
+
+  float rowIndex{};
+  RANGES_FOR(auto row, tileRows) {
+    float columnIndex{};
+    RANGES_FOR(auto tile, row) {
+      tileUVs.push_back({columnIndex * tileWidth,
+                         rowIndex * tileHeight,
+                         (columnIndex + 1) * tileWidth,
+                         (rowIndex + 1) * tileHeight});
+      ++columnIndex;
+    }
+    ++rowIndex;
+  }
+
+  // range of rows (range of tiles (range of rows (range of pixels)))
+  auto transposedRows =
+      tileRows | view::transform([](auto row) { return row | transpose(); });
+  auto joinedRows = action::join(transposedRows);
+  auto joinedTiles = action::join(joinedRows);
+  auto joinedPixelRows = action::join(joinedTiles);
+  action::push_back(bitmap, joinedPixelRows);
+}
+
 Glyph::Glyph(FT_Glyph glyph) : glyph(glyph){};
 
 Glyph::~Glyph() {
