@@ -18,13 +18,12 @@
 #include "vulkan_vector.hpp"
 #include <experimental/filesystem>
 #include "VkEnumStrings.hpp"
-#include "vkaGUI.hpp"
 #include "Text.hpp"
 
 namespace fs = std::experimental::filesystem;
 
-using ImguiIndex = uint16_t;
-struct ImguiVertex {
+using TextIndex = uint16_t;
+struct TextVertex {
   glm::vec2 pos;
   glm::vec2 uv;
   glm::vec4 color;
@@ -115,8 +114,21 @@ struct AppState {
   std::unique_ptr<vka::PipelineLayout> pipelineLayout;
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::unique_ptr<vka::GraphicsPipeline> pipeline;
-  vka::GUIData guiData;
   std::unique_ptr<Text::Library> textLibrary;
+  struct TextData {
+    std::map<FT_ULong, std::unique_ptr<Text::Glyph>> glyphMap;
+    std::unique_ptr<vka::Image> fontImage;
+    std::unique_ptr<vka::ImageView> fontImageView;
+    std::unique_ptr<vka::Buffer> indexBuffer;
+    std::unique_ptr<vka::Buffer> vertexBuffer;
+    std::unique_ptr<vka::ShaderModule> vertexShader;
+    std::unique_ptr<vka::ShaderModule> fragmentShader;
+    std::unique_ptr<vka::DescriptorSetLayout> setLayout;
+    std::unique_ptr<vka::DescriptorPool> descriptorPool;
+    std::unique_ptr<vka::DescriptorSet> descriptorSet;
+    std::unique_ptr<vka::PipelineLayout> pipelineLayout;
+    std::unique_ptr<vka::GraphicsPipeline> pipeline;
+  } textData;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
@@ -268,56 +280,57 @@ struct AppState {
     current.instanceUniform.flushMemory(device);
   }
 
-  ImDrawData* prepareImguiRender(uint32_t imageIndex) {
-    ImGui::EndFrame();
-    ImGui::Render();
-    ImDrawData* draw_data = ImGui::GetDrawData();
-    auto& imguiIndexBuffer = guiData.indexBuffer[imageIndex];
-    auto& imguiVertexBuffer = guiData.vertexBuffer[imageIndex];
-    constexpr auto indexSize = 2U;
-    constexpr auto vertexSize = 8U;
-    auto indicesByteLength = draw_data->TotalIdxCount * indexSize;
-    auto verticesByteLength = draw_data->TotalVtxCount * vertexSize;
-    if ((!imguiIndexBuffer) || (imguiIndexBuffer->size() < indicesByteLength)) {
-      imguiIndexBuffer = device->createBuffer(
-          indicesByteLength,
-          VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-    }
-    if ((!imguiVertexBuffer) ||
-        (imguiVertexBuffer->size() < verticesByteLength)) {
-      imguiVertexBuffer = device->createBuffer(
-          verticesByteLength,
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-    }
-    auto indexPtr = imguiIndexBuffer->map();
-    auto vertexPtr = imguiVertexBuffer->map();
-    auto indexOffset = 0U;
-    auto vertexOffset = 0U;
-    for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
-      auto cmdList = draw_data->CmdLists[i];
+  // ImDrawData* prepareImguiRender(uint32_t imageIndex) {
+  //   ImGui::EndFrame();
+  //   ImGui::Render();
+  //   ImDrawData* draw_data = ImGui::GetDrawData();
+  //   auto& imguiIndexBuffer = guiData.indexBuffer[imageIndex];
+  //   auto& imguiVertexBuffer = guiData.vertexBuffer[imageIndex];
+  //   constexpr auto indexSize = 2U;
+  //   constexpr auto vertexSize = 8U;
+  //   auto indicesByteLength = draw_data->TotalIdxCount * indexSize;
+  //   auto verticesByteLength = draw_data->TotalVtxCount * vertexSize;
+  //   if ((!imguiIndexBuffer) || (imguiIndexBuffer->size() <
+  //   indicesByteLength)) {
+  //     imguiIndexBuffer = device->createBuffer(
+  //         indicesByteLength,
+  //         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+  //         VMA_MEMORY_USAGE_CPU_TO_GPU);
+  //   }
+  //   if ((!imguiVertexBuffer) ||
+  //       (imguiVertexBuffer->size() < verticesByteLength)) {
+  //     imguiVertexBuffer = device->createBuffer(
+  //         verticesByteLength,
+  //         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+  //         VMA_MEMORY_USAGE_CPU_TO_GPU);
+  //   }
+  //   auto indexPtr = imguiIndexBuffer->map();
+  //   auto vertexPtr = imguiVertexBuffer->map();
+  //   auto indexOffset = 0U;
+  //   auto vertexOffset = 0U;
+  //   for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
+  //     auto cmdList = draw_data->CmdLists[i];
 
-      auto newIndicesSize = cmdList->IdxBuffer.Size * indexSize;
-      std::memcpy(
-          (char*)indexPtr + indexOffset,
-          cmdList->IdxBuffer.Data,
-          newIndicesSize);
-      indexOffset += newIndicesSize;
+  //     auto newIndicesSize = cmdList->IdxBuffer.Size * indexSize;
+  //     std::memcpy(
+  //         (char*)indexPtr + indexOffset,
+  //         cmdList->IdxBuffer.Data,
+  //         newIndicesSize);
+  //     indexOffset += newIndicesSize;
 
-      auto newVerticesSize = cmdList->VtxBuffer.Size * vertexSize;
-      std::memcpy(
-          (char*)vertexPtr + vertexOffset,
-          cmdList->VtxBuffer.Data,
-          newVerticesSize);
-      vertexOffset += newVerticesSize;
-    }
+  //     auto newVerticesSize = cmdList->VtxBuffer.Size * vertexSize;
+  //     std::memcpy(
+  //         (char*)vertexPtr + vertexOffset,
+  //         cmdList->VtxBuffer.Data,
+  //         newVerticesSize);
+  //     vertexOffset += newVerticesSize;
+  //   }
 
-    imguiIndexBuffer->flush();
-    imguiVertexBuffer->flush();
+  //   imguiIndexBuffer->flush();
+  //   imguiVertexBuffer->flush();
 
-    return draw_data;
-  }
+  //   return draw_data;
+  // }
 
   void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
     auto& render = bufState[renderIndex];
@@ -366,66 +379,66 @@ struct AppState {
     render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
   }
 
-  void pipelineGuiRender(
-      uint32_t renderIndex,
-      VkExtent2D swapExtent,
-      ImDrawData* draw_data) {
-    auto& render = bufState[renderIndex];
+  // void pipelineGuiRender(
+  //     uint32_t renderIndex,
+  //     VkExtent2D swapExtent,
+  //     ImDrawData* draw_data) {
+  //   auto& render = bufState[renderIndex];
 
-    auto viewport = VkViewport{0,
-                               0,
-                               static_cast<float>(swapExtent.width),
-                               static_cast<float>(swapExtent.height),
-                               0,
-                               1};
-    render.cmd->bindGraphicsPipeline(*guiData.pipeline);
-    render.cmd->bindGraphicsDescriptorSets(
-        *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
-    uint32_t guiIndexOffset{};
-    uint32_t guiVertexOffset{};
+  //   auto viewport = VkViewport{0,
+  //                              0,
+  //                              static_cast<float>(swapExtent.width),
+  //                              static_cast<float>(swapExtent.height),
+  //                              0,
+  //                              1};
+  //   render.cmd->bindGraphicsPipeline(*guiData.pipeline);
+  //   render.cmd->bindGraphicsDescriptorSets(
+  //       *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
+  //   uint32_t guiIndexOffset{};
+  //   uint32_t guiVertexOffset{};
 
-    render.cmd->setViewport(0, {viewport});
-    auto pos = draw_data->DisplayPos;
-    auto size = draw_data->DisplaySize;
-    glm::mat4 mvp = glm::ortho(pos.x, pos.x + size.x, pos.y + size.y, pos.y);
-    render.cmd->pushConstants(
-        *guiData.pipelineLayout,
-        VK_SHADER_STAGE_VERTEX_BIT,
-        0,
-        sizeof(glm::mat4),
-        &mvp);
-    for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
-      auto cmdList = draw_data->CmdLists[i];
-      render.cmd->bindIndexBuffer(
-          *guiData.indexBuffer[renderIndex],
-          guiIndexOffset,
-          VK_INDEX_TYPE_UINT16);
-      guiIndexOffset += sizeof(ImguiIndex) * cmdList->IdxBuffer.Size;
-      render.cmd->bindVertexBuffers(
-          0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
-      guiVertexOffset += sizeof(ImguiVertex) * cmdList->VtxBuffer.Size;
-      uint32_t drawIndexOffset{};
-      for (const auto& drawCmd : cmdList->CmdBuffer) {
-        if (drawCmd.UserCallback) {
-          drawCmd.UserCallback(cmdList, &drawCmd);
-          continue;
-        }
-        VkOffset2D scissorOffset{
-            static_cast<int32_t>(drawCmd.ClipRect.w - pos.x),
-            static_cast<int32_t>(drawCmd.ClipRect.x - pos.y)};
-        VkExtent2D scissorExtent{
-            static_cast<uint32_t>(
-                drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x),
-            static_cast<uint32_t>(
-                drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y)};
+  //   render.cmd->setViewport(0, {viewport});
+  //   auto pos = draw_data->DisplayPos;
+  //   auto size = draw_data->DisplaySize;
+  //   glm::mat4 mvp = glm::ortho(pos.x, pos.x + size.x, pos.y + size.y, pos.y);
+  //   render.cmd->pushConstants(
+  //       *guiData.pipelineLayout,
+  //       VK_SHADER_STAGE_VERTEX_BIT,
+  //       0,
+  //       sizeof(glm::mat4),
+  //       &mvp);
+  //   for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
+  //     auto cmdList = draw_data->CmdLists[i];
+  //     render.cmd->bindIndexBuffer(
+  //         *guiData.indexBuffer[renderIndex],
+  //         guiIndexOffset,
+  //         VK_INDEX_TYPE_UINT16);
+  //     guiIndexOffset += sizeof(ImguiIndex) * cmdList->IdxBuffer.Size;
+  //     render.cmd->bindVertexBuffers(
+  //         0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
+  //     guiVertexOffset += sizeof(ImguiVertex) * cmdList->VtxBuffer.Size;
+  //     uint32_t drawIndexOffset{};
+  //     for (const auto& drawCmd : cmdList->CmdBuffer) {
+  //       if (drawCmd.UserCallback) {
+  //         drawCmd.UserCallback(cmdList, &drawCmd);
+  //         continue;
+  //       }
+  //       VkOffset2D scissorOffset{
+  //           static_cast<int32_t>(drawCmd.ClipRect.w - pos.x),
+  //           static_cast<int32_t>(drawCmd.ClipRect.x - pos.y)};
+  //       VkExtent2D scissorExtent{
+  //           static_cast<uint32_t>(
+  //               drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x),
+  //           static_cast<uint32_t>(
+  //               drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y)};
 
-        VkRect2D guiScissor{std::move(scissorOffset), std::move(scissorExtent)};
-        render.cmd->setScissor(0, {std::move(guiScissor)});
-        render.cmd->drawIndexed(drawCmd.ElemCount, 1, drawIndexOffset, 0, 0);
-        drawIndexOffset += drawCmd.ElemCount;
-      }
-    }
-  }
+  //       VkRect2D guiScissor{std::move(scissorOffset),
+  //       std::move(scissorExtent)}; render.cmd->setScissor(0,
+  //       {std::move(guiScissor)}); render.cmd->drawIndexed(drawCmd.ElemCount,
+  //       1, drawIndexOffset, 0, 0); drawIndexOffset += drawCmd.ElemCount;
+  //     }
+  //   }
+  // }
 
   void renderCallback(vka::Engine* engine) {
     auto renderIndex = engine->currentRenderIndex();
@@ -456,7 +469,7 @@ struct AppState {
       set->validate(*device);
     }
     render.commandPool.reset();
-    auto draw_data = prepareImguiRender(render.swapImageIndex);
+    // auto draw_data = prepareImguiRender(render.swapImageIndex);
     auto swapExtent = swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
       return;
@@ -482,7 +495,7 @@ struct AppState {
 
     render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
 
-    pipelineGuiRender(renderIndex, swapExtent, draw_data);
+    // pipelineGuiRender(renderIndex, swapExtent, draw_data);
 
     render.cmd->endRenderPass();
     render.cmd->end();
@@ -642,60 +655,61 @@ struct AppState {
     createSwapchain();
 
     textLibrary = std::make_unique<Text::Library>();
-    guiData.descriptorPool = device->createDescriptorPool(
-        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-         {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
-        1);
+    // guiData.descriptorPool = device->createDescriptorPool(
+    //     {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+    //      {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
+    //     1);
 
-    ImGui::GetIO().Fonts->GetTexDataAsRGBA32(
-        &guiData.fontPixels, &guiData.width, &guiData.height);
-    guiData.fontImage = device->createImage2D(
-        {static_cast<uint32_t>(guiData.width),
-         static_cast<uint32_t>(guiData.height)},
-        guiData.fontFormat,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-        vka::ImageAspect::Color);
-    guiData.fontImageView = device->createImageView2D(
-        *guiData.fontImage, guiData.fontFormat, vka::ImageAspect::Color);
-    guiData.fontSampler = device->createSampler();
+    // ImGui::GetIO().Fonts->GetTexDataAsRGBA32(
+    //     &guiData.fontPixels, &guiData.width, &guiData.height);
+    // guiData.fontImage = device->createImage2D(
+    //     {static_cast<uint32_t>(guiData.width),
+    //      static_cast<uint32_t>(guiData.height)},
+    //     guiData.fontFormat,
+    //     VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+    //     vka::ImageAspect::Color);
+    // guiData.fontImageView = device->createImageView2D(
+    //     *guiData.fontImage, guiData.fontFormat, vka::ImageAspect::Color);
+    // guiData.fontSampler = device->createSampler();
 
-    guiData.setLayout =
-        device->createSetLayout({{0,
-                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                  1,
-                                  VK_SHADER_STAGE_FRAGMENT_BIT,
-                                  *guiData.fontSampler}});
+    // guiData.setLayout =
+    //     device->createSetLayout({{0,
+    //                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    //                               1,
+    //                               VK_SHADER_STAGE_FRAGMENT_BIT,
+    //                               *guiData.fontSampler}});
 
-    guiData.descriptorSet =
-        guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
+    // guiData.descriptorSet =
+    //     guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
 
-    auto fontImageDescriptor =
-        guiData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
-            vka::DescriptorReference{});
-    (*fontImageDescriptor)(
-        *guiData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    guiData.descriptorSet->validate(*device);
+    // auto fontImageDescriptor =
+    //     guiData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
+    //         vka::DescriptorReference{});
+    // (*fontImageDescriptor)(
+    //     *guiData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // guiData.descriptorSet->validate(*device);
 
-    guiData.pipelineLayout = device->createPipelineLayout(
-        {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}},
-        {*guiData.setLayout});
+    // guiData.pipelineLayout = device->createPipelineLayout(
+    //     {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0,
+    //     sizeof(glm::mat4)}},
+    //     {*guiData.setLayout});
 
-    guiData.vertexShader =
-        device->createShaderModule("content/shaders/imgui.vert.spv");
-    guiData.fragmentShader =
-        device->createShaderModule("content/shaders/imgui.frag.spv");
+    // guiData.vertexShader =
+    //     device->createShaderModule("content/shaders/imgui.vert.spv");
+    // guiData.fragmentShader =
+    //     device->createShaderModule("content/shaders/imgui.frag.spv");
 
     auto resourceUpload = [this]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
       transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
       transferFence = device->createFence(false);
-      recordImageUpload(
-          guiData.fontPixels,
-          guiData.width * guiData.height * 4,
-          *guiData.fontImage,
-          {static_cast<uint32_t>(guiData.width),
-           static_cast<uint32_t>(guiData.height)});
+      // recordImageUpload(
+      //     guiData.fontPixels,
+      //     guiData.width * guiData.height * 4,
+      //     *guiData.fontImage,
+      //     {static_cast<uint32_t>(guiData.width),
+      //      static_cast<uint32_t>(guiData.height)});
       transferCmd->end();
       device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
       transferFence->wait();
@@ -852,22 +866,22 @@ struct AppState {
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-    auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
-    subpass3D->addColorRef(
-        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    subpass3D->setDepthRef({depthAttachmentDesc,
-                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-    auto subpassGui = renderPassCreateInfo.addGraphicsSubpass();
-    subpassGui->addColorRef(
-        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    renderPassCreateInfo.addSubpassDependency(
-        subpass3D,
-        subpassGui,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
-        VK_DEPENDENCY_BY_REGION_BIT);
+    // auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
+    // subpass3D->addColorRef(
+    //     {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    // subpass3D->setDepthRef({depthAttachmentDesc,
+    //                         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+    // auto subpassGui = renderPassCreateInfo.addGraphicsSubpass();
+    // subpassGui->addColorRef(
+    //     {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    // renderPassCreateInfo.addSubpassDependency(
+    //     subpass3D,
+    //     subpassGui,
+    //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    //     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    //     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+    //     VK_DEPENDENCY_BY_REGION_BIT);
 
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
@@ -875,47 +889,48 @@ struct AppState {
     MultiLogger::get()->info("creating pipeline cache");
     pipelineCache = device->createPipelineCache();
 
-    vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
-        *guiData.pipelineLayout, *renderPass, 1};
-    imguiPipelineCreateInfo.addColorBlendAttachment(
-        true,
-        VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        VK_BLEND_OP_ADD,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        VK_BLEND_FACTOR_ZERO,
-        VK_BLEND_OP_ADD,
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
-    imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
-    imguiPipelineCreateInfo.addShaderStage(
-        VK_SHADER_STAGE_VERTEX_BIT,
-        {},
-        0,
-        nullptr,
-        *guiData.vertexShader,
-        "main");
-    imguiPipelineCreateInfo.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        {},
-        0,
-        nullptr,
-        *guiData.fragmentShader,
-        "main");
-    imguiPipelineCreateInfo.addVertexAttribute(
-        0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
-    imguiPipelineCreateInfo.addVertexAttribute(
-        1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
-    imguiPipelineCreateInfo.addVertexAttribute(
-        2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
-    imguiPipelineCreateInfo.addVertexBinding(
-        0, 32, VK_VERTEX_INPUT_RATE_VERTEX);
-    imguiPipelineCreateInfo.addViewportScissor({}, {});
-    imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
+    // vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
+    //     *guiData.pipelineLayout, *renderPass, 1};
+    // imguiPipelineCreateInfo.addColorBlendAttachment(
+    //     true,
+    //     VK_BLEND_FACTOR_SRC_ALPHA,
+    //     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    //     VK_BLEND_OP_ADD,
+    //     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    //     VK_BLEND_FACTOR_ZERO,
+    //     VK_BLEND_OP_ADD,
+    //     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+    //         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    // imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
+    // imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
+    // imguiPipelineCreateInfo.addShaderStage(
+    //     VK_SHADER_STAGE_VERTEX_BIT,
+    //     {},
+    //     0,
+    //     nullptr,
+    //     *guiData.vertexShader,
+    //     "main");
+    // imguiPipelineCreateInfo.addShaderStage(
+    //     VK_SHADER_STAGE_FRAGMENT_BIT,
+    //     {},
+    //     0,
+    //     nullptr,
+    //     *guiData.fragmentShader,
+    //     "main");
+    // imguiPipelineCreateInfo.addVertexAttribute(
+    //     0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
+    // imguiPipelineCreateInfo.addVertexAttribute(
+    //     1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
+    // imguiPipelineCreateInfo.addVertexAttribute(
+    //     2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
+    // imguiPipelineCreateInfo.addVertexBinding(
+    //     0, 32, VK_VERTEX_INPUT_RATE_VERTEX);
+    // imguiPipelineCreateInfo.addViewportScissor({}, {});
+    // imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
 
-    guiData.pipeline =
-        device->createGraphicsPipeline(*pipelineCache, imguiPipelineCreateInfo);
+    // guiData.pipeline =
+    //     device->createGraphicsPipeline(*pipelineCache,
+    //     imguiPipelineCreateInfo);
 
     auto pipeline3DInfo =
         vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);

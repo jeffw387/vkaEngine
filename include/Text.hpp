@@ -3,6 +3,7 @@
 #include FT_GLYPH_H
 #include <memory>
 #include <vector>
+#include <map>
 #include <string>
 #include <optional>
 #include <gsl-lite.hpp>
@@ -64,7 +65,7 @@ public:
   std::unique_ptr<Glyph> loadChar(FT_ULong character);
   std::unique_ptr<Glyph> loadGlyph(FT_UInt glyphIndex);
   std::vector<FT_ULong> getCharacters();
-  std::vector<std::unique_ptr<Glyph>> getGlyphs();
+  auto getGlyphs();
   void setSize(uint8_t fontSize, FT_UInt dpi);
 
 private:
