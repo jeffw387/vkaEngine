@@ -136,4 +136,4 @@ Library::~Library() { FT_Done_FreeType(library); }
 std::unique_ptr<Font> Library::loadFont(std::string fontPath) {
   return std::make_unique<Font>(library, std::move(fontPath));
 }
-}  // namespace FreeType
+}  // namespace Text
