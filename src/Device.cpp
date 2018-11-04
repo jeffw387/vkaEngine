@@ -297,7 +297,7 @@ std::unique_ptr<ShaderModule> Device::createShaderModule(
     return std::make_unique<ShaderModule>(device, binaryData);
   } catch (const std::exception& e) {
     MultiLogger::get()->critical("error while creating shader: {}", e.what());
-    // throw e;
+    throw e;
   }
 }
 
