@@ -8,87 +8,20 @@
 #include <gsl-lite.hpp>
 #include "Logger.hpp"
 #include <range/v3/all.hpp>
-using namespace ranges;
-
-// Flattens a range of ranges by iterating the inner
-// ranges in round-robin fashion.
-template <class Rngs>
-class interleave_view : public view_facade<interleave_view<Rngs>> {
-  friend range_access;
-  std::vector<range_value_type_t<Rngs>> rngs_;
-  struct cursor;
-  cursor begin_cursor() {
-    return {0, &rngs_, view::transform(rngs_, ranges::begin)};
-  }
-
-public:
-  interleave_view() = default;
-  explicit interleave_view(Rngs rngs) : rngs_(std::move(rngs)) {}
-};
-
-template <class Rngs>
-struct interleave_view<Rngs>::cursor {
-  std::size_t n_;
-  std::vector<range_value_type_t<Rngs>> *rngs_;
-  std::vector<iterator_t<range_value_type_t<Rngs>>> its_;
-  decltype(auto) read() const { return *its_[n_]; }
-  void next() {
-    if (0 == ((++n_) %= its_.size())) for_each(its_, [](auto &it) { ++it; });
-  }
-  bool equal(default_sentinel) const {
-    return n_ == 0 &&
-           its_.end() !=
-               mismatch(
-                   its_, *rngs_, std::not_equal_to<>(), ident(), ranges::end)
-                   .in1();
-  }
-  CONCEPT_REQUIRES(ForwardRange<range_value_type_t<Rngs>>())
-  bool equal(cursor const &that) const {
-    return n_ == that.n_ && its_ == that.its_;
-  }
-};
-
-// In:  Range<Range<T>>
-// Out: Range<T>, flattened by walking the ranges
-//                round-robin fashion.
-inline auto interleave() {
-  return make_pipeable([](auto &&rngs) {
-    using Rngs = decltype(rngs);
-    return interleave_view<view::all_t<Rngs>>(
-        view::all(std::forward<Rngs>(rngs)));
-  });
-}
-
-// In:  Range<Range<T>>
-// Out: Range<Range<T>>, transposing the rows and columns.
-inline auto transpose() {
-  return make_pipeable([](auto &&rngs) {
-    using Rngs = decltype(rngs);
-    CONCEPT_ASSERT(ForwardRange<Rngs>());
-    return std::forward<Rngs>(rngs) | interleave() |
-           view::chunk(static_cast<std::size_t>(distance(rngs)));
-  });
-}
 
 namespace Text {
-
-struct BBox {
-  int xmin;
-  int ymin;
-  int xmax;
-  int ymax;
-};
 
 struct Dimensions {
   int width;
   int height;
 };
 
-struct UV {
-  float xmin;
-  float ymin;
-  float xmax;
-  float ymax;
+template <typename T>
+struct Rect {
+  T xmin;
+  T ymin;
+  T xmax;
+  T ymax;
 };
 
 struct Tile {
@@ -97,11 +30,17 @@ struct Tile {
   int rowcount;
 };
 
+using ZippedTileData =
+    ranges::zip_view<gsl::span<unsigned char>, Rect<float>, Rect<uint32_t>>;
 struct Tileset {
   Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth);
   std::vector<Tile> m_tiles;
-  std::vector<UV> tileUVs;
-  std::vector<unsigned char> bitmap;
+  std::vector<Rect<float>> tileUVs;
+  std::vector<Rect<uint32_t>> tileRects;
+  float tilesetWidth = {};
+  float tilesetHeight = {};
+
+  auto zippedTileData() const;
 };
 
 class Glyph {
@@ -109,7 +48,7 @@ public:
   Glyph(FT_Glyph glyph);
   ~Glyph();
   gsl::span<unsigned char> render();
-  BBox getBoundingBox();
+  Rect<int> getBoundingBox();
   Dimensions getDimensions();
 
 private:

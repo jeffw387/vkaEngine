@@ -1,39 +1,44 @@
 #include "Text.hpp"
 
 namespace Text {
+using namespace ranges;
+
+inline auto getTileData = [](Tile tile) { return tile.tileData; };
+
 Tileset::Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth)
     : m_tiles(std::move(tiles)) {
   auto tileWidth = m_tiles.at(0).pitch;
   auto tileHeight = m_tiles.at(0).rowcount;
 
   int maxTilesPerRow = maxTilesetWidth / tileWidth;
-  // range of tiles (range of rows (range of pixels))
-  auto bitmapsView = view::transform(m_tiles, [=](Tile tile) {
-    return tile.tileData | view::chunk(tileWidth);
-  });
+
+  auto bitmapsView = m_tiles | view::transform(getTileData);
 
   auto tileRows = bitmapsView | view::chunk(maxTilesPerRow);
+  auto tileRowCount = distance(tileRows);
+  tilesetWidth = maxTilesetWidth;
+  tilesetHeight = tileRowCount * tileHeight;
 
   float rowIndex{};
   RANGES_FOR(auto row, tileRows) {
     float columnIndex{};
     RANGES_FOR(auto tile, row) {
-      tileUVs.push_back({columnIndex * tileWidth,
-                         rowIndex * tileHeight,
-                         (columnIndex + 1) * tileWidth,
-                         (rowIndex + 1) * tileHeight});
+      tileRects.push_back({static_cast<uint32_t>(columnIndex * tileWidth),
+                           static_cast<uint32_t>(rowIndex * tileHeight),
+                           static_cast<uint32_t>((columnIndex + 1) * tileWidth),
+                           static_cast<uint32_t>((rowIndex + 1) * tileHeight)});
+      tileUVs.push_back({(columnIndex * tileWidth) / tilesetWidth,
+                         (rowIndex * tileHeight) / tilesetHeight,
+                         ((columnIndex + 1) * tileWidth) / tilesetWidth,
+                         ((rowIndex + 1) * tileHeight) / tilesetHeight});
       ++columnIndex;
     }
     ++rowIndex;
   }
+}
 
-  // range of rows (range of tiles (range of rows (range of pixels)))
-  auto transposedRows =
-      tileRows | view::transform([](auto row) { return row | transpose(); });
-  auto joinedRows = action::join(transposedRows);
-  auto joinedTiles = action::join(joinedRows);
-  auto joinedPixelRows = action::join(joinedTiles);
-  action::push_back(bitmap, joinedPixelRows);
+auto Tileset::zippedTileData() const {
+  return view::zip(m_tiles | view::transform(getTileData), tileUVs, tileRects);
 }
 
 Glyph::Glyph(FT_Glyph glyph) : glyph(glyph){};
@@ -56,13 +61,13 @@ gsl::span<unsigned char> Glyph::render() {
   return {bmp.buffer, bmp.pitch * bmp.rows};
 }
 
-BBox Glyph::getBoundingBox() {
+Rect<int> Glyph::getBoundingBox() {
   FT_BBox bbox{};
   FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
-  BBox myBBox{static_cast<int>(bbox.xMin),
-              static_cast<int>(bbox.yMin),
-              static_cast<int>(bbox.xMax),
-              static_cast<int>(bbox.yMax)};
+  Rect<int> myBBox{static_cast<int>(bbox.xMin),
+                   static_cast<int>(bbox.yMin),
+                   static_cast<int>(bbox.xMax),
+                   static_cast<int>(bbox.yMax)};
   return myBBox;
 }
 
