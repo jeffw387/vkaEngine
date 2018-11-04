@@ -30,8 +30,6 @@ struct Tile {
   uint32_t rowcount;
 };
 
-using ZippedTileData =
-    ranges::zip_view<gsl::span<unsigned char>, Rect<float>, Rect<uint32_t>>;
 struct Tileset {
   Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth);
   std::vector<Tile> m_tiles;
@@ -47,7 +45,9 @@ class Glyph {
 public:
   Glyph(FT_Glyph glyph);
   ~Glyph();
-  gsl::span<unsigned char> render();
+  void render();
+  Tile getTile();
+
   Rect<int> getBoundingBox();
   Dimensions getDimensions();
 

@@ -50,13 +50,17 @@ Glyph::~Glyph() {
   }
 }
 
-gsl::span<unsigned char> Glyph::render() {
+void Glyph::render() {
   if (!rendered) {
     auto newGlyph = glyph;
     FT_Glyph_To_Bitmap(&newGlyph, FT_RENDER_MODE_NORMAL, nullptr, 0);
     bitmapGlyph = (FT_BitmapGlyph)newGlyph;
     rendered = true;
   }
+}
+
+Tile Glyph::getTile() {
+  render();
   auto& bmp = bitmapGlyph->bitmap;
   return {{bmp.buffer, bmp.width * bmp.rows}, bmp.width, bmp.rows};
 }
