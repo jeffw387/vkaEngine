@@ -149,8 +149,8 @@ class Library {
 public:
   Library();
   ~Library();
-  Library(const Library&) = delete;
-  Library& operator=(const Library&) = delete;
+  Library(const Library &) = delete;
+  Library &operator=(const Library &) = delete;
 
   std::unique_ptr<Font> loadFont(std::string fontPath);
 
@@ -158,11 +158,4 @@ private:
   FT_Library library;
 };
 
-inline void testLoad() {
-  // std::string fontPath = "content/fonts/arial.ttf";
-  // Library library;
-  // auto font = library.loadFont(fontPath);
-  // auto face = font->createFace(0);
-}
-
-}  // namespace FreeType
+}  // namespace Text
