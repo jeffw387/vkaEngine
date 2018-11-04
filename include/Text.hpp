@@ -70,6 +70,7 @@ inline auto transpose() {
   });
 }
 
+namespace Text {
 
 struct BBox {
   int xmin;
@@ -83,26 +84,26 @@ struct Dimensions {
   int height;
 };
 
+struct UV {
+  float xmin;
+  float ymin;
+  float xmax;
+  float ymax;
+};
+
 struct Tile {
   gsl::span<unsigned char> tileData;
   int pitch;
   int rowcount;
-
-  gsl::span<unsigned char> getRow(size_t rowIndex);
 };
 
-struct Row {
-  std::vector<Tile> tiles;
-};
 
 struct Tileset {
-  std::vector<Row> rows;
+  Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth);
+  std::vector<Tile> m_tiles;
+  std::vector<UV> tileUVs;
+  std::vector<unsigned char> bitmap;
 };
-
-inline Tileset makeTileset(std::vector<Tile> tiles, size_t maxTilesetWidth) {
-  Tileset result;
-  
-}
 
 class Glyph {
 public:
