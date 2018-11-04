@@ -97,7 +97,6 @@ struct Tile {
   int rowcount;
 };
 
-
 struct Tileset {
   Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth);
   std::vector<Tile> m_tiles;
