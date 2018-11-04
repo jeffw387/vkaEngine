@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.10)
 
 set(EngineVersionMajor 0)
 set(EngineVersionMinor 0)
@@ -74,8 +74,11 @@ add_library(vkaEngine)
 target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
 target_include_directories(vkaEngine PUBLIC 
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set_target_properties(vkaEngine PROPERTIES
-  CXX_STANDARD 17)
+
+target_compile_options(vkaEngine PUBLIC -fconcepts)
+set_property(TARGET vkaEngine PROPERTY CXX_STANDARD 17)
+set_property(TARGET vkaEngine PROPERTY CXX_STANDARD_REQUIRED ON)
+#set_property(TARGET vkaEngine PROPERTY CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 
 target_compile_definitions(vkaEngine 
   PUBLIC 
@@ -92,7 +95,9 @@ add_custom_command(
   POST_BUILD
   COMMAND clang-format -i -style=file ${vkaEngineSources} ${vkaEngineIncludes})
 
-#target_link_libraries(vkaEngine PUBLIC stdc++fs)
+if (UNIX)
+  target_link_libraries(vkaEngine PUBLIC stdc++fs)
+endif()
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/freetype2")
 target_link_libraries(vkaEngine PUBLIC freetype)
@@ -104,6 +109,9 @@ add_library(outcome INTERFACE)
 target_include_directories(outcome INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/external/outcome/single-header")
 target_link_libraries(vkaEngine PUBLIC outcome)
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3")
+target_link_libraries(vkaEngine PUBLIC range-v3)
 
 find_package(Vulkan REQUIRED)
 if(VULKAN_FOUND)
