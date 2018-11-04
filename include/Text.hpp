@@ -26,8 +26,8 @@ struct Rect {
 
 struct Tile {
   gsl::span<unsigned char> tileData;
-  int pitch;
-  int rowcount;
+  uint32_t width;
+  uint32_t rowcount;
 };
 
 using ZippedTileData =

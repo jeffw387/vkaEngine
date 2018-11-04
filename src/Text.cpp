@@ -7,7 +7,7 @@ inline auto getTileData = [](Tile tile) { return tile.tileData; };
 
 Tileset::Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth)
     : m_tiles(std::move(tiles)) {
-  auto tileWidth = m_tiles.at(0).pitch;
+  auto tileWidth = m_tiles.at(0).width;
   auto tileHeight = m_tiles.at(0).rowcount;
 
   int maxTilesPerRow = maxTilesetWidth / tileWidth;
@@ -58,7 +58,7 @@ gsl::span<unsigned char> Glyph::render() {
     rendered = true;
   }
   auto& bmp = bitmapGlyph->bitmap;
-  return {bmp.buffer, bmp.pitch * bmp.rows};
+  return {{bmp.buffer, bmp.width * bmp.rows}, bmp.width, bmp.rows};
 }
 
 Rect<int> Glyph::getBoundingBox() {
