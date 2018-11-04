@@ -116,7 +116,7 @@ struct AppState {
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::unique_ptr<vka::GraphicsPipeline> pipeline;
   vka::GUIData guiData;
-  std::unique_ptr<FreeType::Library> textLibrary;
+  std::unique_ptr<Text::Library> textLibrary;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
@@ -640,8 +640,8 @@ struct AppState {
         });
 
     createSwapchain();
-    
-    textLibrary = std::make_unique<FreeType::Library>();
+
+    textLibrary = std::make_unique<Text::Library>();
     guiData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
