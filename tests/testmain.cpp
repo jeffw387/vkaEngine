@@ -29,6 +29,28 @@ struct TextVertex {
   glm::vec2 uv;
 };
 
+struct CharacterData {
+  int32_t xOffset;
+  FT_ULong character;
+};
+
+struct TextObject {
+  glm::vec2 screenPosition;
+  std::vector<CharacterData> characters;
+  TextObject(
+      std::map<FT_ULong, std::unique_ptr<Text::Glyph>>& charMap,
+      std::string text,
+      glm::vec2 screenPosition = {})
+      : screenPosition(screenPosition) {
+    int32_t offset{};
+    for (auto character : text) {
+      auto& glyph = charMap.at(character);
+
+      characters.push_back({offset, static_cast<FT_ULong>(character)});
+      offset += glyph->getAdvance();
+    }
+  }
+};
 struct Material {
   glm::vec4 diffuse;
 };
@@ -679,7 +701,8 @@ struct AppState {
     auto niocFace = textData.fontNiocTresni->createFace(0);
     niocFace->setSize(16, 72);
     textData.glyphMap = niocFace->getGlyphs();
-    auto tileDimensions = textData.glyphMap.begin()->second->getDimensions();
+    textData.testText = std::make_unique<TextObject>(
+        textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
     auto fontBBox = textData.glyphMap.begin()->second->getBoundingBox();
     auto glyphs = ranges::view::values(textData.glyphMap);
     auto tiles = ranges::view::transform(
