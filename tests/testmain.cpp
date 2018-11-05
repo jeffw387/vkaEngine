@@ -26,7 +26,6 @@ using TextIndex = uint16_t;
 struct TextVertex {
   glm::vec2 pos;
   glm::vec2 uv;
-  glm::vec4 color;
 };
 
 struct Material {
