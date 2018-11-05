@@ -710,15 +710,31 @@ struct AppState {
     textData.fragmentShader =
         device->createShaderModule("content/shaders/text.frag.spv");
 
-    // guiData.pipelineLayout = device->createPipelineLayout(
-    //     {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0,
-    //     sizeof(glm::mat4)}},
-    //     {*guiData.setLayout});
+    std::vector<TextIndex> textIndices;
+    std::vector<TextVertex> textVertices;
+    size_t indexOffset{};
+    RANGES_FOR(const auto& uv, textData.tilesetNiocTresni->tileUVs) {
+      std::vector<TextIndex> nextIndices{
+          static_cast<TextIndex>(indexOffset + 0),
+          static_cast<TextIndex>(indexOffset + 1),
+          static_cast<TextIndex>(indexOffset + 2),
+          static_cast<TextIndex>(indexOffset + 2),
+          static_cast<TextIndex>(indexOffset + 3),
+          static_cast<TextIndex>(indexOffset + 0),
+      };
+      ranges::action::push_back(textIndices, std::move(nextIndices));
 
-    // guiData.vertexShader =
-    //     device->createShaderModule("content/shaders/imgui.vert.spv");
-    // guiData.fragmentShader =
-    //     device->createShaderModule("content/shaders/imgui.frag.spv");
+      std::vector<TextVertex> nextVertices{
+          {glm::vec2(fontBBox.xmin, -fontBBox.ymax),
+           glm::vec2(uv.xmin, uv.ymin)},
+          {glm::vec2(fontBBox.xmin, -fontBBox.ymin),
+           glm::vec2(uv.xmin, uv.ymax)},
+          {glm::vec2(fontBBox.xmax, -fontBBox.ymin),
+           glm::vec2(uv.xmax, uv.ymax)},
+          {glm::vec2(fontBBox.xmax, -fontBBox.ymax),
+           glm::vec2(uv.xmax, uv.ymin)}};
+      ranges::action::push_back(textVertices, std::move(nextVertices));
+    }
 
     auto resourceUpload = [this]() {
       transferCommandPool = device->createCommandPool();
