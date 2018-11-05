@@ -45,9 +45,8 @@ Glyph::~Glyph() {
 
 void Glyph::render() {
   if (!rendered) {
-    auto newGlyph = glyph;
-    FT_Glyph_To_Bitmap(&newGlyph, FT_RENDER_MODE_NORMAL, nullptr, 0);
-    bitmapGlyph = (FT_BitmapGlyph)newGlyph;
+    FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
+    bitmapGlyph = (FT_BitmapGlyph)glyph;
     rendered = true;
   }
 }
