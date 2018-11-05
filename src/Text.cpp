@@ -91,12 +91,16 @@ std::unique_ptr<Glyph> Face::getGlyph() {
 
 std::unique_ptr<Glyph> Face::loadChar(FT_ULong character) {
   FT_Load_Char(face, character, FT_LOAD_DEFAULT);
-  return getGlyph();
+  auto glyph = getGlyph();
+  glyph->render();
+  return glyph;
 }
 
 std::unique_ptr<Glyph> Face::loadGlyph(FT_UInt glyphIndex) {
   FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT);
-  return getGlyph();
+  auto glyph = getGlyph();
+  glyph->render();
+  return glyph;
 }
 
 std::vector<FT_ULong> Face::getCharacters() {
