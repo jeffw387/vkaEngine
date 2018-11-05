@@ -47,8 +47,6 @@ public:
   Engine(const Engine&) = delete;
   Engine& operator=(const Engine&) = delete;
   Engine(EngineCreateInfo);
-  Engine(Engine&&) = default;
-  Engine& operator=(Engine&&) = default;
   ~Engine() = default;
 
   Instance* createInstance(InstanceCreateInfo);
