@@ -28,14 +28,16 @@ struct Rect {
 using Tile = gsl::span<unsigned char>;
 
 struct Tileset {
-  Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth);
-  std::vector<Tile> m_tiles;
+  Tileset(
+      ranges::any_view<Tile> tiles,
+      uint32_t maxTilesetWidth,
+      uint32_t tileWidth,
+      uint32_t tileHeight);
+  ranges::any_view<Tile> tiles;
   std::vector<Rect<float>> tileUVs;
   std::vector<Rect<uint32_t>> tileRects;
   float tilesetWidth = {};
   float tilesetHeight = {};
-
-  auto zippedTileData() const;
 };
 
 class Glyph {

@@ -3,13 +3,12 @@
 namespace Text {
 using namespace ranges;
 
-inline auto getTileData = [](Tile tile) { return tile.tileData; };
-
-Tileset::Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth)
-    : m_tiles(std::move(tiles)) {
-  auto tileWidth = m_tiles.at(0).width;
-  auto tileHeight = m_tiles.at(0).rowcount;
-
+Tileset::Tileset(
+    any_view<Tile> tiles,
+    uint32_t maxTilesetWidth,
+    uint32_t tileWidth,
+    uint32_t tileHeight)
+    : tiles(tiles) {
   int maxTilesPerRow = maxTilesetWidth / tileWidth;
 
   auto tileRows = tiles | view::chunk(maxTilesPerRow);
