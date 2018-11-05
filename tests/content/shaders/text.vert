@@ -1,7 +1,6 @@
 #version 450 core
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aUV;
-layout(location = 2) in vec4 aColor;
 
 layout(push_constant) uniform uPushConstant{
     mat4 mvp;
@@ -12,13 +11,11 @@ out gl_PerVertex{
 };
 
 layout(location = 0) out struct{
-    vec4 Color;
     vec2 UV;
 } Out;
 
 void main()
 {
-    Out.Color = aColor;
     Out.UV = aUV;
     gl_Position = pc.mvp * vec4(aPos, 0, 1);
 }

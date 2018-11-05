@@ -71,7 +71,7 @@ copy_content(
   "${CMAKE_CURRENT_BINARY_DIR}/content/fonts/NiocTresni"
 )
 
-list(APPEND shaderFileNames shader.vert shader.frag imgui.vert imgui.frag)
+list(APPEND shaderFileNames shader.vert shader.frag text.vert text.frag)
 process_shader(
   shaderFileNames
   "${CMAKE_CURRENT_SOURCE_DIR}/content/shaders"
