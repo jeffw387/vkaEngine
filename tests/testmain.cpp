@@ -540,20 +540,33 @@ struct AppState {
         *depthImage, depthFormat, vka::ImageAspect::Depth);
   }
 
+  template <typename T>
+  void
+  recordBufferUpload(gsl::span<T> data, VkBuffer buffer, VkDeviceSize offset) {
+    auto staging = device->createBuffer(
+        data.size_bytes(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY);
+    void* stagePtr = staging->map();
+    std::memcpy(stagePtr, data.data(), data.size_bytes());
+    staging->flush();
+    VkBufferCopy bufferCopy{0, offset, data.size_bytes()};
+    transferCmd->copyBuffer(*staging, buffer, {bufferCopy});
+  }
+
+  template <typename T>
   void recordImageUpload(
-      unsigned char* data,
-      size_t bufferSize,
+      gsl::span<T> data,
       VkImage image,
       VkOffset2D imageOffset,
       VkExtent2D imageExtent) {
     auto staging = device->createBuffer(
-        bufferSize,
+        data.size_bytes(),
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VMA_MEMORY_USAGE_CPU_ONLY);
-    void* stagePtr{};
-    vmaMapMemory(device->getAllocator(), *staging, &stagePtr);
-    std::memcpy(stagePtr, data, bufferSize);
-    vmaFlushAllocation(device->getAllocator(), *staging, 0, bufferSize);
+    void* stagePtr = staging->map();
+    std::memcpy(stagePtr, data.data(), data.size_bytes());
+    staging->flush();
 
     VkImageSubresourceLayers imageSubresource = {};
     imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -739,6 +752,7 @@ struct AppState {
     auto resourceUpload = [&]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
+      transferFence = device->createFence(false);
       transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
       transferFence = device->createFence(false);
 
