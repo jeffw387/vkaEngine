@@ -58,6 +58,19 @@ copy_content(
   "${CMAKE_CURRENT_SOURCE_DIR}/content/models"
   "${CMAKE_CURRENT_BINARY_DIR}/content/models")
 
+list(APPEND fontNiocTresniFiles 
+  TracerTong_info.pdf
+  NiocTresni.ttf
+  NiocTresniBold.ttf
+  NiocTresniExtraBold.ttf
+  NiocTresniFade.ttf
+  NiocTresniSolid.ttf)
+copy_content(
+  fontNiocTresniFiles
+  "${CMAKE_CURRENT_SOURCE_DIR}/content/fonts/NiocTresni"
+  "${CMAKE_CURRENT_BINARY_DIR}/content/fonts/NiocTresni"
+)
+
 list(APPEND shaderFileNames shader.vert shader.frag imgui.vert imgui.frag)
 process_shader(
   shaderFileNames
