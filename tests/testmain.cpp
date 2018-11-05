@@ -680,9 +680,13 @@ struct AppState {
         *textData.fontImage, VK_FORMAT_R8_UINT, vka::ImageAspect::Color);
     textData.fontSampler = device->createSampler();
     textData.descriptorPool = device->createDescriptorPool(
-        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-         {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
-        1);
+        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);
+    textData.setLayout =
+        device->createSetLayout({{0,
+                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                  1,
+                                  VK_SHADER_STAGE_FRAGMENT_BIT,
+                                  *textData.fontSampler}});
 
     // ImGui::GetIO().Fonts->GetTexDataAsRGBA32(
     //     &guiData.fontPixels, &guiData.width, &guiData.height);
