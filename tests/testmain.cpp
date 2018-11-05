@@ -667,6 +667,7 @@ struct AppState {
     niocFace->setSize(16, 72);
     textData.glyphMap = niocFace->getGlyphs();
     auto tileDimensions = textData.glyphMap.begin()->second->getDimensions();
+    auto fontBBox = textData.glyphMap.begin()->second->getBoundingBox();
     auto glyphs = ranges::view::values(textData.glyphMap);
     auto tiles = ranges::view::transform(
         glyphs, [](auto& glyph) { return glyph->getTile(); });
