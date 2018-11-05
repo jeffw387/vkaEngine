@@ -13,8 +13,8 @@ Tileset::Tileset(
 
   auto tileRows = tiles | view::chunk(maxTilesPerRow);
   auto tileRowCount = distance(tileRows);
-  tilesetWidth = maxTilesetWidth;
-  tilesetHeight = tileRowCount * tileHeight;
+  width = maxTilesetWidth;
+  height = tileRowCount * tileHeight;
 
   float rowIndex{};
   RANGES_FOR(auto row, tileRows) {
@@ -24,10 +24,10 @@ Tileset::Tileset(
                            static_cast<uint32_t>(rowIndex * tileHeight),
                            static_cast<uint32_t>((columnIndex + 1) * tileWidth),
                            static_cast<uint32_t>((rowIndex + 1) * tileHeight)});
-      tileUVs.push_back({(columnIndex * tileWidth) / tilesetWidth,
-                         (rowIndex * tileHeight) / tilesetHeight,
-                         ((columnIndex + 1) * tileWidth) / tilesetWidth,
-                         ((rowIndex + 1) * tileHeight) / tilesetHeight});
+      tileUVs.push_back({(columnIndex * tileWidth) / width,
+                         (rowIndex * tileHeight) / height,
+                         ((columnIndex + 1) * tileWidth) / width,
+                         ((rowIndex + 1) * tileHeight) / height});
       ++columnIndex;
     }
     ++rowIndex;

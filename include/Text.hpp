@@ -37,8 +37,8 @@ struct Tileset {
   ranges::any_view<Tile> tiles;
   std::vector<Rect<float>> tileUVs;
   std::vector<Rect<uint32_t>> tileRects;
-  float tilesetWidth = {};
-  float tilesetHeight = {};
+  float width = {};
+  float height = {};
 };
 
 class Glyph {
