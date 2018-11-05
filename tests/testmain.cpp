@@ -669,11 +669,6 @@ struct AppState {
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
         1);
 
-    // guiData.descriptorPool = device->createDescriptorPool(
-    //     {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-    //      {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
-    //     1);
-
     // ImGui::GetIO().Fonts->GetTexDataAsRGBA32(
     //     &guiData.fontPixels, &guiData.width, &guiData.height);
     // guiData.fontImage = device->createImage2D(
