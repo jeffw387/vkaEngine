@@ -75,7 +75,7 @@ target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources}
 target_include_directories(vkaEngine PUBLIC 
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-target_compile_options(vkaEngine PUBLIC -fconcepts)
+#target_compile_options(vkaEngine PUBLIC -fconcepts)
 set_property(TARGET vkaEngine PROPERTY CXX_STANDARD 17)
 set_property(TARGET vkaEngine PROPERTY CXX_STANDARD_REQUIRED ON)
 #set_property(TARGET vkaEngine PROPERTY CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
