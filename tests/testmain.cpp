@@ -738,7 +738,7 @@ struct AppState {
     textData.descriptorSet->validate(*device);
 
     textData.pipelineLayout = device->createPipelineLayout(
-        {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}},
+        {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(TextVertexPushData))}},
         {*textData.setLayout});
 
     textData.vertexShader =
