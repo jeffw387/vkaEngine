@@ -754,7 +754,9 @@ struct AppState {
       transferCmd = transferCommandPool->allocateCommandBuffer();
       transferFence = device->createFence(false);
       transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-      transferFence = device->createFence(false);
+
+      recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0);
+      recordBufferUpload<TextVertex>({textVertices}, *textData.vertexBuffer, 0);
 
       RANGES_FOR(
           const auto& ziptuple,
