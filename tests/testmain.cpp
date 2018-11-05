@@ -749,16 +749,23 @@ struct AppState {
     std::vector<TextIndex> textIndices;
     std::vector<TextVertex> textVertices;
     size_t indexOffset{};
-    RANGES_FOR(const auto& uv, textData.tilesetNiocTresni->tileUVs) {
+    size_t vertexOffset{};
+    RANGES_FOR(
+        const auto& zipped,
+        ranges::view::zip(
+            textData.glyphMap, textData.tilesetNiocTresni->tileUVs)) {
+      const auto& glyphPair = std::get<0>(zipped);
+      const auto& uv = std::get<1>(zipped);
+
       std::vector<TextIndex> nextIndices{
-          static_cast<TextIndex>(indexOffset + 0),
-          static_cast<TextIndex>(indexOffset + 1),
-          static_cast<TextIndex>(indexOffset + 2),
-          static_cast<TextIndex>(indexOffset + 2),
-          static_cast<TextIndex>(indexOffset + 3),
-          static_cast<TextIndex>(indexOffset + 0),
-      };
+          static_cast<TextIndex>(vertexOffset + 0),
+          static_cast<TextIndex>(vertexOffset + 1),
+          static_cast<TextIndex>(vertexOffset + 2),
+          static_cast<TextIndex>(vertexOffset + 2),
+          static_cast<TextIndex>(vertexOffset + 3),
+          static_cast<TextIndex>(vertexOffset + 0)};
       ranges::action::push_back(textIndices, std::move(nextIndices));
+      textData.indexBufferOffsets[glyphPair.first] = indexOffset;
 
       std::vector<TextVertex> nextVertices{
           {glm::vec2(fontBBox.xmin, -fontBBox.ymax),
@@ -770,6 +777,8 @@ struct AppState {
           {glm::vec2(fontBBox.xmax, -fontBBox.ymax),
            glm::vec2(uv.xmax, uv.ymin)}};
       ranges::action::push_back(textVertices, std::move(nextVertices));
+      indexOffset += 6;
+      vertexOffset += 4;
     }
 
     auto resourceUpload = [&]() {
