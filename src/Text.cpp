@@ -60,7 +60,7 @@ Tile Glyph::getTile() {
 
 Rect<float> Glyph::getBoundingBox() {
   FT_BBox bbox{};
-  FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
+  FT_Glyph_Get_CBox(glyph, 0, &bbox);
   Rect<float> myBBox{static_cast<float>(bbox.xMin),
                      static_cast<float>(bbox.yMin),
                      static_cast<float>(bbox.xMax),
