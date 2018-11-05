@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <algorithm>
 #include <optional>
 #include <gsl-lite.hpp>
 #include "Logger.hpp"
@@ -13,8 +14,8 @@
 namespace Text {
 
 struct Dimensions {
-  int width;
-  int height;
+  uint32_t width;
+  uint32_t height;
 };
 
 template <typename T>

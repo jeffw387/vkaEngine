@@ -70,8 +70,8 @@ Rect<int> Glyph::getBoundingBox() {
 
 Dimensions Glyph::getDimensions() {
   auto bbox = getBoundingBox();
-  auto width = bbox.xmax - bbox.xmin;
-  auto height = bbox.ymax - bbox.ymin;
+  uint32_t width = std::abs(bbox.xmax - bbox.xmin);
+  uint32_t height = std::abs(bbox.ymax - bbox.ymin);
   return {std::move(width), std::move(height)};
 }
 
