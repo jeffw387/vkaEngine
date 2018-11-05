@@ -690,24 +690,15 @@ struct AppState {
                                   VK_SHADER_STAGE_FRAGMENT_BIT,
                                   *textData.fontSampler}});
 
-    // ImGui::GetIO().Fonts->GetTexDataAsRGBA32(
-    //     &guiData.fontPixels, &guiData.width, &guiData.height);
-    // guiData.fontImage = device->createImage2D(
-    //     {static_cast<uint32_t>(guiData.width),
-    //      static_cast<uint32_t>(guiData.height)},
-    //     guiData.fontFormat,
-    //     VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-    //     vka::ImageAspect::Color);
-    // guiData.fontImageView = device->createImageView2D(
-    //     *guiData.fontImage, guiData.fontFormat, vka::ImageAspect::Color);
-    // guiData.fontSampler = device->createSampler();
+    textData.descriptorSet = textData.descriptorPool->allocateDescriptorSet(
+        textData.setLayout.get());
 
-    // guiData.setLayout =
-    //     device->createSetLayout({{0,
-    //                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    //                               1,
-    //                               VK_SHADER_STAGE_FRAGMENT_BIT,
-    //                               *guiData.fontSampler}});
+    auto fontImageDescriptor =
+        textData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
+            vka::DescriptorReference{});
+    (*fontImageDescriptor)(
+        *textData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    textData.descriptorSet->validate(*device);
 
     // guiData.descriptorSet =
     //     guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
