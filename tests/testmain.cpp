@@ -19,6 +19,7 @@
 #include <experimental/filesystem>
 #include "VkEnumStrings.hpp"
 #include "Text.hpp"
+#include <range/v3/all.hpp>
 
 namespace fs = std::experimental::filesystem;
 
@@ -662,7 +663,9 @@ struct AppState {
     auto niocFace = textData.fontNiocTresni->createFace(0);
     niocFace->setSize(16, 72);
     textData.glyphMap = niocFace->getGlyphs();
-
+    auto glyphs = ranges::view::values(textData.glyphMap);
+    auto tiles = ranges::view::transform(
+        glyphs, [](auto& glyph) { return glyph->getTile(); });
     textData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
