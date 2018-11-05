@@ -116,7 +116,7 @@ std::vector<FT_ULong> Face::getCharacters() {
 std::map<FT_ULong, std::unique_ptr<Glyph>> Face::getGlyphs() {
   std::map<FT_ULong, std::unique_ptr<Glyph>> result;
   for (auto character : getCharacters()) {
-    result[std::move(character)] = loadChar(character);
+    result[character] = loadChar(character);
   }
   return result;
 }
