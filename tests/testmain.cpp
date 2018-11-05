@@ -544,6 +544,7 @@ struct AppState {
       unsigned char* data,
       size_t bufferSize,
       VkImage image,
+      VkOffset2D imageOffset,
       VkExtent2D imageExtent) {
     auto staging = device->createBuffer(
         bufferSize,
@@ -585,6 +586,7 @@ struct AppState {
         {preCopyBarrier});
 
     VkBufferImageCopy copy{};
+    copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
     copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
     copy.imageSubresource = imageSubresource;
     transferCmd->copyBufferToImage(
