@@ -12,9 +12,7 @@ Tileset::Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth)
 
   int maxTilesPerRow = maxTilesetWidth / tileWidth;
 
-  auto bitmapsView = m_tiles | view::transform(getTileData);
-
-  auto tileRows = bitmapsView | view::chunk(maxTilesPerRow);
+  auto tileRows = tiles | view::chunk(maxTilesPerRow);
   auto tileRowCount = distance(tileRows);
   tilesetWidth = maxTilesetWidth;
   tilesetHeight = tileRowCount * tileHeight;
@@ -35,10 +33,6 @@ Tileset::Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth)
     }
     ++rowIndex;
   }
-}
-
-auto Tileset::zippedTileData() const {
-  return view::zip(m_tiles | view::transform(getTileData), tileUVs, tileRects);
 }
 
 Glyph::Glyph(FT_Glyph glyph) : glyph(glyph){};
@@ -62,7 +56,7 @@ void Glyph::render() {
 Tile Glyph::getTile() {
   render();
   auto& bmp = bitmapGlyph->bitmap;
-  return {{bmp.buffer, bmp.width * bmp.rows}, bmp.width, bmp.rows};
+  return {bmp.buffer, bmp.width * bmp.rows};
 }
 
 Rect<int> Glyph::getBoundingBox() {

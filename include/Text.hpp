@@ -25,11 +25,7 @@ struct Rect {
   T ymax;
 };
 
-struct Tile {
-  gsl::span<unsigned char> tileData;
-  uint32_t width;
-  uint32_t rowcount;
-};
+using Tile = gsl::span<unsigned char>;
 
 struct Tileset {
   Tileset(std::vector<Tile> tiles, size_t maxTilesetWidth);
