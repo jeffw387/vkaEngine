@@ -116,7 +116,9 @@ struct AppState {
   std::unique_ptr<vka::GraphicsPipeline> pipeline;
   std::unique_ptr<Text::Library> textLibrary;
   struct TextData {
+    std::unique_ptr<Text::Font> fontNiocTresni;
     std::map<FT_ULong, std::unique_ptr<Text::Glyph>> glyphMap;
+    // std::
     std::unique_ptr<vka::Image> fontImage;
     std::unique_ptr<vka::ImageView> fontImageView;
     std::unique_ptr<vka::Buffer> indexBuffer;
@@ -655,6 +657,13 @@ struct AppState {
     createSwapchain();
 
     textLibrary = std::make_unique<Text::Library>();
+
+    textData.fontNiocTresni =
+        textLibrary->loadFont("content/fonts/NiocTresni/NiocTresni.ttf");
+    auto niocFace = textData.fontNiocTresni->createFace(0);
+    niocFace->setSize(16, 72);
+    textData.glyphMap = niocFace->getGlyphs();
+
     textData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
