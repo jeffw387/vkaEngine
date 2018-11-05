@@ -974,48 +974,43 @@ struct AppState {
     MultiLogger::get()->info("creating pipeline cache");
     pipelineCache = device->createPipelineCache();
 
-    // vka::GraphicsPipelineCreateInfo imguiPipelineCreateInfo{
-    //     *guiData.pipelineLayout, *renderPass, 1};
-    // imguiPipelineCreateInfo.addColorBlendAttachment(
-    //     true,
-    //     VK_BLEND_FACTOR_SRC_ALPHA,
-    //     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    //     VK_BLEND_OP_ADD,
-    //     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    //     VK_BLEND_FACTOR_ZERO,
-    //     VK_BLEND_OP_ADD,
-    //     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-    //         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    // imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
-    // imguiPipelineCreateInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
-    // imguiPipelineCreateInfo.addShaderStage(
-    //     VK_SHADER_STAGE_VERTEX_BIT,
-    //     {},
-    //     0,
-    //     nullptr,
-    //     *guiData.vertexShader,
-    //     "main");
-    // imguiPipelineCreateInfo.addShaderStage(
-    //     VK_SHADER_STAGE_FRAGMENT_BIT,
-    //     {},
-    //     0,
-    //     nullptr,
-    //     *guiData.fragmentShader,
-    //     "main");
-    // imguiPipelineCreateInfo.addVertexAttribute(
-    //     0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
-    // imguiPipelineCreateInfo.addVertexAttribute(
-    //     1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
-    // imguiPipelineCreateInfo.addVertexAttribute(
-    //     2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 16);
-    // imguiPipelineCreateInfo.addVertexBinding(
-    //     0, 32, VK_VERTEX_INPUT_RATE_VERTEX);
-    // imguiPipelineCreateInfo.addViewportScissor({}, {});
-    // imguiPipelineCreateInfo.setCullMode(VK_CULL_MODE_NONE);
+    vka::GraphicsPipelineCreateInfo textPipelineInfo{
+        *textData.pipelineLayout, *renderPass, 1};
+    textPipelineInfo.addColorBlendAttachment(
+        true,
+        VK_BLEND_FACTOR_SRC_ALPHA,
+        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_OP_ADD,
+        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_FACTOR_ZERO,
+        VK_BLEND_OP_ADD,
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
+    textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
+    textPipelineInfo.addShaderStage(
+        VK_SHADER_STAGE_VERTEX_BIT,
+        {},
+        0,
+        nullptr,
+        *textData.vertexShader,
+        "main");
+    textPipelineInfo.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        {},
+        0,
+        nullptr,
+        *textData.fragmentShader,
+        "main");
+    textPipelineInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
+    textPipelineInfo.addVertexAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
+    textPipelineInfo.addVertexBinding(
+        0, sizeof(TextVertex), VK_VERTEX_INPUT_RATE_VERTEX);
+    textPipelineInfo.addViewportScissor({}, {});
+    textPipelineInfo.setCullMode(VK_CULL_MODE_NONE);
 
-    // guiData.pipeline =
-    //     device->createGraphicsPipeline(*pipelineCache,
-    //     imguiPipelineCreateInfo);
+    textData.pipeline =
+        device->createGraphicsPipeline(*pipelineCache, textPipelineInfo);
 
     auto pipeline3DInfo =
         vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);
