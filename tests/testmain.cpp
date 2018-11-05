@@ -736,17 +736,27 @@ struct AppState {
       ranges::action::push_back(textVertices, std::move(nextVertices));
     }
 
-    auto resourceUpload = [this]() {
+    auto resourceUpload = [&]() {
       transferCommandPool = device->createCommandPool();
       transferCmd = transferCommandPool->allocateCommandBuffer();
       transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
       transferFence = device->createFence(false);
-      // recordImageUpload(
-      //     guiData.fontPixels,
-      //     guiData.width * guiData.height * 4,
-      //     *guiData.fontImage,
-      //     {static_cast<uint32_t>(guiData.width),
-      //      static_cast<uint32_t>(guiData.height)});
+
+      RANGES_FOR(
+          const auto& ziptuple,
+          ranges::view::zip(
+              textData.tilesetNiocTresni->tiles,
+              textData.tilesetNiocTresni->tileRects)) {
+        auto& tile = std::get<0>(ziptuple);
+        auto& pos = std::get<1>(ziptuple);
+        recordImageUpload(
+            tile.data(),
+            tile.size(),
+            *textData.fontImage,
+            {pos.xmin, pos.ymin},
+            {tileDimensions.width, tileDimensions.height});
+      }
+
       transferCmd->end();
       device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
       transferFence->wait();
