@@ -700,8 +700,9 @@ struct AppState {
         *textData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     textData.descriptorSet->validate(*device);
 
-    // guiData.descriptorSet =
-    //     guiData.descriptorPool->allocateDescriptorSet(guiData.setLayout.get());
+    textData.pipelineLayout = device->createPipelineLayout(
+        {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}},
+        {*textData.setLayout});
 
     // auto fontImageDescriptor =
     //     guiData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
