@@ -118,9 +118,10 @@ struct AppState {
   struct TextData {
     std::unique_ptr<Text::Font> fontNiocTresni;
     std::map<FT_ULong, std::unique_ptr<Text::Glyph>> glyphMap;
-    // std::
+    std::unique_ptr<Text::Tileset> tilesetNiocTresni;
     std::unique_ptr<vka::Image> fontImage;
     std::unique_ptr<vka::ImageView> fontImageView;
+    std::unique_ptr<vka::Sampler> fontSampler;
     std::unique_ptr<vka::Buffer> indexBuffer;
     std::unique_ptr<vka::Buffer> vertexBuffer;
     std::unique_ptr<vka::ShaderModule> vertexShader;
@@ -663,9 +664,21 @@ struct AppState {
     auto niocFace = textData.fontNiocTresni->createFace(0);
     niocFace->setSize(16, 72);
     textData.glyphMap = niocFace->getGlyphs();
+    auto tileDimensions = textData.glyphMap.begin()->second->getDimensions();
     auto glyphs = ranges::view::values(textData.glyphMap);
     auto tiles = ranges::view::transform(
         glyphs, [](auto& glyph) { return glyph->getTile(); });
+    textData.tilesetNiocTresni = std::make_unique<Text::Tileset>(
+        tiles, 2048, tileDimensions.width, tileDimensions.height);
+    textData.fontImage = device->createImage2D(
+        {static_cast<uint32_t>(textData.tilesetNiocTresni->width),
+         static_cast<uint32_t>(textData.tilesetNiocTresni->height)},
+        VK_FORMAT_R8_UINT,
+        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+        vka::ImageAspect::Color);
+    textData.fontImageView = device->createImageView2D(
+        *textData.fontImage, VK_FORMAT_R8_UINT, vka::ImageAspect::Color);
+    textData.fontSampler = device->createSampler();
     textData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}},
