@@ -61,7 +61,7 @@ public:
   std::unique_ptr<Glyph> loadChar(FT_ULong character);
   std::unique_ptr<Glyph> loadGlyph(FT_UInt glyphIndex);
   std::vector<FT_ULong> getCharacters();
-  auto getGlyphs();
+  std::map<FT_ULong, std::unique_ptr<Glyph>> getGlyphs();
   void setSize(uint8_t fontSize, FT_UInt dpi);
 
 private:
