@@ -3,8 +3,15 @@ layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aUV;
 
 layout(push_constant) uniform uPushConstant{
-    mat4 mvp;
+    layout(offset=0) vec2 scale;
+    layout(offset=16) vec2 pos;
 } pc;
+
+// screenspace pos, scale factor to switch to clip space
+// pos: 250, 250
+// screen size: 1000, 1000
+// scale: 1/1000, 1/1000
+// outVert = 0.25, 0.25, 0, 1
 
 out gl_PerVertex{
     vec4 gl_Position;
@@ -17,5 +24,5 @@ layout(location = 0) out struct{
 void main()
 {
     Out.UV = aUV;
-    gl_Position = pc.mvp * vec4(aPos, 0, 1);
+    gl_Position = vec4((aPos + pc.pos) * pc.scale, 0, 1);
 }
