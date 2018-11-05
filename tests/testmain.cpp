@@ -305,58 +305,6 @@ struct AppState {
     current.instanceUniform.flushMemory(device);
   }
 
-  // ImDrawData* prepareImguiRender(uint32_t imageIndex) {
-  //   ImGui::EndFrame();
-  //   ImGui::Render();
-  //   ImDrawData* draw_data = ImGui::GetDrawData();
-  //   auto& imguiIndexBuffer = guiData.indexBuffer[imageIndex];
-  //   auto& imguiVertexBuffer = guiData.vertexBuffer[imageIndex];
-  //   constexpr auto indexSize = 2U;
-  //   constexpr auto vertexSize = 8U;
-  //   auto indicesByteLength = draw_data->TotalIdxCount * indexSize;
-  //   auto verticesByteLength = draw_data->TotalVtxCount * vertexSize;
-  //   if ((!imguiIndexBuffer) || (imguiIndexBuffer->size() <
-  //   indicesByteLength)) {
-  //     imguiIndexBuffer = device->createBuffer(
-  //         indicesByteLength,
-  //         VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-  //         VMA_MEMORY_USAGE_CPU_TO_GPU);
-  //   }
-  //   if ((!imguiVertexBuffer) ||
-  //       (imguiVertexBuffer->size() < verticesByteLength)) {
-  //     imguiVertexBuffer = device->createBuffer(
-  //         verticesByteLength,
-  //         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-  //         VMA_MEMORY_USAGE_CPU_TO_GPU);
-  //   }
-  //   auto indexPtr = imguiIndexBuffer->map();
-  //   auto vertexPtr = imguiVertexBuffer->map();
-  //   auto indexOffset = 0U;
-  //   auto vertexOffset = 0U;
-  //   for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
-  //     auto cmdList = draw_data->CmdLists[i];
-
-  //     auto newIndicesSize = cmdList->IdxBuffer.Size * indexSize;
-  //     std::memcpy(
-  //         (char*)indexPtr + indexOffset,
-  //         cmdList->IdxBuffer.Data,
-  //         newIndicesSize);
-  //     indexOffset += newIndicesSize;
-
-  //     auto newVerticesSize = cmdList->VtxBuffer.Size * vertexSize;
-  //     std::memcpy(
-  //         (char*)vertexPtr + vertexOffset,
-  //         cmdList->VtxBuffer.Data,
-  //         newVerticesSize);
-  //     vertexOffset += newVerticesSize;
-  //   }
-
-  //   imguiIndexBuffer->flush();
-  //   imguiVertexBuffer->flush();
-
-  //   return draw_data;
-  // }
-
   void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
     auto& render = bufState[renderIndex];
 
@@ -404,66 +352,37 @@ struct AppState {
     render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
   }
 
-  // void pipelineGuiRender(
-  //     uint32_t renderIndex,
-  //     VkExtent2D swapExtent,
-  //     ImDrawData* draw_data) {
-  //   auto& render = bufState[renderIndex];
-
-  //   auto viewport = VkViewport{0,
-  //                              0,
-  //                              static_cast<float>(swapExtent.width),
-  //                              static_cast<float>(swapExtent.height),
-  //                              0,
-  //                              1};
-  //   render.cmd->bindGraphicsPipeline(*guiData.pipeline);
-  //   render.cmd->bindGraphicsDescriptorSets(
-  //       *guiData.pipelineLayout, 0, {*guiData.descriptorSet}, {});
-  //   uint32_t guiIndexOffset{};
-  //   uint32_t guiVertexOffset{};
-
-  //   render.cmd->setViewport(0, {viewport});
-  //   auto pos = draw_data->DisplayPos;
-  //   auto size = draw_data->DisplaySize;
-  //   glm::mat4 mvp = glm::ortho(pos.x, pos.x + size.x, pos.y + size.y, pos.y);
-  //   render.cmd->pushConstants(
-  //       *guiData.pipelineLayout,
-  //       VK_SHADER_STAGE_VERTEX_BIT,
-  //       0,
-  //       sizeof(glm::mat4),
-  //       &mvp);
-  //   for (size_t i{0}; i < draw_data->CmdListsCount; ++i) {
-  //     auto cmdList = draw_data->CmdLists[i];
-  //     render.cmd->bindIndexBuffer(
-  //         *guiData.indexBuffer[renderIndex],
-  //         guiIndexOffset,
-  //         VK_INDEX_TYPE_UINT16);
-  //     guiIndexOffset += sizeof(ImguiIndex) * cmdList->IdxBuffer.Size;
-  //     render.cmd->bindVertexBuffers(
-  //         0, {*guiData.vertexBuffer[renderIndex]}, {guiVertexOffset});
-  //     guiVertexOffset += sizeof(ImguiVertex) * cmdList->VtxBuffer.Size;
-  //     uint32_t drawIndexOffset{};
-  //     for (const auto& drawCmd : cmdList->CmdBuffer) {
-  //       if (drawCmd.UserCallback) {
-  //         drawCmd.UserCallback(cmdList, &drawCmd);
-  //         continue;
-  //       }
-  //       VkOffset2D scissorOffset{
-  //           static_cast<int32_t>(drawCmd.ClipRect.w - pos.x),
-  //           static_cast<int32_t>(drawCmd.ClipRect.x - pos.y)};
-  //       VkExtent2D scissorExtent{
-  //           static_cast<uint32_t>(
-  //               drawCmd.ClipRect.y - drawCmd.ClipRect.w - pos.x),
-  //           static_cast<uint32_t>(
-  //               drawCmd.ClipRect.z - drawCmd.ClipRect.x - pos.y)};
-
-  //       VkRect2D guiScissor{std::move(scissorOffset),
-  //       std::move(scissorExtent)}; render.cmd->setScissor(0,
-  //       {std::move(guiScissor)}); render.cmd->drawIndexed(drawCmd.ElemCount,
-  //       1, drawIndexOffset, 0, 0); drawIndexOffset += drawCmd.ElemCount;
-  //     }
-  //   }
-  // }
+  void pipelineTextRender(uint32_t renderIndex, VkExtent2D swapExtent) {
+    auto& render = bufState[renderIndex];
+    auto viewport = VkViewport{0,
+                               0,
+                               static_cast<float>(swapExtent.width),
+                               static_cast<float>(swapExtent.height),
+                               0,
+                               1};
+    auto scissor = VkRect2D{{0, 0}, {swapExtent.width, swapExtent.height}};
+    render.cmd->bindGraphicsPipeline(*textData.pipeline);
+    render.cmd->bindGraphicsDescriptorSets(
+        *textData.pipelineLayout, 0, {*textData.descriptorSet}, {});
+    render.cmd->bindIndexBuffer(*textData.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+    render.cmd->bindVertexBuffers(0, {*textData.vertexBuffer}, {0});
+    render.cmd->setViewport(0, {viewport});
+    render.cmd->setScissor(0, {scissor});
+    TextVertexPushData pushData{};
+    pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
+    for (auto& charData : textData.testText->characters) {
+      pushData.position =
+          textData.testText->screenPosition + glm::vec2(charData.xOffset, 0.f);
+      render.cmd->pushConstants(
+          *textData.pipelineLayout,
+          VK_SHADER_STAGE_VERTEX_BIT,
+          0,
+          sizeof(TextVertexPushData),
+          &pushData);
+      render.cmd->drawIndexed(
+          6, 1, textData.indexBufferOffsets[charData.character], 0, 0);
+    }
+  }
 
   void renderCallback(vka::Engine* engine) {
     auto renderIndex = engine->currentRenderIndex();
