@@ -51,6 +51,14 @@ struct TextObject {
     }
   }
 };
+
+struct TextVertexPushData {
+  glm::vec2 scale;
+  glm::float32 padding0[2];
+  glm::vec2 position;
+  glm::float32 padding1[2];
+};
+
 struct Material {
   glm::vec4 diffuse;
 };
@@ -140,6 +148,7 @@ struct AppState {
   struct TextData {
     std::unique_ptr<Text::Font> fontNiocTresni;
     std::map<FT_ULong, std::unique_ptr<Text::Glyph>> glyphMap;
+    std::map<FT_ULong, size_t> indexBufferOffsets;
     std::unique_ptr<Text::Tileset> tilesetNiocTresni;
     std::unique_ptr<vka::Image> fontImage;
     std::unique_ptr<vka::ImageView> fontImageView;
@@ -153,6 +162,7 @@ struct AppState {
     std::unique_ptr<vka::DescriptorSet> descriptorSet;
     std::unique_ptr<vka::PipelineLayout> pipelineLayout;
     std::unique_ptr<vka::GraphicsPipeline> pipeline;
+    std::unique_ptr<TextObject> testText;
   } textData;
 
   asset::Collection shapesAsset;
