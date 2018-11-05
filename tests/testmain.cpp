@@ -703,6 +703,8 @@ struct AppState {
     textData.glyphMap = niocFace->getGlyphs();
     textData.testText = std::make_unique<TextObject>(
         textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
+    auto tileDimensions =
+        (++textData.glyphMap.begin())->second->getDimensions();
     auto fontBBox = textData.glyphMap.begin()->second->getBoundingBox();
     auto glyphs = ranges::view::values(textData.glyphMap);
     auto tiles = ranges::view::transform(
