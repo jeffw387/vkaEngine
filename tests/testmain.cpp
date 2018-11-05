@@ -766,8 +766,7 @@ struct AppState {
         auto& tile = std::get<0>(ziptuple);
         auto& pos = std::get<1>(ziptuple);
         recordImageUpload(
-            tile.data(),
-            tile.size(),
+            tile,
             *textData.fontImage,
             {pos.xmin, pos.ymin},
             {tileDimensions.width, tileDimensions.height});
