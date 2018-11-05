@@ -50,6 +50,7 @@ public:
 
   Rect<float> getBoundingBox();
   Dimensions getDimensions();
+  int32_t getAdvance();
 
 private:
   FT_Glyph glyph;

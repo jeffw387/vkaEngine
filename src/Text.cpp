@@ -75,6 +75,8 @@ Dimensions Glyph::getDimensions() {
   return {std::move(width), std::move(height)};
 }
 
+int32_t Glyph::getAdvance() { return glyph->advance.x >> 16; }
+
 Face::Face(FT_Library library, std::string fontPath, FT_Long faceIndex) {
   FT_New_Face(library, fontPath.c_str(), faceIndex, &face);
 }
