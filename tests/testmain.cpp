@@ -951,22 +951,22 @@ struct AppState {
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-    // auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
-    // subpass3D->addColorRef(
-    //     {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    // subpass3D->setDepthRef({depthAttachmentDesc,
-    //                         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-    // auto subpassGui = renderPassCreateInfo.addGraphicsSubpass();
-    // subpassGui->addColorRef(
-    //     {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    // renderPassCreateInfo.addSubpassDependency(
-    //     subpass3D,
-    //     subpassGui,
-    //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    //     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    //     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
-    //     VK_DEPENDENCY_BY_REGION_BIT);
+    auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
+    subpass3D->addColorRef(
+        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    subpass3D->setDepthRef({depthAttachmentDesc,
+                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+    auto subpassText = renderPassCreateInfo.addGraphicsSubpass();
+    subpassText->addColorRef(
+        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    renderPassCreateInfo.addSubpassDependency(
+        subpass3D,
+        subpassText,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
 
     MultiLogger::get()->info("creating render pass");
     renderPass = device->createRenderPass(renderPassCreateInfo);
