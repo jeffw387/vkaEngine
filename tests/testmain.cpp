@@ -704,12 +704,10 @@ struct AppState {
         {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4)}},
         {*textData.setLayout});
 
-    // auto fontImageDescriptor =
-    //     guiData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
-    //         vka::DescriptorReference{});
-    // (*fontImageDescriptor)(
-    //     *guiData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    // guiData.descriptorSet->validate(*device);
+    textData.vertexShader =
+        device->createShaderModule("content/shaders/text.vert.spv");
+    textData.fragmentShader =
+        device->createShaderModule("content/shaders/text.frag.spv");
 
     // guiData.pipelineLayout = device->createPipelineLayout(
     //     {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0,
