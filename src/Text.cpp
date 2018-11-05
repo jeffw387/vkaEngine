@@ -20,10 +20,10 @@ Tileset::Tileset(
   RANGES_FOR(auto row, tileRows) {
     float columnIndex{};
     RANGES_FOR(auto tile, row) {
-      tileRects.push_back({static_cast<uint32_t>(columnIndex * tileWidth),
-                           static_cast<uint32_t>(rowIndex * tileHeight),
-                           static_cast<uint32_t>((columnIndex + 1) * tileWidth),
-                           static_cast<uint32_t>((rowIndex + 1) * tileHeight)});
+      tileRects.push_back({static_cast<int32_t>(columnIndex * tileWidth),
+                           static_cast<int32_t>(rowIndex * tileHeight),
+                           static_cast<int32_t>((columnIndex + 1) * tileWidth),
+                           static_cast<int32_t>((rowIndex + 1) * tileHeight)});
       tileUVs.push_back({(columnIndex * tileWidth) / width,
                          (rowIndex * tileHeight) / height,
                          ((columnIndex + 1) * tileWidth) / width,
@@ -58,13 +58,13 @@ Tile Glyph::getTile() {
   return {bmp.buffer, bmp.width * bmp.rows};
 }
 
-Rect<int> Glyph::getBoundingBox() {
+Rect<float> Glyph::getBoundingBox() {
   FT_BBox bbox{};
   FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
-  Rect<int> myBBox{static_cast<int>(bbox.xMin),
-                   static_cast<int>(bbox.yMin),
-                   static_cast<int>(bbox.xMax),
-                   static_cast<int>(bbox.yMax)};
+  Rect<float> myBBox{static_cast<float>(bbox.xMin),
+                     static_cast<float>(bbox.yMin),
+                     static_cast<float>(bbox.xMax),
+                     static_cast<float>(bbox.yMax)};
   return myBBox;
 }
 

@@ -36,7 +36,7 @@ struct Tileset {
       uint32_t tileHeight);
   ranges::any_view<Tile> tiles;
   std::vector<Rect<float>> tileUVs;
-  std::vector<Rect<uint32_t>> tileRects;
+  std::vector<Rect<int32_t>> tileRects;
   float width = {};
   float height = {};
 };
@@ -48,7 +48,7 @@ public:
   void render();
   Tile getTile();
 
-  Rect<int> getBoundingBox();
+  Rect<float> getBoundingBox();
   Dimensions getDimensions();
 
 private:
