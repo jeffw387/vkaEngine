@@ -669,7 +669,8 @@ struct AppState {
     textData.descriptorSet->validate(*device);
 
     textData.pipelineLayout = device->createPipelineLayout(
-        {VkPushConstantRange{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(TextVertexPushData))}},
+        {VkPushConstantRange{
+            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(TextVertexPushData)}},
         {*textData.setLayout});
 
     textData.vertexShader =
@@ -712,35 +713,33 @@ struct AppState {
       vertexOffset += 4;
     }
 
-    auto resourceUpload = [&]() {
-      transferCommandPool = device->createCommandPool();
-      transferCmd = transferCommandPool->allocateCommandBuffer();
-      transferFence = device->createFence(false);
-      transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    transferCommandPool = device->createCommandPool();
+    transferCmd = transferCommandPool->allocateCommandBuffer();
+    transferFence = device->createFence(false);
+    transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-      recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0);
-      recordBufferUpload<TextVertex>({textVertices}, *textData.vertexBuffer, 0);
+    recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0);
+    recordBufferUpload<TextVertex>({textVertices}, *textData.vertexBuffer, 0);
 
-      RANGES_FOR(
-          const auto& ziptuple,
-          ranges::view::zip(
-              textData.tilesetNiocTresni->tiles,
-              textData.tilesetNiocTresni->tileRects)) {
-        auto& tile = std::get<0>(ziptuple);
-        auto& pos = std::get<1>(ziptuple);
-        recordImageUpload(
-            tile,
-            *textData.fontImage,
-            {pos.xmin, pos.ymin},
-            {tileDimensions.width, tileDimensions.height});
-      }
+    RANGES_FOR(
+        const auto& ziptuple,
+        ranges::view::zip(
+            textData.tilesetNiocTresni->tiles,
+            textData.tilesetNiocTresni->tileRects)) {
+      auto& tile = std::get<0>(ziptuple);
+      auto& pos = std::get<1>(ziptuple);
+      recordImageUpload(
+          tile,
+          *textData.fontImage,
+          {pos.xmin, pos.ymin},
+          {tileDimensions.width, tileDimensions.height});
+    }
 
-      transferCmd->end();
-      device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
-      transferFence->wait();
-      transferFence->reset();
-    };
-    resourceUpload();
+    transferCmd->end();
+    device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
+    transferFence->wait();
+    transferFence->reset();
+
     shapesAsset = loadCollection("content/models/shapes.gltf");
     terrainAsset = loadCollection("content/models/terrain.gltf");
 
