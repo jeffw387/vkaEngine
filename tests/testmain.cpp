@@ -639,6 +639,14 @@ struct AppState {
     textData.glyphMap = niocFace->getGlyphs();
     textData.testText = std::make_unique<TextObject>(
         textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
+    Text::Dimensions tileDimensions{};
+    RANGES_FOR(const auto& glyphPtr, ranges::view::values(textData.glyphMap)) {
+      auto glyphDimensions = glyphPtr->getDimensions();
+      tileDimensions.width =
+          std::max(glyphDimensions.width, tileDimensions.width);
+      tileDimensions.height =
+          std::max(glyphDimensions.height, tileDimensions.height);
+    };
     std::vector<Text::Glyph*> glyphs;
     ranges::action::push_back(
         glyphs,
