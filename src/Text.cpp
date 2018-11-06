@@ -56,14 +56,23 @@ Tile Glyph::getTile() {
     auto rowPixels = gsl::span<uint32_t>(bmpPtr, bmp.width);
     ranges::action::push_back(bitmap, rowPixels);
     bmpPtr += bmp.pitch;
-}
+  }
   return {bitmap};
 }
 
 Rect<float> Glyph::getBoundingBox() const {
+  auto xmin = bitmapGlyph->left;
+  auto ymin = -bitmapGlyph->top;
+  auto xmax = xmin + bitmapGlyph->bitmap.width;
+  auto ymax = ymin + bitmapGlyph->bitmap.rows;
+  return Rect<float>{static_cast<float>(std::move(xmin)),
+                     static_cast<float>(std::move(ymin)),
+                     static_cast<float>(std::move(xmax)),
+                     static_cast<float>(std::move(ymax))};
 }
 
 Dimensions Glyph::getDimensions() const {
+  return {bitmapGlyph->bitmap.width, bitmapGlyph->bitmap.rows};
 }
 
 int32_t Glyph::getAdvance() { return glyph->advance.x >> 16; }
