@@ -19,7 +19,7 @@ std::shared_ptr<spdlog::logger> MultiLogger::get() {
     std::vector<spdlog::sink_ptr> sinks = {MultiLogger::fileSink,
                                            MultiLogger::stderrSink};
     MultiLogger::multilogger = std::make_shared<spdlog::logger>(
-        "MultiLogger", sinks.begin(), sinks.end());
+        "vkaEngine", sinks.begin(), sinks.end());
     spdlog::register_logger(MultiLogger::multilogger);
     MultiLogger::multilogger->flush_on(spdlog::level::err);
   }
