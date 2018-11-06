@@ -51,7 +51,13 @@ void Glyph::render() {
 Tile Glyph::getTile() {
   render();
   auto& bmp = bitmapGlyph->bitmap;
-  return {bmp.buffer, bmp.width * bmp.rows};
+  auto bmpPtr = reinterpret_cast<uint32_t*>(bmp.buffer);
+  for (size_t rowIndex{}; rowIndex < bmp.rows; ++rowIndex) {
+    auto rowPixels = gsl::span<uint32_t>(bmpPtr, bmp.width);
+    ranges::action::push_back(bitmap, rowPixels);
+    bmpPtr += bmp.pitch;
+}
+  return {bitmap};
 }
 
 Rect<float> Glyph::getBoundingBox() const {
