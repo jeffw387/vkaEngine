@@ -36,16 +36,13 @@ Tileset::Tileset(
 
 Glyph::Glyph(FT_Glyph glyph) : glyph(glyph){};
 
-Glyph::~Glyph() {
-  FT_Done_Glyph(glyph);
-  if (rendered) {
-    FT_Done_Glyph(FT_Glyph(bitmapGlyph));
-  }
-}
+Glyph::~Glyph() { FT_Done_Glyph(glyph); }
 
 void Glyph::render() {
   if (!rendered) {
-    FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
+    if (FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, 1)) {
+      MultiLogger::get()->error("Error rendering glyph.");
+    }
     bitmapGlyph = (FT_BitmapGlyph)glyph;
     rendered = true;
   }
@@ -77,26 +74,41 @@ Dimensions Glyph::getDimensions() {
 int32_t Glyph::getAdvance() { return glyph->advance.x >> 16; }
 
 Face::Face(FT_Library library, std::string fontPath, FT_Long faceIndex) {
-  FT_New_Face(library, fontPath.c_str(), faceIndex, &face);
+  if (FT_New_Face(library, fontPath.c_str(), faceIndex, &face)) {
+    MultiLogger::get()->error(
+        "Error creating face {} from font {}.", faceIndex, fontPath);
+  }
 }
 
 Face::~Face() { FT_Done_Face(face); }
 
 std::unique_ptr<Glyph> Face::getGlyph() {
   FT_Glyph glyph{};
-  FT_Get_Glyph(face->glyph, &glyph);
+  if (FT_Get_Glyph(face->glyph, &glyph)) {
+    MultiLogger::get()->error("Error creating glyph from face.");
+  }
   return std::make_unique<Glyph>(glyph);
 }
 
 std::unique_ptr<Glyph> Face::loadChar(FT_ULong character) {
-  FT_Load_Char(face, character, FT_LOAD_DEFAULT);
+  if (FT_Load_Char(face, character, FT_LOAD_DEFAULT)) {
+    MultiLogger::get()->error(
+        "Error loading character {} from face {}.",
+        character,
+        face->family_name);
+  }
   auto glyph = getGlyph();
   glyph->render();
   return glyph;
 }
 
 std::unique_ptr<Glyph> Face::loadGlyph(FT_UInt glyphIndex) {
-  FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT);
+  if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT)) {
+    MultiLogger::get()->error(
+        "Error loading glyph index {} from face {}.",
+        glyphIndex,
+        face->family_name);
+  }
   auto glyph = getGlyph();
   glyph->render();
   return glyph;
@@ -125,7 +137,10 @@ std::map<FT_ULong, std::unique_ptr<Glyph>> Face::getGlyphs() {
 }
 
 void Face::setSize(uint8_t fontSize, FT_UInt dpi) {
-  FT_Set_Char_Size(face, fontSize * 64, 0, dpi, 0);
+  if (FT_Set_Char_Size(face, fontSize * 64, 0, dpi, 0)) {
+    MultiLogger::get()->error(
+        "Error setting font size {} for face {}.", fontSize, face->family_name);
+  }
 }
 
 Font::Font(FT_Library library, std::string fontPath)
@@ -135,7 +150,11 @@ std::unique_ptr<Face> Font::createFace(FT_Long faceIndex) {
   return std::make_unique<Face>(library, fontPath, faceIndex);
 }
 
-Library::Library() { FT_Init_FreeType(&library); }
+Library::Library() {
+  if (FT_Init_FreeType(&library)) {
+    MultiLogger::get()->error("Error initializing freetype.");
+  }
+}
 
 Library::~Library() { FT_Done_FreeType(library); }
 
