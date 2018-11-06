@@ -73,6 +73,8 @@ Face::Face(FT_Library library, std::string fontPath, FT_Long faceIndex) {
     MultiLogger::get()->error(
         "Error creating face {} from font {}.", faceIndex, fontPath);
   }
+  MultiLogger::get()->info(
+      "Created face {} for font {}.", face->family_name, fontPath);
 }
 
 Face::~Face() { FT_Done_Face(face); }
@@ -128,6 +130,8 @@ std::map<FT_ULong, std::unique_ptr<Glyph>> Face::getGlyphs() {
   for (auto character : getCharacters()) {
     result[character] = loadChar(character);
   }
+
+  MultiLogger::get()->info("Retrieved glyphs from face.");
   return result;
 }
 
@@ -136,10 +140,13 @@ void Face::setSize(uint8_t fontSize, FT_UInt dpi) {
     MultiLogger::get()->error(
         "Error setting font size {} for face {}.", fontSize, face->family_name);
   }
+  MultiLogger::get()->info("Set font {} to {}", face->family_name, fontSize);
 }
 
 Font::Font(FT_Library library, std::string fontPath)
-    : library(library), fontPath(fontPath) {}
+    : library(library), fontPath(fontPath) {
+  MultiLogger::get()->info("Created font {}.", fontPath);
+}
 
 std::unique_ptr<Face> Font::createFace(FT_Long faceIndex) {
   return std::make_unique<Face>(library, fontPath, faceIndex);
@@ -149,6 +156,7 @@ Library::Library() {
   if (FT_Init_FreeType(&library)) {
     MultiLogger::get()->error("Error initializing freetype.");
   }
+  MultiLogger::get()->info("Initialized freetype.");
 }
 
 Library::~Library() { FT_Done_FreeType(library); }
