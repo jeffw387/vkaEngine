@@ -71,6 +71,13 @@ copy_content(
   "${CMAKE_CURRENT_BINARY_DIR}/content/fonts/NiocTresni"
 )
 
+set(aerovias AeroviasBrasilNF.ttf)
+copy_content(
+  aerovias
+  "${CMAKE_CURRENT_SOURCE_DIR}/content/fonts"
+  "${CMAKE_CURRENT_BINARY_DIR}/content/fonts"
+)
+
 list(APPEND shaderFileNames shader.vert shader.frag text.vert text.frag)
 process_shader(
   shaderFileNames
