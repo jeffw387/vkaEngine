@@ -650,11 +650,11 @@ struct AppState {
     textData.fontImage = device->createImage2D(
         {static_cast<uint32_t>(textData.tilesetNiocTresni->width),
          static_cast<uint32_t>(textData.tilesetNiocTresni->height)},
-        VK_FORMAT_R8_UINT,
+        VK_FORMAT_R8G8B8A8_UINT,
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         vka::ImageAspect::Color);
     textData.fontImageView = device->createImageView2D(
-        *textData.fontImage, VK_FORMAT_R8_UINT, vka::ImageAspect::Color);
+        *textData.fontImage, VK_FORMAT_R8G8B8A8_UINT, vka::ImageAspect::Color);
     textData.fontSampler = device->createSampler();
     textData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);
