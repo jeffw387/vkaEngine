@@ -497,7 +497,7 @@ struct AppState {
   }
 
   template <typename T>
-  void
+  std::unique_ptr<vka::Buffer>
   recordBufferUpload(gsl::span<T> data, VkBuffer buffer, VkDeviceSize offset) {
     auto staging = device->createBuffer(
         data.size_bytes(),
@@ -508,10 +508,11 @@ struct AppState {
     staging->flush();
     VkBufferCopy bufferCopy{0, offset, data.size_bytes()};
     transferCmd->copyBuffer(*staging, buffer, {bufferCopy});
+    return staging;
   }
 
   template <typename T>
-  void recordImageUpload(
+  std::unique_ptr<vka::Buffer> recordImageUpload(
       gsl::span<T> data,
       VkImage image,
       VkOffset2D imageOffset,
@@ -578,6 +579,7 @@ struct AppState {
         {},
         {},
         {postCopyBarrier});
+    return staging;
   }
 
   AppState() {
@@ -723,17 +725,12 @@ struct AppState {
     transferFence = device->createFence(false);
     transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-    recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0);
-    recordBufferUpload<TextVertex>({textVertices}, *textData.vertexBuffer, 0);
+    stagingBuffers.push_back(
+        recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0));
+    stagingBuffers.push_back(recordBufferUpload<TextVertex>(
+        {textVertices}, *textData.vertexBuffer, 0));
 
-    RANGES_FOR(
-        const auto& ziptuple,
-        ranges::view::zip(
-            textData.tilesetNiocTresni->tiles,
-            textData.tilesetNiocTresni->tileRects)) {
-      auto& tile = std::get<0>(ziptuple);
-      auto& pos = std::get<1>(ziptuple);
-      recordImageUpload(
+      stagingBuffers.push_back(recordImageUpload(
           tile,
           *textData.fontImage,
           {pos.xmin, pos.ymin},
