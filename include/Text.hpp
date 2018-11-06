@@ -53,7 +53,10 @@ public:
   int32_t getAdvance();
 
 private:
+  FT_Glyph glyph = {};
+  FT_BitmapGlyph bitmapGlyph = {};
   std::vector<uint32_t> bitmap;
+  bool rendered = false;
 };
 
 class Face {
