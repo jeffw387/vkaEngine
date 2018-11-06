@@ -26,7 +26,7 @@ struct Rect {
   T ymax;
 };
 
-using Tile = gsl::span<unsigned char>;
+using Tile = gsl::span<uint32_t>;
 
 struct Tileset {
   Tileset(
