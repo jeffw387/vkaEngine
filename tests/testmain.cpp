@@ -759,6 +759,7 @@ struct AppState {
     transferCmd->end();
     device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
     transferFence->wait();
+    stagingBuffers.clear();
     transferFence->reset();
 
     shapesAsset = loadCollection("content/models/shapes.gltf");
