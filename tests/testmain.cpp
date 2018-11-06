@@ -46,14 +46,14 @@ struct TextObject {
     for (auto character : text) {
       if (charMap.find(character) != charMap.end()) {
         auto& glyph = charMap[character];
-      characters.push_back({offset, static_cast<FT_ULong>(character)});
-      offset += glyph->getAdvance();
+        characters.push_back({offset, static_cast<FT_ULong>(character)});
+        offset += glyph->getAdvance();
 
       } else {
         offset += charMap.at('i')->getAdvance();
         characters.push_back({offset, 0});
+      }
     }
-  }
   }
 };
 

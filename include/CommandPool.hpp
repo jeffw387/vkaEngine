@@ -8,8 +8,8 @@ class Device;
 
 class CommandBuffer {
 public:
-  CommandBuffer(VkCommandBuffer commandBuffer)
-      : commandBufferHandle(commandBuffer) {}
+  CommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferLevel level)
+      : commandBufferHandle(commandBuffer), level(level) {}
   CommandBuffer(CommandBuffer&&) = default;
   CommandBuffer(const CommandBuffer&) = delete;
   CommandBuffer& operator=(CommandBuffer&&) = default;
@@ -105,7 +105,8 @@ public:
   void executeCommands(const std::vector<CommandBuffer>& commandBuffers);
 
 private:
-  VkCommandBuffer commandBufferHandle;
+  VkCommandBuffer commandBufferHandle = {};
+  VkCommandBufferLevel level = {};
 };
 
 class CommandPool {

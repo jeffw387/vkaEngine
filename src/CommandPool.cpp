@@ -17,7 +17,8 @@ void CommandBuffer::begin(
   VkCommandBufferBeginInfo beginInfo{};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = usage;
-  beginInfo.pInheritanceInfo = &inheritInfo;
+  beginInfo.pInheritanceInfo =
+      level == VK_COMMAND_BUFFER_LEVEL_SECONDARY ? &inheritInfo : nullptr;
   vkBeginCommandBuffer(commandBufferHandle, &beginInfo);
 }
 
@@ -289,7 +290,7 @@ std::unique_ptr<CommandBuffer> CommandPool::allocateCommandBuffer(
   allocateInfo.commandPool = poolHandle;
   allocateInfo.level = level;
   vkAllocateCommandBuffers(device, &allocateInfo, &cmd);
-  return std::make_unique<CommandBuffer>(cmd);
+  return std::make_unique<CommandBuffer>(cmd, level);
 }
 
 CommandPool& CommandPool::operator=(CommandPool&& other) {
