@@ -9,5 +9,5 @@ layout(location = 0) in struct{
 
 void main()
 {
-    fColor = vec4(0, 0, 0, 1) * texture(sTexture, In.UV);
+    fColor = vec4(0, 0, 0, 1 * texture(sTexture, In.UV).r) ;
 }
