@@ -706,14 +706,15 @@ struct AppState {
       ranges::action::push_back(textIndices, std::move(nextIndices));
       textData.indexBufferOffsets[glyphPair.first] = indexOffset;
 
+      auto glyphBounds = glyphPair.second->getBoundingBox();
       std::vector<TextVertex> nextVertices{
-          {glm::vec2(fontBBox.xmin, -fontBBox.ymax),
+          {glm::vec2(glyphBounds.xmin, glyphBounds.ymax),
            glm::vec2(uv.xmin, uv.ymin)},
-          {glm::vec2(fontBBox.xmin, -fontBBox.ymin),
+          {glm::vec2(glyphBounds.xmin, glyphBounds.ymin),
            glm::vec2(uv.xmin, uv.ymax)},
-          {glm::vec2(fontBBox.xmax, -fontBBox.ymin),
+          {glm::vec2(glyphBounds.xmax, glyphBounds.ymin),
            glm::vec2(uv.xmax, uv.ymax)},
-          {glm::vec2(fontBBox.xmax, -fontBBox.ymax),
+          {glm::vec2(glyphBounds.xmax, glyphBounds.ymax),
            glm::vec2(uv.xmax, uv.ymin)}};
       ranges::action::push_back(textVertices, std::move(nextVertices));
       indexOffset += 6;
