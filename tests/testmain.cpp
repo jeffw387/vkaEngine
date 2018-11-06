@@ -725,6 +725,16 @@ struct AppState {
     transferFence = device->createFence(false);
     transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
+    textData.indexBuffer = device->createBuffer(
+        textIndices.size() * sizeof(TextIndex),
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY);
+    textData.vertexBuffer = device->createBuffer(
+        textVertices.size() * sizeof(TextVertex),
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY);
+    std::vector<std::unique_ptr<vka::Buffer>> stagingBuffers;
+
     stagingBuffers.push_back(
         recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0));
     stagingBuffers.push_back(recordBufferUpload<TextVertex>(
