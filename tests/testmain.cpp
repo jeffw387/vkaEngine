@@ -639,12 +639,18 @@ struct AppState {
     textData.glyphMap = niocFace->getGlyphs();
     textData.testText = std::make_unique<TextObject>(
         textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
-    auto tileDimensions =
-        (++textData.glyphMap.begin())->second->getDimensions();
-    auto fontBBox = textData.glyphMap.begin()->second->getBoundingBox();
-    auto glyphs = ranges::view::values(textData.glyphMap);
-    auto tiles = ranges::view::transform(
-        glyphs, [](auto& glyph) { return glyph->getTile(); });
+    std::vector<Text::Glyph*> glyphs;
+    ranges::action::push_back(
+        glyphs,
+        ranges::view::transform(
+            ranges::view::values(textData.glyphMap),
+            [](auto& glyphPtr) { return glyphPtr.get(); }));
+    std::vector<Text::Tile> tiles;
+    ranges::action::push_back(
+        tiles, ranges::view::transform(glyphs, [](auto& glyph) {
+          return glyph->getTile();
+        }));
+
     textData.tilesetNiocTresni = std::make_unique<Text::Tileset>(
         tiles, 2048, tileDimensions.width, tileDimensions.height);
     textData.fontImage = device->createImage2D(
