@@ -635,7 +635,7 @@ struct AppState {
     textData.fontNiocTresni =
         textLibrary->loadFont("content/fonts/NiocTresni/NiocTresni.ttf");
     auto niocFace = textData.fontNiocTresni->createFace(0);
-    niocFace->setSize(16, 72);
+    niocFace->setSize(32, 72);
     textData.glyphMap = niocFace->getGlyphs();
     textData.testText = std::make_unique<TextObject>(
         textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
