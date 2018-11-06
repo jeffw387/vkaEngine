@@ -54,21 +54,10 @@ Tile Glyph::getTile() {
   return {bmp.buffer, bmp.width * bmp.rows};
 }
 
-Rect<float> Glyph::getBoundingBox() {
-  FT_BBox bbox{};
-  FT_Glyph_Get_CBox(glyph, 0, &bbox);
-  Rect<float> myBBox{static_cast<float>(bbox.xMin),
-                     static_cast<float>(bbox.yMin),
-                     static_cast<float>(bbox.xMax),
-                     static_cast<float>(bbox.yMax)};
-  return myBBox;
+Rect<float> Glyph::getBoundingBox() const {
 }
 
-Dimensions Glyph::getDimensions() {
-  auto bbox = getBoundingBox();
-  uint32_t width = std::abs(bbox.xmax - bbox.xmin);
-  uint32_t height = std::abs(bbox.ymax - bbox.ymin);
-  return {std::move(width), std::move(height)};
+Dimensions Glyph::getDimensions() const {
 }
 
 int32_t Glyph::getAdvance() { return glyph->advance.x >> 16; }

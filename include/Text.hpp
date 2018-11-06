@@ -48,8 +48,8 @@ public:
   void render();
   Tile getTile();
 
-  Rect<float> getBoundingBox();
-  Dimensions getDimensions();
+  Rect<float> getBoundingBox() const;
+  Dimensions getDimensions() const;
   int32_t getAdvance();
 
 private:
