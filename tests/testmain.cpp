@@ -44,11 +44,16 @@ struct TextObject {
       : screenPosition(screenPosition) {
     int32_t offset{};
     for (auto character : text) {
-      auto& glyph = charMap.at(character);
-
+      if (charMap.find(character) != charMap.end()) {
+        auto& glyph = charMap[character];
       characters.push_back({offset, static_cast<FT_ULong>(character)});
       offset += glyph->getAdvance();
+
+      } else {
+        offset += charMap.at('i')->getAdvance();
+        characters.push_back({offset, 0});
     }
+  }
   }
 };
 
