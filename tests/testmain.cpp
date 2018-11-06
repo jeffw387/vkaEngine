@@ -740,11 +740,20 @@ struct AppState {
     stagingBuffers.push_back(recordBufferUpload<TextVertex>(
         {textVertices}, *textData.vertexBuffer, 0));
 
+    for (size_t tileIndex{}; tileIndex < tiles.size(); ++tileIndex) {
+      auto& tile = tiles[tileIndex];
+      auto& pos = textData.tilesetNiocTresni->tileRects[tileIndex];
+      auto glyph = glyphs[tileIndex];
+
+      auto glyphDimensions = glyph->getDimensions();
+      if (tile.size() == 0) {
+        continue;
+      }
       stagingBuffers.push_back(recordImageUpload(
           tile,
           *textData.fontImage,
           {pos.xmin, pos.ymin},
-          {tileDimensions.width, tileDimensions.height});
+          {glyphDimensions.width, glyphDimensions.height}));
     }
 
     transferCmd->end();
