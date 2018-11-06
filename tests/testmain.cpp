@@ -454,7 +454,7 @@ struct AppState {
 
     render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
 
-    // pipelineGuiRender(renderIndex, swapExtent, draw_data);
+    pipelineTextRender(renderIndex, swapExtent);
 
     render.cmd->endRenderPass();
     render.cmd->end();
