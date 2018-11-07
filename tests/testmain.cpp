@@ -245,10 +245,11 @@ struct AppState {
 
     auto copyFence = device->createFence(false);
 
-    void* stagePtr{};
-    vmaMapMemory(device->getAllocator(), *stagingBuffer, &stagePtr);
+    void* stagePtr = stagingBuffer->map();
     std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
-    vmaFlushAllocation(device->getAllocator(), *stagingBuffer, 0, bufferSize);
+    stagingBuffer->flush();
+    // vmaFlushAllocation(device->getAllocator(), *stagingBuffer, 0,
+    // bufferSize);
     auto cmdPool = device->createCommandPool();
     auto cmd = cmdPool->allocateCommandBuffer();
     cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
