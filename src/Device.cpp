@@ -17,6 +17,8 @@
 
 namespace fs = std::experimental::filesystem;
 namespace vka {
+PFN_vkSetDebugUtilsObjectNameEXT Device::vkSetDebugUtilsObjectNameEXT = {};
+
 PhysicalDeviceData::PhysicalDeviceData(VkInstance instance) {
   uint32_t physicalDeviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
@@ -104,6 +106,10 @@ Device::Device(
   allocatorCreateInfo.physicalDevice = physicalDevice;
   allocatorCreateInfo.device = device;
   vmaCreateAllocator(&allocatorCreateInfo, &allocator);
+
+  vkSetDebugUtilsObjectNameEXT =
+      (PFN_vkSetDebugUtilsObjectNameEXT)glfwGetInstanceProcAddress(
+          instance, "vkSetDebugUtilsObjectNameEXT");
 }
 
 VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {

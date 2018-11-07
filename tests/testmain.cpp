@@ -237,7 +237,8 @@ struct AppState {
     auto stagingBuffer = device->createBuffer(
         bufferSize,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY);
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *stagingBuffer, "ModelVertexIndexStaging");
 
     auto copyFence = device->createFence(false);
 
@@ -743,11 +744,13 @@ struct AppState {
     textData.indexBuffer = device->createBuffer(
         textIndices.size() * sizeof(TextIndex),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY);
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *textData.indexBuffer, "TextIndexBuffer");
     textData.vertexBuffer = device->createBuffer(
         textVertices.size() * sizeof(TextVertex),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY);
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
     std::vector<std::unique_ptr<vka::Buffer>> stagingBuffers;
 
     stagingBuffers.push_back(
@@ -778,7 +781,11 @@ struct AppState {
     transferFence->reset();
 
     shapesAsset = loadCollection("content/models/shapes.gltf");
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *shapesAsset.buffer, "ShapesVertexBuffer");
     terrainAsset = loadCollection("content/models/terrain.gltf");
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *terrainAsset.buffer, "TerrainVertexBuffer");
 
     VkDescriptorSetLayoutBinding materialBinding = {
         0,

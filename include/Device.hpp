@@ -188,6 +188,16 @@ public:
     return memoryProperties;
   }
 
+  template <typename T>
+  void debugNameObject(VkObjectType objectType, T handle, const char* name) {
+    VkDebugUtilsObjectNameInfoEXT nameInfo{};
+    nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    nameInfo.objectType = objectType;
+    nameInfo.objectHandle = reinterpret_cast<uint64_t>(handle);
+    nameInfo.pObjectName = name;
+    Device::vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
+  }
+
 private:
   VkSurfaceKHR surface;
   PhysicalDeviceData physicalDeviceData;
@@ -202,6 +212,7 @@ private:
   VkDeviceQueueCreateInfo queueCreateInfo = {
       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
   VkQueue graphicsQueue;
+  static PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 };
 
 }  // namespace vka
