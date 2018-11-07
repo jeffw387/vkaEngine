@@ -233,10 +233,13 @@ struct AppState {
         bufferSize,
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY);
+        VMA_MEMORY_USAGE_GPU_ONLY,
+        true);
     auto stagingBuffer = device->createBuffer(
         bufferSize,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        false);
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *stagingBuffer, "ModelVertexIndexStaging");
 
@@ -492,7 +495,8 @@ struct AppState {
         swapchain->getSwapExtent(),
         depthFormat,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        vka::ImageAspect::Depth);
+        vka::ImageAspect::Depth,
+        true);
     depthImageView = device->createImageView2D(
         *depthImage, depthFormat, vka::ImageAspect::Depth);
   }
@@ -503,7 +507,8 @@ struct AppState {
     auto staging = device->createBuffer(
         data.size_bytes(),
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY);
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        false);
     void* stagePtr = staging->map();
     std::memcpy(stagePtr, data.data(), data.size_bytes());
     staging->flush();
@@ -521,10 +526,12 @@ struct AppState {
     auto staging = device->createBuffer(
         data.size_bytes(),
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY);
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        false);
     void* stagePtr = staging->map();
     std::memcpy(stagePtr, data.data(), data.size_bytes());
     staging->flush();
+    staging->unmap();
 
     VkImageSubresourceLayers imageSubresource = {};
     imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -744,11 +751,15 @@ struct AppState {
     textData.indexBuffer = device->createBuffer(
         textIndices.size() * sizeof(TextIndex),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY,
+        true);
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *textData.indexBuffer, "TextIndexBuffer");
     textData.vertexBuffer = device->createBuffer(
         textVertices.size() * sizeof(TextVertex),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY,
+        true);
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
     std::vector<std::unique_ptr<vka::Buffer>> stagingBuffers;
