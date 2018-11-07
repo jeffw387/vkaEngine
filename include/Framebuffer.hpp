@@ -14,8 +14,8 @@ public:
   ~Framebuffer();
   operator VkFramebuffer() const noexcept;
 private:
-  VkDevice device;
+  VkDevice device = {};
   std::vector<std::shared_ptr<ImageView>> views;
-  VkFramebuffer framebuffer;
+  VkFramebuffer framebuffer = {};
 };
 }
