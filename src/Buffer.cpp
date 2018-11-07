@@ -37,7 +37,9 @@ Buffer::Buffer(
 Buffer::~Buffer() {
   if (allocator != nullptr && buffer != VK_NULL_HANDLE &&
       allocation != nullptr) {
-    unmap();
+    if (mapped) {
+      unmap();
+    }
     vmaDestroyBuffer(allocator, buffer, allocation);
   }
 }
@@ -64,10 +66,14 @@ VkDeviceSize Buffer::size() { return getAllocationInfo().size; }
 void* Buffer::map() {
   void* result{};
   vmaMapMemory(allocator, allocation, &result);
+  mapped = true;
   return result;
 }
 
-void Buffer::unmap() { vmaUnmapMemory(allocator, allocation); }
+void Buffer::unmap() {
+  vmaUnmapMemory(allocator, allocation);
+  mapped = false;
+}
 
 void Buffer::flush() { vmaFlushAllocation(allocator, allocation, 0, size()); }
 

@@ -29,6 +29,7 @@ private:
   VmaAllocator allocator;
   VkBuffer buffer;
   VmaAllocation allocation;
+  bool mapped = false;
   VmaAllocationInfo getAllocationInfo();
 };
 }  // namespace vka
