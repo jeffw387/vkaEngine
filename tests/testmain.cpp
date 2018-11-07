@@ -431,8 +431,8 @@ struct AppState {
     for (auto& set : render.descriptorSets) {
       set->validate(*device);
     }
-    render.commandPool.reset();
-    // auto draw_data = prepareImguiRender(render.swapImageIndex);
+    // render.commandPool.reset();
+
     auto swapExtent = swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
       return;
@@ -442,6 +442,7 @@ struct AppState {
         *renderPass,
         swapExtent.width,
         swapExtent.height);
+
     render.cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
     std::vector<VkClearValue> clearValues = {
