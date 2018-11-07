@@ -18,6 +18,12 @@ static VkBool32 vulkanDebugCallback(
         "Vulkan Error: {} {}",
         pCallbackData->pMessageIdName,
         pCallbackData->pMessage);
+    for (size_t objIndex{}; objIndex < pCallbackData->objectCount; ++objIndex) {
+      if (pCallbackData->pObjects[objIndex].pObjectName != nullptr) {
+      MultiLogger::get()->error(
+          "Involved object: {}", pCallbackData->pObjects[objIndex].pObjectName);
+      }
+    }
   } else if (
       messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
     MultiLogger::get()->warn(
