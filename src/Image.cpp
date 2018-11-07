@@ -9,6 +9,7 @@ Image::Image(
     VkFormat format,
     VkImageUsageFlags usage,
     ImageAspect aspect,
+    bool dedicated,
     VkSampleCountFlagBits samples,
     VkImageType imageType,
     uint32_t mipLevels,
@@ -37,6 +38,8 @@ Image::Image(
 
   VmaAllocationCreateInfo allocationCreateInfo{};
   allocationCreateInfo.usage = memoryUsage;
+  allocationCreateInfo.flags =
+      dedicated ? VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT : 0;
 
   vmaCreateImage(
       allocator,

@@ -6,7 +6,8 @@ Buffer::Buffer(
     VkDeviceSize size,
     VkBufferUsageFlags usage,
     VmaMemoryUsage memoryUsage,
-    std::vector<uint32_t> queueIndices)
+    std::vector<uint32_t> queueIndices,
+    bool dedicated)
     : allocator(allocator) {
   VkBufferCreateInfo bufferCreateInfo{};
   bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -21,6 +22,8 @@ Buffer::Buffer(
 
   VmaAllocationCreateInfo allocationCreateInfo{};
   allocationCreateInfo.usage = memoryUsage;
+  allocationCreateInfo.flags =
+      dedicated ? VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT : 0;
 
   vmaCreateBuffer(
       allocator,

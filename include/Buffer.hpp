@@ -11,7 +11,8 @@ public:
       VkDeviceSize size,
       VkBufferUsageFlags usage,
       VmaMemoryUsage memoryUsage,
-      std::vector<uint32_t> queueIndices);
+      std::vector<uint32_t> queueIndices,
+      bool dedicated);
   ~Buffer();
   operator VkBuffer() const noexcept;
   operator VmaAllocation() const noexcept;

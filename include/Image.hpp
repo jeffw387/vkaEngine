@@ -19,6 +19,7 @@ public:
       VkFormat format,
       VkImageUsageFlags usage,
       ImageAspect aspect,
+      bool dedicated,
       VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
       VkImageType imageType = VK_IMAGE_TYPE_2D,
       uint32_t mipLevels = 1,

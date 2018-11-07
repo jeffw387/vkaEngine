@@ -116,20 +116,23 @@ VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {
 std::unique_ptr<Buffer> Device::createBuffer(
     VkDeviceSize size,
     VkBufferUsageFlags usage,
-    VmaMemoryUsage memoryUsage) {
+    VmaMemoryUsage memoryUsage,
+    bool dedicated) {
   return std::make_unique<Buffer>(
       allocator,
       size,
       usage,
       memoryUsage,
-      std::vector<uint32_t>{graphicsQueueIndex});
+      std::vector<uint32_t>{graphicsQueueIndex},
+      dedicated);
 }
 
 std::unique_ptr<Image> Device::createImage2D(
     VkExtent2D extent,
     VkFormat format,
     VkImageUsageFlags usage,
-    ImageAspect aspect) {
+    ImageAspect aspect,
+    bool dedicated) {
   std::vector<uint32_t> queueIndices = {graphicsQueueIndex};
   return std::make_unique<Image>(
       allocator,
@@ -137,7 +140,8 @@ std::unique_ptr<Image> Device::createImage2D(
       VkExtent3D{extent.width, extent.height, 1U},
       std::move(format),
       std::move(usage),
-      std::move(aspect));
+      std::move(aspect),
+      dedicated);
 }
 
 std::unique_ptr<ImageView>

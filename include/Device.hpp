@@ -106,10 +106,17 @@ public:
   operator VkDevice() { return device; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  std::unique_ptr<Buffer>
-      createBuffer(VkDeviceSize, VkBufferUsageFlags, VmaMemoryUsage);
-  std::unique_ptr<Image>
-      createImage2D(VkExtent2D, VkFormat, VkImageUsageFlags, ImageAspect);
+  std::unique_ptr<Buffer> createBuffer(
+      VkDeviceSize,
+      VkBufferUsageFlags,
+      VmaMemoryUsage,
+      bool dedicated = false);
+  std::unique_ptr<Image> createImage2D(
+      VkExtent2D,
+      VkFormat,
+      VkImageUsageFlags,
+      ImageAspect,
+      bool = false);
   std::unique_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
   std::unique_ptr<Swapchain> createSwapchain(
       VkSwapchainKHR = VK_NULL_HANDLE,
