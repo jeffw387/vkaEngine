@@ -64,6 +64,12 @@ private:
   Engine* engine;
   VkInstance instanceHandle;
   InstanceOwner instanceOwner;
+
+public:
+  static PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
+  static PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
+
+private:
   VkDebugUtilsMessengerEXT debugMessenger;
   DebugMessengerOwner debugMessengerOwner;
   std::unique_ptr<Surface> surface;

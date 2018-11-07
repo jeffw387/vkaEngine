@@ -7,9 +7,6 @@
 #include "Engine.hpp"
 #include "spdlog/spdlog.h"
 
-PFN_vkCreateDebugUtilsMessengerEXT pfn_vkCreateDebugUtilsMessengerEXT;
-PFN_vkDestroyDebugUtilsMessengerEXT pfn_vkDestroyDebugUtilsMessengerEXT;
-
 namespace vka {
 static VkBool32 vulkanDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -36,8 +33,13 @@ static VkBool32 vulkanDebugCallback(
   return VK_FALSE;
 }
 
+PFN_vkCreateDebugUtilsMessengerEXT Instance::vkCreateDebugUtilsMessengerEXT =
+    {};
+PFN_vkDestroyDebugUtilsMessengerEXT Instance::vkDestroyDebugUtilsMessengerEXT =
+    {};
+
 void DebugMessengerDeleter::operator()(VkDebugUtilsMessengerEXT messenger) {
-  pfn_vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
+  Instance::vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
 }
 
 Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
@@ -85,10 +87,10 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
   instanceOwner = InstanceOwner(instanceHandle);
 
   // LoadInstanceLevelEntryPoints(instanceHandle);
-  pfn_vkCreateDebugUtilsMessengerEXT =
+  Instance::vkCreateDebugUtilsMessengerEXT =
       (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
           instanceHandle, "vkCreateDebugUtilsMessengerEXT");
-  pfn_vkDestroyDebugUtilsMessengerEXT =
+  Instance::vkDestroyDebugUtilsMessengerEXT =
       (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
           instanceHandle, "vkDestroyDebugUtilsMessengerEXT");
 
@@ -104,7 +106,7 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
       VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
-  pfn_vkCreateDebugUtilsMessengerEXT(
+  Instance::vkCreateDebugUtilsMessengerEXT(
       instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
   debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);
 }
