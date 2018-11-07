@@ -3,11 +3,68 @@
 
 namespace vka {
 
+void CommandBuffer::checkInitial() {
+if (state != Initial) {
+    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in initial state.", stateString(state));
+    throw std::runtime_error("");
+  }
+}
+
+void CommandBuffer::checkRecording() {
+  if (state != Recording) {
+    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in recording state.", stateString(state));
+    throw std::runtime_error("");
+  }
+}
+
+void CommandBuffer::checkExecutable() {
+  if (state != Executable) {
+    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in executable state.", stateString(state));
+    throw std::runtime_error("");
+  }
+}
+
+void CommandBuffer::checkPending() {
+  if (state != Pending) {
+    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in pending state.", stateString(state));
+    throw std::runtime_error("");
+  }
+}
+
+void CommandBuffer::checkRenderPassActive() {
+  if (!activeRenderPass) {
+    MultiLogger::get()->error("Cannot record this command outside of a render pass.", stateString(state));
+    throw std::runtime_error("");
+  }
+}
+
+void CommandBuffer::checkRenderPassInactive() {
+  if (activeRenderPass) {
+    MultiLogger::get()->error("Cannot record this command during a render pass.", stateString(state));
+    throw std::runtime_error("");
+  }
+}
+
+void CommandBuffer::checkGraphicsPipelineBound() {
+  if (!boundGraphicsPipeline) {
+    
+    MultiLogger::get()->error("Cannot record this command without a graphics pipeline bound.", stateString(state));
+  }
+}
+
+void CommandBuffer::checkComputePipelineBound() {
+  if (!boundComputePipeline) {
+    
+    MultiLogger::get()->error("Cannot record this command without a compute pipeline bound.", stateString(state));
+  }
+}
+
 void CommandBuffer::begin(
     VkCommandBufferUsageFlags usage,
     VkRenderPass renderPass,
     uint32_t subpass,
     VkFramebuffer framebuffer) {
+  checkInitial();
   VkCommandBufferInheritanceInfo inheritInfo{};
   inheritInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
   inheritInfo.renderPass = renderPass;
@@ -20,23 +77,36 @@ void CommandBuffer::begin(
   beginInfo.pInheritanceInfo =
       level == VK_COMMAND_BUFFER_LEVEL_SECONDARY ? &inheritInfo : nullptr;
   vkBeginCommandBuffer(commandBufferHandle, &beginInfo);
+  state = State::Recording;
 }
 
-void CommandBuffer::end() { vkEndCommandBuffer(commandBufferHandle); }
-
-void CommandBuffer::bindGraphicsPipeline(VkPipeline pipeline) {
-  vkCmdBindPipeline(
-      commandBufferHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+void CommandBuffer::end() { 
+  checkRecording();
+  checkRenderPassInactive();
+  vkEndCommandBuffer(commandBufferHandle);
+  state = State::Executable;
 }
 
-void CommandBuffer::bindComputePipeline(VkPipeline pipeline) {
+void CommandBuffer::bindGraphicsPipeline(std::shared_ptr<GraphicsPipeline> pipeline) {
+  checkRecording();
   vkCmdBindPipeline(
-      commandBufferHandle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+      commandBufferHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+  graphicsPipelines.push_back(std::move(pipeline));
+}
+
+void CommandBuffer::bindComputePipeline(std::shared_ptr<ComputePipeline> pipeline) {
+  checkRecording();
+  vkCmdBindPipeline(
+      commandBufferHandle, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
+  computePipelines.push_back(std::move(pipeline));
 }
 
 void CommandBuffer::setViewport(
     uint32_t firstViewport,
     std::vector<VkViewport> viewports) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
   vkCmdSetViewport(
       commandBufferHandle,
       firstViewport,
@@ -47,6 +117,9 @@ void CommandBuffer::setViewport(
 void CommandBuffer::setScissor(
     uint32_t firstScissor,
     std::vector<VkRect2D> scissors) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
   vkCmdSetScissor(
       commandBufferHandle,
       firstScissor,
@@ -55,57 +128,94 @@ void CommandBuffer::setScissor(
 }
 
 void CommandBuffer::setLineWidth(float lineWidth) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
   vkCmdSetLineWidth(commandBufferHandle, lineWidth);
 }
 
 void CommandBuffer::bindGraphicsDescriptorSets(
-    VkPipelineLayout layout,
+    std::shared_ptr<PipelineLayout> layout,
     uint32_t firstSet,
-    const std::vector<VkDescriptorSet>& sets,
+    const std::vector<std::shared_ptr<DescriptorSet>>& sets,
     const std::vector<uint32_t>& dynamicOffsets) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
+  std::vector<VkDescriptorSet> vkSets;
+  vkSets.reserve(sets.size());
+  for (auto& set : sets) {
+    vkSets.push_back(*set);
+  }
   vkCmdBindDescriptorSets(
       commandBufferHandle,
       VK_PIPELINE_BIND_POINT_GRAPHICS,
-      layout,
+      *layout,
       firstSet,
-      static_cast<uint32_t>(sets.size()),
-      sets.data(),
+      static_cast<uint32_t>(vkSets.size()),
+      vkSets.data(),
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
+  pipelineLayouts.push_back(std::move(layout));
+  descriptorSets.insert(descriptorSets.cend(),
+    sets.begin(), sets.end());
 }
 
 void CommandBuffer::bindComputeDescriptorSets(
-    VkPipelineLayout layout,
+    std::shared_ptr<PipelineLayout> layout,
     uint32_t firstSet,
-    const std::vector<VkDescriptorSet>& sets,
+    const std::vector<std::shared_ptr<DescriptorSet>>& sets,
     const std::vector<uint32_t>& dynamicOffsets) {
+  checkRecording();
+  checkComputePipelineBound();
+  std::vector<VkDescriptorSet> vkSets;
+  vkSets.reserve(sets.size());
+  for (auto& set : sets) {
+    vkSets.push_back(*set);
+  }
   vkCmdBindDescriptorSets(
       commandBufferHandle,
       VK_PIPELINE_BIND_POINT_COMPUTE,
-      layout,
+      *layout,
       firstSet,
-      static_cast<uint32_t>(sets.size()),
-      sets.data(),
+      static_cast<uint32_t>(vkSets.size()),
+      vkSets.data(),
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
+  pipelineLayouts.push_back(std::move(layout));
+  descriptorSets.insert(descriptorSets.cend(),
+    sets.begin(), sets.end());
 }
 
 void CommandBuffer::bindIndexBuffer(
-    VkBuffer buffer,
+    std::shared_ptr<Buffer> buffer,
     uint32_t offset,
     VkIndexType indexType) {
-  vkCmdBindIndexBuffer(commandBufferHandle, buffer, offset, indexType);
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
+  vkCmdBindIndexBuffer(commandBufferHandle, *buffer, offset, indexType);
+  buffers.push_back(std::move(buffer));
 }
 
 void CommandBuffer::bindVertexBuffers(
     uint32_t firstBinding,
-    const std::vector<VkBuffer>& buffers,
+    const std::vector<std::shared_ptr<Buffer>>& buffers,
     const std::vector<VkDeviceSize>& offsets) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
+  std::vector<VkBuffer> vkBuffers;
+  vkBuffers.reserve(buffers.size());
+  for (auto& buffer : buffers) {
+    vkBuffers.push_back(*buffer);
+    this->buffers.push_back(std::move(buffer));
+  }
   vkCmdBindVertexBuffers(
       commandBufferHandle,
       firstBinding,
-      static_cast<uint32_t>(buffers.size()),
-      buffers.data(),
+      static_cast<uint32_t>(vkBuffers.size()),
+      vkBuffers.data(),
       offsets.data());
 }
 
@@ -114,6 +224,9 @@ void CommandBuffer::draw(
     uint32_t instanceCount,
     uint32_t firstVertex,
     uint32_t firstInstance) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
   vkCmdDraw(
       commandBufferHandle,
       vertexCount,
@@ -128,6 +241,9 @@ void CommandBuffer::drawIndexed(
     uint32_t firstIndex,
     uint32_t vertexOffset,
     uint32_t firstInstance) {
+  checkRecording();
+  checkRenderPassActive();
+  checkGraphicsPipelineBound();
   vkCmdDrawIndexed(
       commandBufferHandle,
       indexCount,
@@ -138,77 +254,87 @@ void CommandBuffer::drawIndexed(
 }
 
 void CommandBuffer::copyBuffer(
-    VkBuffer srcBuffer,
-    VkBuffer dstBuffer,
+    std::shared_ptr<Buffer> srcBuffer,
+    std::shared_ptr<Buffer> dstBuffer,
     std::vector<VkBufferCopy> regions) {
   vkCmdCopyBuffer(
       commandBufferHandle,
-      srcBuffer,
-      dstBuffer,
+      *srcBuffer,
+      *dstBuffer,
       static_cast<uint32_t>(regions.size()),
       regions.data());
+  buffers.push_back(std::move(srcBuffer));
+  buffers.push_back(std::move(dstBuffer));
 }
 
 void CommandBuffer::copyImage(
-    VkImage srcImage,
+    std::shared_ptr<Image> srcImage,
     VkImageLayout srcImageLayout,
-    VkImage dstImage,
+    std::shared_ptr<Image> dstImage,
     VkImageLayout dstImageLayout,
     const std::vector<VkImageCopy>& regions) {
   vkCmdCopyImage(
       commandBufferHandle,
-      srcImage,
+      *srcImage,
       srcImageLayout,
-      dstImage,
+      *dstImage,
       dstImageLayout,
       static_cast<uint32_t>(regions.size()),
       regions.data());
+  images.push_back(std::move(srcImage));
+  images.push_back(std::move(dstImage));
 }
 
 void CommandBuffer::blitImage(
-    VkImage srcImage,
+    std::shared_ptr<Image> srcImage,
     VkImageLayout srcImageLayout,
-    VkImage dstImage,
+    std::shared_ptr<Image> dstImage,
     VkImageLayout dstImageLayout,
     const std::vector<VkImageBlit>& regions,
     VkFilter filter) {
   vkCmdBlitImage(
       commandBufferHandle,
-      srcImage,
+      *srcImage,
       srcImageLayout,
-      dstImage,
+      *dstImage,
       dstImageLayout,
       static_cast<uint32_t>(regions.size()),
       regions.data(),
       filter);
+  images.push_back(std::move(srcImage));
+  images.push_back(std::move(dstImage));
 }
 
 void CommandBuffer::copyBufferToImage(
-    VkBuffer srcBuffer,
-    VkImage dstImage,
+    std::shared_ptr<Buffer> srcBuffer,
+    std::shared_ptr<Image> dstImage,
     VkImageLayout dstImageLayout,
     const std::vector<VkBufferImageCopy>& regions) {
   vkCmdCopyBufferToImage(
       commandBufferHandle,
-      srcBuffer,
-      dstImage,
+      *srcBuffer,
+      *dstImage,
       dstImageLayout,
       static_cast<uint32_t>(regions.size()),
       regions.data());
+  buffers.push_back(std::move(srcBuffer));
+  images.push_back(std::move(dstImage));
 }
 
 void CommandBuffer::copyImageToBuffer(
-    VkImage srcImage,
+    std::shared_ptr<Image> srcImage,
     VkImageLayout srcImageLayout,
-    VkBuffer dstBuffer,
+    std::shared_ptr<Buffer> dstBuffer,
     const std::vector<VkBufferImageCopy>& regions) {
   vkCmdCopyImageToBuffer(
       commandBufferHandle,
-      srcImage,
+      *srcImage,
       srcImageLayout,
-      dstBuffer,
+      *dstBuffer,
       static_cast<uint32_t>(regions.size()),
       regions.data());
+  images.push_back(std::move(srcImage));
+  buffers.push_back(std::move(dstBuffer));
 }
 
 void CommandBuffer::pipelineBarrier(
@@ -232,57 +358,91 @@ void CommandBuffer::pipelineBarrier(
 }
 
 void CommandBuffer::pushConstants(
-    VkPipelineLayout layout,
+    std::shared_ptr<PipelineLayout> layout,
     VkShaderStageFlags stageFlags,
     uint32_t offset,
     uint32_t size,
     void* pValues) {
+  checkRecording();
   vkCmdPushConstants(
-      commandBufferHandle, layout, stageFlags, offset, size, pValues);
+      commandBufferHandle, *layout, stageFlags, offset, size, pValues);
+  pipelineLayouts.push_back(std::move(layout));
 }
 
 void CommandBuffer::beginRenderPass(
-    VkRenderPass renderPass,
-    VkFramebuffer framebuffer,
+    std::shared_ptr<RenderPass> renderPass,
+    std::shared_ptr<Framebuffer> framebuffer,
     VkRect2D renderArea,
     const std::vector<VkClearValue>& clearValues,
     VkSubpassContents contents) {
+  checkRecording();
+  checkRenderPassInactive();
   VkRenderPassBeginInfo beginInfo{};
   beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  beginInfo.renderPass = renderPass;
-  beginInfo.framebuffer = framebuffer;
-  beginInfo.renderArea = renderArea;
+  beginInfo.renderPass = *renderPass;
+  beginInfo.framebuffer = *framebuffer;
+  beginInfo.renderArea = std::move(renderArea);
   beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
   beginInfo.pClearValues = clearValues.data();
   vkCmdBeginRenderPass(commandBufferHandle, &beginInfo, contents);
+  activeRenderPass = renderPass;
+  renderPasses.push_back(std::move(renderPass));
+  framebuffers.push_back(std::move(framebuffer));
 }
 
 void CommandBuffer::nextSubpass(VkSubpassContents contents) {
+  checkRecording();
+  checkRenderPassActive();
+  if (level != VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+    MultiLogger::get()->error("Attempt to call next subpass from secondary cmd buffer.");
+    throw std::runtime_error("");
+  }
   vkCmdNextSubpass(commandBufferHandle, contents);
 }
 
-void CommandBuffer::endRenderPass() { vkCmdEndRenderPass(commandBufferHandle); }
-
-void CommandBuffer::executeCommands(
-    const std::vector<CommandBuffer>& commandBuffers) {
-  vkCmdExecuteCommands(
-      commandBufferHandle,
-      static_cast<uint32_t>(commandBuffers.size()),
-      reinterpret_cast<const VkCommandBuffer*>(commandBuffers.data()));
+void CommandBuffer::endRenderPass() {
+  checkRecording();
+  checkRenderPassActive();
+  vkCmdEndRenderPass(commandBufferHandle);
+  activeRenderPass.reset();
+  boundGraphicsPipeline.reset();
 }
 
-CommandPool::CommandPool(VkDevice device, uint32_t queueIndex)
-    : device(device) {
+void CommandBuffer::executeCommands(
+    const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) {
+  checkRecording();
+  if (level != VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+    MultiLogger::get()->error("Attempt to execute secondary command buffer from secondary command buffer.");
+    throw std::runtime_error("");
+  }
+  std::vector<VkCommandBuffer> vkCmds;
+  vkCmds.reserve(commandBuffers.size());
+  for (auto& cmd : commandBuffers) {
+    vkCmds.push_back(*cmd);
+    this->commandBuffers.push_back(std::move(cmd));
+  }
+  vkCmdExecuteCommands(
+      commandBufferHandle,
+      static_cast<uint32_t>(vkCmds.size()),
+      vkCmds.data());
+}
+
+CommandPool::CommandPool(VkDevice device,
+    uint32_t queueIndex,
+    VkCommandBufferLevel level,
+    bool transient)
+    : device(device),
+    level(level) {
   VkCommandPoolCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   createInfo.queueFamilyIndex = queueIndex;
-
+  createInfo.flags = 
+    transient ? VK_COMMAND_POOL_CREATE_TRANSIENT_BIT : 0;
   auto poolResult =
       vkCreateCommandPool(device, &createInfo, nullptr, &poolHandle);
 }
 
-std::unique_ptr<CommandBuffer> CommandPool::allocateCommandBuffer(
-    VkCommandBufferLevel level) {
+std::shared_ptr<CommandBuffer> CommandPool::allocateCommandBuffer() {
   VkCommandBuffer cmd{};
   VkCommandBufferAllocateInfo allocateInfo{
       VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
@@ -290,30 +450,25 @@ std::unique_ptr<CommandBuffer> CommandPool::allocateCommandBuffer(
   allocateInfo.commandPool = poolHandle;
   allocateInfo.level = level;
   vkAllocateCommandBuffers(device, &allocateInfo, &cmd);
-  return std::make_unique<CommandBuffer>(cmd, level);
+  cmdBuffers.push_back(std::make_shared<CommandBuffer>(cmd, level));
+  return cmdBuffers.back();
 }
-
-CommandPool& CommandPool::operator=(CommandPool&& other) {
-  if (this != &other) {
-    device = other.device;
-    poolHandle = other.poolHandle;
-    other.device = {};
-    other.poolHandle = {};
-  }
-  return *this;
-}
-
-CommandPool::CommandPool(CommandPool&& other) { *this = std::move(other); }
 
 void CommandPool::reset(bool releaseResources) {
   vkResetCommandPool(
       device,
       poolHandle,
       releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0);
+  for (auto& cmd : cmdBuffers) {
+    cmd->state = CommandBuffer::Initial;
+  }
 }
 
 CommandPool::~CommandPool() {
-  if (device != VK_NULL_HANDLE && poolHandle != VK_NULL_HANDLE) {
+  if (poolHandle != VK_NULL_HANDLE) {
+    for (auto& cmd : cmdBuffers) {
+      cmd->state = CommandBuffer::Invalid;
+    }
     vkDestroyCommandPool(device, poolHandle, nullptr);
   }
 }
