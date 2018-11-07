@@ -20,6 +20,7 @@
 #include "Swapchain.hpp"
 #include "Fence.hpp"
 #include "Semaphore.hpp"
+#include "Framebuffer.hpp"
 #include "Image.hpp"
 #include "Buffer.hpp"
 
@@ -66,16 +67,6 @@ inline VkPhysicalDeviceFeatures makeVkFeatures(
   return vkFeatures;
 }
 
-struct FramebufferDeleter {
-  using pointer = VkFramebuffer;
-
-  void operator()(VkFramebuffer framebuffer) {
-    vkDestroyFramebuffer(device, framebuffer, nullptr);
-  }
-
-  VkDevice device;
-};
-using UniqueFramebuffer = std::unique_ptr<VkFramebuffer, FramebufferDeleter>;
 struct PhysicalDeviceData {
   PhysicalDeviceData() = default;
   PhysicalDeviceData(VkInstance);
@@ -156,11 +147,10 @@ public:
       float maxLod = 0.f,
       VkBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
       VkBool32 unnormalizedCoordinates = false);
-  UniqueFramebuffer createFramebuffer(
-      std::vector<VkImageView> attachments,
+  std::unique_ptr<Framebuffer> createFramebuffer(
       VkRenderPass renderPass,
-      uint32_t width,
-      uint32_t height);
+      std::vector<std::shared_ptr<ImageView>> attachments,
+      VkExtent2D extent);
   std::unique_ptr<Fence> createFence(bool signaled = true);
   std::unique_ptr<Semaphore> createSemaphore();
 

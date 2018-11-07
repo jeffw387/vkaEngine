@@ -311,22 +311,11 @@ std::unique_ptr<ShaderModule> Device::createShaderModule(
   }
 }
 
-UniqueFramebuffer Device::createFramebuffer(
-    std::vector<VkImageView> attachments,
+std::unique_ptr<Framebuffer> Device::createFramebuffer(
     VkRenderPass renderPass,
-    uint32_t width,
-    uint32_t height) {
-  VkFramebuffer framebuffer{};
-  VkFramebufferCreateInfo createInfo{};
-  createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-  createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-  createInfo.pAttachments = attachments.data();
-  createInfo.renderPass = renderPass;
-  createInfo.width = width;
-  createInfo.height = height;
-  createInfo.layers = 1;
-  vkCreateFramebuffer(device, &createInfo, nullptr, &framebuffer);
-  return UniqueFramebuffer(framebuffer, {device});
+    std::vector<std::shared_ptr<ImageView>> attachments,
+    VkExtent2D extent) {
+  return std::make_unique<Framebuffer>(renderPass, std::move(attachments), extent);
 }
 
 std::unique_ptr<Fence> Device::createFence(bool signaled) {
