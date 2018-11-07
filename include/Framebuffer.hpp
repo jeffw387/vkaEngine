@@ -7,15 +7,17 @@
 namespace vka {
 class Framebuffer {
 public:
-  Framebuffer(VkDevice,
-    VkRenderPass,
-    std::vector<std::shared_ptr<ImageView>>,
-    VkExtent2D);
+  Framebuffer(
+      VkDevice,
+      VkRenderPass,
+      std::vector<std::shared_ptr<ImageView>>,
+      VkExtent2D);
   ~Framebuffer();
   operator VkFramebuffer() const noexcept;
+
 private:
   VkDevice device = {};
   std::vector<std::shared_ptr<ImageView>> views;
   VkFramebuffer framebuffer = {};
 };
-}
+}  // namespace vka

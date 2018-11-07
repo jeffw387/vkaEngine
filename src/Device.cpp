@@ -268,8 +268,15 @@ std::unique_ptr<ComputePipeline> Device::createComputePipeline(
   return std::make_unique<ComputePipeline>(device, pipelineCache, createInfo);
 }
 
-std::unique_ptr<CommandPool> Device::createCommandPool() {
-  return std::make_unique<CommandPool>(device, gfxQueueIndex());
+std::unique_ptr<CommandPool> Device::createCommandPool(
+    bool primary,
+    bool transient) {
+  return std::make_unique<CommandPool>(
+      device,
+      gfxQueueIndex(),
+      primary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY
+              : VK_COMMAND_BUFFER_LEVEL_SECONDARY,
+      transient);
 }
 
 std::unique_ptr<DescriptorPool> Device::createDescriptorPool(
@@ -315,7 +322,8 @@ std::unique_ptr<Framebuffer> Device::createFramebuffer(
     VkRenderPass renderPass,
     std::vector<std::shared_ptr<ImageView>> attachments,
     VkExtent2D extent) {
-  return std::make_unique<Framebuffer>(renderPass, std::move(attachments), extent);
+  return std::make_unique<Framebuffer>(
+      device, renderPass, std::move(attachments), extent);
 }
 
 std::unique_ptr<Fence> Device::createFence(bool signaled) {
@@ -342,19 +350,27 @@ VkResult Device::presentImage(
 
 void Device::queueSubmit(
     const std::vector<VkSemaphore>& waitSemaphores,
-    const std::vector<VkCommandBuffer>& commandBuffers,
+    std::vector<std::shared_ptr<CommandBuffer>> commandBuffers,
     const std::vector<VkSemaphore>& signalSemaphores,
-    VkFence fence) {
+    vka::Fence* fence) {
+  std::vector<VkCommandBuffer> vkCmdBuffers;
+  vkCmdBuffers.reserve(commandBuffers.size());
+  for (auto& cmd : commandBuffers) {
+    cmd->checkExecutable();
+    vkCmdBuffers.push_back(*cmd);
+    fence->subscribe([=]() { cmd->cmdExecuted(); });
+    cmd->cmdPending();
+  }
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
   submitInfo.pWaitSemaphores = waitSemaphores.data();
-  submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-  submitInfo.pCommandBuffers = commandBuffers.data();
+  submitInfo.commandBufferCount = static_cast<uint32_t>(vkCmdBuffers.size());
+  submitInfo.pCommandBuffers = vkCmdBuffers.data();
   submitInfo.signalSemaphoreCount =
       static_cast<uint32_t>(signalSemaphores.size());
   submitInfo.pSignalSemaphores = signalSemaphores.data();
-  vkQueueSubmit(graphicsQueue, 1, &submitInfo, fence);
+  vkQueueSubmit(graphicsQueue, 1, &submitInfo, *fence);
 }
 
 std::unique_ptr<RenderPass> Device::createRenderPass(

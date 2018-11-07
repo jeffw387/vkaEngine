@@ -5,7 +5,8 @@ Framebuffer::Framebuffer(
     VkDevice device,
     VkRenderPass renderPass,
     std::vector<std::shared_ptr<ImageView>> views,
-    VkExtent2D extent) : device(device), views(std::move(views)) {
+    VkExtent2D extent)
+    : device(device), views(std::move(views)) {
   std::vector<VkImageView> vkViews;
   vkViews.reserve(views.size());
   for (auto& view : this->views) {
@@ -28,7 +29,5 @@ Framebuffer::~Framebuffer() {
   }
 }
 
-Framebuffer::operator VkFramebuffer() const noexcept {
-  return framebuffer;
-}
-}
+Framebuffer::operator VkFramebuffer() const noexcept { return framebuffer; }
+}  // namespace vka

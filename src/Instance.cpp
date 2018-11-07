@@ -20,8 +20,9 @@ static VkBool32 vulkanDebugCallback(
         pCallbackData->pMessage);
     for (size_t objIndex{}; objIndex < pCallbackData->objectCount; ++objIndex) {
       if (pCallbackData->pObjects[objIndex].pObjectName != nullptr) {
-      MultiLogger::get()->error(
-          "Involved object: {}", pCallbackData->pObjects[objIndex].pObjectName);
+        MultiLogger::get()->error(
+            "Involved object: {}",
+            pCallbackData->pObjects[objIndex].pObjectName);
       }
     }
   } else if (

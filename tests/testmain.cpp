@@ -190,7 +190,7 @@ struct AppState {
     std::unique_ptr<vka::Fence> bufferExecuted;
     std::unique_ptr<vka::Semaphore> renderComplete;
     uint32_t swapImageIndex;
-    vka::UniqueFramebuffer framebuffer;
+    std::unique_ptr<vka::Framebuffer> framebuffer;
     std::unique_ptr<vka::CommandPool> commandPool;
     std::unique_ptr<vka::CommandBuffer> cmd;
     entt::DefaultRegistry ecs;
@@ -250,12 +250,13 @@ struct AppState {
     stagingBuffer->flush();
     // vmaFlushAllocation(device->getAllocator(), *stagingBuffer, 0,
     // bufferSize);
-    auto cmdPool = device->createCommandPool();
-    auto cmd = cmdPool->allocateCommandBuffer();
-    cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-    cmd->copyBuffer(*stagingBuffer, *result.buffer, {{0U, 0U, bufferSize}});
-    cmd->end();
-    device->queueSubmit({}, {*cmd}, {}, *copyFence);
+
+    // TODO: make things return shared_ptr to begin with
+    
+    transferCmd->begin();
+    transferCmd->copyBuffer(std::make_shared(stagingBuffer), *result.buffer, {{0U, 0U, bufferSize}});
+    transferCmd->end();
+    device->queueSubmit({}, {*transferCmd}, {}, *copyFence);
     copyFence->wait();
     return result;
   }

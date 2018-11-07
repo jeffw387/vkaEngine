@@ -121,7 +121,9 @@ public:
   std::unique_ptr<ComputePipeline> createComputePipeline(
       VkPipelineCache pipelineCache,
       const VkComputePipelineCreateInfo&);
-  std::unique_ptr<CommandPool> createCommandPool();
+  std::unique_ptr<CommandPool> createCommandPool(
+      bool primary = true,
+      bool transient = true);
   std::unique_ptr<DescriptorPool> createDescriptorPool(
       std::vector<VkDescriptorPoolSize> poolSizes,
       uint32_t maxSets);
@@ -160,9 +162,9 @@ public:
       VkSemaphore waitSemaphore);
   void queueSubmit(
       const std::vector<VkSemaphore>& waitSemaphores,
-      const std::vector<VkCommandBuffer>& commandBuffers,
+      std::vector<std::shared_ptr<CommandBuffer>> commandBuffers,
       const std::vector<VkSemaphore>& signalSemaphores,
-      VkFence fence = VK_NULL_HANDLE);
+      vka::Fence* fence = nullptr);
 
   void waitIdle();
 

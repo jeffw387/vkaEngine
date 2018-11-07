@@ -9,20 +9,16 @@ Fence::Fence(VkDevice device, bool signaled) : device(device) {
   vkCreateFence(device, &createInfo, nullptr, &fence);
 }
 
-Fence::Fence(Fence&& other) { *this = std::move(other); }
-
-Fence& Fence::operator=(Fence&& other) {
-  if (this != &other) {
-    device = other.device;
-    fence = other.fence;
-    other.device = {};
-    other.fence = {};
-  }
-  return *this;
-}
-
 void Fence::wait(uint64_t timeout) {
-  vkWaitForFences(device, 1, &fence, true, timeout);
+  auto waitResult = vkWaitForFences(device, 1, &fence, true, timeout);
+  if (waitResult == VK_SUCCESS) {
+    for (auto& sub : subscribers) {
+      if (sub) {
+        sub();
+      }
+    }
+    subscribers.clear();
+  }
 }
 
 void Fence::reset() { vkResetFences(device, 1, &fence); }
