@@ -2,65 +2,104 @@
 #include "Device.hpp"
 
 namespace vka {
+CommandBuffer::CommandBuffer(
+    VkCommandBuffer commandBuffer,
+    VkCommandBufferLevel level,
+    bool transient)
+    : commandBufferHandle(commandBuffer), level(level), transient(transient) {}
 
 void CommandBuffer::checkInitial() {
-if (state != Initial) {
-    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in initial state.", stateString(state));
+  if (state != Initial) {
+    MultiLogger::get()->error(
+        "Incorrect cmd buffer state {}. Should be in initial state.",
+        stateString(state));
     throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkRecording() {
   if (state != Recording) {
-    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in recording state.", stateString(state));
+    MultiLogger::get()->error(
+        "Incorrect cmd buffer state {}. Should be in recording state.",
+        stateString(state));
     throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkExecutable() {
   if (state != Executable) {
-    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in executable state.", stateString(state));
+    MultiLogger::get()->error(
+        "Incorrect cmd buffer state {}. Should be in executable state.",
+        stateString(state));
     throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkPending() {
   if (state != Pending) {
-    MultiLogger::get()->error("Incorrect cmd buffer state {}. Should be in pending state.", stateString(state));
+    MultiLogger::get()->error(
+        "Incorrect cmd buffer state {}. Should be in pending state.",
+        stateString(state));
     throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkRenderPassActive() {
   if (!activeRenderPass) {
-    MultiLogger::get()->error("Cannot record this command outside of a render pass.", stateString(state));
+    MultiLogger::get()->error(
+        "Cannot record this command outside of a render pass.",
+        stateString(state));
     throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkRenderPassInactive() {
   if (activeRenderPass) {
-    MultiLogger::get()->error("Cannot record this command during a render pass.", stateString(state));
+    MultiLogger::get()->error(
+        "Cannot record this command during a render pass.", stateString(state));
     throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkGraphicsPipelineBound() {
   if (!boundGraphicsPipeline) {
-    
-    MultiLogger::get()->error("Cannot record this command without a graphics pipeline bound.", stateString(state));
+    MultiLogger::get()->error(
+        "Cannot record this command without a graphics pipeline bound.",
+        stateString(state));
+    throw std::runtime_error("");
   }
 }
 
 void CommandBuffer::checkComputePipelineBound() {
   if (!boundComputePipeline) {
-    
-    MultiLogger::get()->error("Cannot record this command without a compute pipeline bound.", stateString(state));
+    MultiLogger::get()->error(
+        "Cannot record this command without a compute pipeline bound.",
+        stateString(state));
+    throw std::runtime_error("");
   }
 }
 
+void CommandBuffer::cmdPending() { state = Pending; }
+
+void CommandBuffer::cmdExecuted() {
+  state = transient ? Invalid : Initial;
+  graphicsPipelines.clear();
+  computePipelines.clear();
+  pipelineLayouts.clear();
+  descriptorSets.clear();
+  buffers.clear();
+  images.clear();
+  renderPasses.clear();
+  framebuffers.clear();
+  commandBuffers.clear();
+  activeRenderPass.reset();
+  boundComputePipeline.reset();
+  boundGraphicsPipeline.reset();
+}
+
 void CommandBuffer::begin(
-    VkCommandBufferUsageFlags usage,
+    bool renderPassContinue,
+    bool simultaneousUse,
     VkRenderPass renderPass,
     uint32_t subpass,
     VkFramebuffer framebuffer) {
@@ -73,28 +112,35 @@ void CommandBuffer::begin(
 
   VkCommandBufferBeginInfo beginInfo{};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = usage;
+  beginInfo.flags |=
+      transient ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
+  beginInfo.flags |=
+      renderPassContinue ? VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT : 0;
+  beginInfo.flags |=
+      simultaneousUse ? VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT : 0;
   beginInfo.pInheritanceInfo =
       level == VK_COMMAND_BUFFER_LEVEL_SECONDARY ? &inheritInfo : nullptr;
   vkBeginCommandBuffer(commandBufferHandle, &beginInfo);
   state = State::Recording;
 }
 
-void CommandBuffer::end() { 
+void CommandBuffer::end() {
   checkRecording();
   checkRenderPassInactive();
   vkEndCommandBuffer(commandBufferHandle);
   state = State::Executable;
 }
 
-void CommandBuffer::bindGraphicsPipeline(std::shared_ptr<GraphicsPipeline> pipeline) {
+void CommandBuffer::bindGraphicsPipeline(
+    std::shared_ptr<GraphicsPipeline> pipeline) {
   checkRecording();
   vkCmdBindPipeline(
       commandBufferHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
   graphicsPipelines.push_back(std::move(pipeline));
 }
 
-void CommandBuffer::bindComputePipeline(std::shared_ptr<ComputePipeline> pipeline) {
+void CommandBuffer::bindComputePipeline(
+    std::shared_ptr<ComputePipeline> pipeline) {
   checkRecording();
   vkCmdBindPipeline(
       commandBufferHandle, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
@@ -157,8 +203,7 @@ void CommandBuffer::bindGraphicsDescriptorSets(
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
   pipelineLayouts.push_back(std::move(layout));
-  descriptorSets.insert(descriptorSets.cend(),
-    sets.begin(), sets.end());
+  descriptorSets.insert(descriptorSets.cend(), sets.begin(), sets.end());
 }
 
 void CommandBuffer::bindComputeDescriptorSets(
@@ -183,8 +228,7 @@ void CommandBuffer::bindComputeDescriptorSets(
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
   pipelineLayouts.push_back(std::move(layout));
-  descriptorSets.insert(descriptorSets.cend(),
-    sets.begin(), sets.end());
+  descriptorSets.insert(descriptorSets.cend(), sets.begin(), sets.end());
 }
 
 void CommandBuffer::bindIndexBuffer(
@@ -394,7 +438,8 @@ void CommandBuffer::nextSubpass(VkSubpassContents contents) {
   checkRecording();
   checkRenderPassActive();
   if (level != VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
-    MultiLogger::get()->error("Attempt to call next subpass from secondary cmd buffer.");
+    MultiLogger::get()->error(
+        "Attempt to call next subpass from secondary cmd buffer.");
     throw std::runtime_error("");
   }
   vkCmdNextSubpass(commandBufferHandle, contents);
@@ -412,7 +457,9 @@ void CommandBuffer::executeCommands(
     const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers) {
   checkRecording();
   if (level != VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
-    MultiLogger::get()->error("Attempt to execute secondary command buffer from secondary command buffer.");
+    MultiLogger::get()->error(
+        "Attempt to execute secondary command buffer from secondary command "
+        "buffer.");
     throw std::runtime_error("");
   }
   std::vector<VkCommandBuffer> vkCmds;
@@ -422,22 +469,19 @@ void CommandBuffer::executeCommands(
     this->commandBuffers.push_back(std::move(cmd));
   }
   vkCmdExecuteCommands(
-      commandBufferHandle,
-      static_cast<uint32_t>(vkCmds.size()),
-      vkCmds.data());
+      commandBufferHandle, static_cast<uint32_t>(vkCmds.size()), vkCmds.data());
 }
 
-CommandPool::CommandPool(VkDevice device,
+CommandPool::CommandPool(
+    VkDevice device,
     uint32_t queueIndex,
     VkCommandBufferLevel level,
     bool transient)
-    : device(device),
-    level(level) {
+    : device(device), level(level), transient(transient) {
   VkCommandPoolCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   createInfo.queueFamilyIndex = queueIndex;
-  createInfo.flags = 
-    transient ? VK_COMMAND_POOL_CREATE_TRANSIENT_BIT : 0;
+  createInfo.flags = transient ? VK_COMMAND_POOL_CREATE_TRANSIENT_BIT : 0;
   auto poolResult =
       vkCreateCommandPool(device, &createInfo, nullptr, &poolHandle);
 }
@@ -450,7 +494,7 @@ std::shared_ptr<CommandBuffer> CommandPool::allocateCommandBuffer() {
   allocateInfo.commandPool = poolHandle;
   allocateInfo.level = level;
   vkAllocateCommandBuffers(device, &allocateInfo, &cmd);
-  cmdBuffers.push_back(std::make_shared<CommandBuffer>(cmd, level));
+  cmdBuffers.push_back(std::make_shared<CommandBuffer>(cmd, level, transient));
   return cmdBuffers.back();
 }
 
