@@ -110,7 +110,7 @@ public:
   ~DescriptorPool();
   operator VkDescriptorPool() { return poolHandle; }
 
-  std::unique_ptr<DescriptorSet> allocateDescriptorSet(
+  std::shared_ptr<DescriptorSet> allocateDescriptorSet(
       DescriptorSetLayout* layout);
   void reset();
 

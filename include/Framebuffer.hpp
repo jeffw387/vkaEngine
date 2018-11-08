@@ -6,6 +6,8 @@
 
 namespace vka {
 class Framebuffer {
+  friend class CommandBuffer;
+
 public:
   Framebuffer(
       VkDevice,

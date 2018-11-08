@@ -150,9 +150,9 @@ std::shared_ptr<Image> Device::createImage2D(
       dedicated);
 }
 
-std::unique_ptr<ImageView>
+std::shared_ptr<ImageView>
 Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
-  return std::make_unique<ImageView>(device, image, format, aspect);
+  return std::make_shared<ImageView>(device, image, format, aspect);
 }
 
 std::unique_ptr<Sampler> Device::createSampler(

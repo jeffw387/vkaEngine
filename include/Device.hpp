@@ -108,7 +108,7 @@ public:
       VkImageUsageFlags,
       ImageAspect,
       bool = false);
-  std::unique_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
+  std::shared_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
   std::unique_ptr<Swapchain> createSwapchain(
       VkSwapchainKHR = VK_NULL_HANDLE,
       VkFormat = VK_FORMAT_B8G8R8A8_UNORM);

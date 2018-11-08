@@ -156,7 +156,7 @@ struct AppState {
     std::map<FT_ULong, size_t> indexBufferOffsets;
     std::unique_ptr<Text::Tileset> tilesetNiocTresni;
     std::shared_ptr<vka::Image> fontImage;
-    std::unique_ptr<vka::ImageView> fontImageView;
+    std::shared_ptr<vka::ImageView> fontImageView;
     std::unique_ptr<vka::Sampler> fontSampler;
     std::shared_ptr<vka::Buffer> indexBuffer;
     std::shared_ptr<vka::Buffer> vertexBuffer;
@@ -164,7 +164,7 @@ struct AppState {
     std::unique_ptr<vka::ShaderModule> fragmentShader;
     std::unique_ptr<vka::DescriptorSetLayout> setLayout;
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
-    std::unique_ptr<vka::DescriptorSet> descriptorSet;
+    std::shared_ptr<vka::DescriptorSet> descriptorSet;
     std::shared_ptr<vka::PipelineLayout> pipelineLayout;
     std::shared_ptr<vka::GraphicsPipeline> pipeline;
     std::unique_ptr<TextObject> testText;
@@ -173,13 +173,13 @@ struct AppState {
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
   std::vector<VkImage> swapImages;
-  std::vector<std::unique_ptr<vka::ImageView>> swapImageViews;
+  std::vector<std::shared_ptr<vka::ImageView>> swapImageViews;
   std::shared_ptr<vka::Image> depthImage;
-  std::unique_ptr<vka::ImageView> depthImageView;
+  std::shared_ptr<vka::ImageView> depthImageView;
 
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
-    std::vector<std::unique_ptr<vka::DescriptorSet>> descriptorSets;
+    std::vector<std::shared_ptr<vka::DescriptorSet>> descriptorSets;
     vka::vulkan_vector<Material, vka::StorageBufferDescriptor> materialUniform;
     vka::vulkan_vector<Light, vka::StorageBufferDescriptor>
         dynamicLightsUniform;
@@ -248,16 +248,13 @@ struct AppState {
     void* stagePtr = stagingBuffer->map();
     std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
     stagingBuffer->flush();
-    // vmaFlushAllocation(device->getAllocator(), *stagingBuffer, 0,
-    // bufferSize);
 
-    // TODO: make things return shared_ptr to begin with
-    
+    transferCommandPool->reset();
     if (auto cmd = transferCmd.lock()) {
       cmd->begin();
       cmd->copyBuffer(stagingBuffer, result.buffer, {{0U, 0U, bufferSize}});
       cmd->end();
-      device->queueSubmit({}, {cmd}, {}, copyFence);
+      device->queueSubmit({}, {cmd}, {}, copyFence.get());
     }
     copyFence->wait();
     return result;
@@ -445,10 +442,9 @@ struct AppState {
       return;
     }
     render.framebuffer = device->createFramebuffer(
-        {*swapImageViews[render.swapImageIndex], *depthImageView},
         *renderPass,
-        swapExtent.width,
-        swapExtent.height);
+        {swapImageViews[render.swapImageIndex], depthImageView},
+        swapExtent);
 
     if (auto cmd = render.cmd.lock()) {
       cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
@@ -472,7 +468,7 @@ struct AppState {
       cmd->endRenderPass();
       cmd->end();
       device->queueSubmit(
-          {}, {cmd}, {render.renderComplete}, render.bufferExecuted);
+          {}, {cmd}, {*render.renderComplete}, render.bufferExecuted.get());
     }
     auto presentResult = device->presentImage(
         *swapchain, render.swapImageIndex, *render.renderComplete);
@@ -512,8 +508,10 @@ struct AppState {
   }
 
   template <typename T>
-  std::shared_ptr<vka::Buffer>
-  recordBufferUpload(gsl::span<T> data, VkBuffer buffer, VkDeviceSize offset) {
+  std::shared_ptr<vka::Buffer> recordBufferUpload(
+      gsl::span<T> data,
+      std::shared_ptr<vka::Buffer> buffer,
+      VkDeviceSize offset) {
     auto staging = device->createBuffer(
         data.size_bytes(),
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -523,14 +521,16 @@ struct AppState {
     std::memcpy(stagePtr, data.data(), data.size_bytes());
     staging->flush();
     VkBufferCopy bufferCopy{0, offset, data.size_bytes()};
-    transferCmd->copyBuffer(*staging, buffer, {bufferCopy});
+    if (auto cmd = transferCmd.lock()) {
+      cmd->copyBuffer(staging, buffer, {bufferCopy});
+    }
     return staging;
   }
 
   template <typename T>
   std::shared_ptr<vka::Buffer> recordImageUpload(
       gsl::span<T> data,
-      VkImage image,
+      std::shared_ptr<vka::Image> image,
       VkOffset2D imageOffset,
       VkExtent2D imageExtent) {
     auto staging = device->createBuffer(
@@ -557,7 +557,7 @@ struct AppState {
 
     VkImageMemoryBarrier preCopyBarrier{};
     preCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    preCopyBarrier.image = image;
+    preCopyBarrier.image = *image;
     preCopyBarrier.subresourceRange = subresourceRange;
     preCopyBarrier.srcAccessMask = 0;
     preCopyBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -565,7 +565,8 @@ struct AppState {
     preCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     preCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     preCopyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    transferCmd->pipelineBarrier(
+    if (auto cmd = transferCmd.lock()) {
+      cmd->pipelineBarrier(
         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
@@ -577,12 +578,12 @@ struct AppState {
     copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
     copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
     copy.imageSubresource = imageSubresource;
-    transferCmd->copyBufferToImage(
-        *staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
+      cmd->copyBufferToImage(
+          staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
 
     VkImageMemoryBarrier postCopyBarrier{};
     postCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    postCopyBarrier.image = image;
+      postCopyBarrier.image = *image;
     postCopyBarrier.subresourceRange = subresourceRange;
     postCopyBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     postCopyBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -590,13 +591,14 @@ struct AppState {
     postCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     postCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     postCopyBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    transferCmd->pipelineBarrier(
+      cmd->pipelineBarrier(
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
         0,
         {},
         {},
         {postCopyBarrier});
+    }
     return staging;
   }
 
@@ -754,10 +756,12 @@ struct AppState {
       vertexOffset += 4;
     }
 
-    transferCommandPool = device->createCommandPool();
+    transferCommandPool = device->createCommandPool(true, false);
     transferCmd = transferCommandPool->allocateCommandBuffer();
     transferFence = device->createFence(false);
-    transferCmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    if (auto cmd = transferCmd.lock()) {
+      cmd->begin();
+    }
 
     textData.indexBuffer = device->createBuffer(
         textIndices.size() * sizeof(TextIndex),
@@ -776,9 +780,9 @@ struct AppState {
 
     std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
     stagingBuffers.push_back(
-        recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0));
+        recordBufferUpload<TextIndex>({textIndices}, textData.indexBuffer, 0));
     stagingBuffers.push_back(recordBufferUpload<TextVertex>(
-        {textVertices}, *textData.vertexBuffer, 0));
+        {textVertices}, textData.vertexBuffer, 0));
 
     for (size_t tileIndex{}; tileIndex < tiles.size(); ++tileIndex) {
       auto& tile = tiles[tileIndex];
@@ -791,13 +795,14 @@ struct AppState {
       }
       stagingBuffers.push_back(recordImageUpload(
           tile,
-          *textData.fontImage,
+          textData.fontImage,
           {pos.xmin, pos.ymin},
           {glyphDimensions.width, glyphDimensions.height}));
     }
-
-    transferCmd->end();
-    device->queueSubmit({}, {*transferCmd}, {}, *transferFence);
+    if (auto cmd = transferCmd.lock()) {
+      cmd->end();
+      device->queueSubmit({}, {cmd}, {}, transferFence.get());
+    }
     transferFence->wait();
     stagingBuffers.clear();
     transferFence->reset();

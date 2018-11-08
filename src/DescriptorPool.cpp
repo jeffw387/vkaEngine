@@ -237,7 +237,7 @@ DescriptorPool::DescriptorPool(
   vkCreateDescriptorPool(device, &createInfo, nullptr, &poolHandle);
 }
 
-std::unique_ptr<DescriptorSet> DescriptorPool::allocateDescriptorSet(
+std::shared_ptr<DescriptorSet> DescriptorPool::allocateDescriptorSet(
     DescriptorSetLayout* layout) {
   VkDescriptorSetLayout vkLayout = *layout;
   VkDescriptorSet vkSet;
@@ -249,7 +249,7 @@ std::unique_ptr<DescriptorSet> DescriptorPool::allocateDescriptorSet(
   allocateInfo.pSetLayouts = &vkLayout;
   vkAllocateDescriptorSets(device, &allocateInfo, &vkSet);
 
-  return std::make_unique<DescriptorSet>(vkSet, layout);
+  return std::make_shared<DescriptorSet>(vkSet, layout);
 }
 
 void DescriptorPool::reset() { vkResetDescriptorPool(device, poolHandle, 0); }

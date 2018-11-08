@@ -286,8 +286,7 @@ public:
     if (actualNewCap > m_capacity) {
       auto newBuffer = m_device->createBuffer(
           actualNewCap * m_alignment, m_buffer_usage, m_memory_usage);
-      void* newStoragePtr{};
-      vmaMapMemory(m_device->getAllocator(), *newBuffer, &newStoragePtr);
+      void* newStoragePtr = newBuffer->map();
       std::memcpy(newStoragePtr, m_storage, m_size * m_alignment);
       m_vulkan_buffer = std::move(newBuffer);
       m_storage = reinterpret_cast<T*>(newStoragePtr);
