@@ -254,22 +254,8 @@ std::shared_ptr<DescriptorSet> DescriptorPool::allocateDescriptorSet(
 
 void DescriptorPool::reset() { vkResetDescriptorPool(device, poolHandle, 0); }
 
-DescriptorPool& DescriptorPool::operator=(DescriptorPool&& other) {
-  if (this != &other) {
-    device = other.device;
-    poolHandle = other.poolHandle;
-    other.device = {};
-    other.poolHandle = {};
-  }
-  return *this;
-}
-
-DescriptorPool::DescriptorPool(DescriptorPool&& other) {
-  *this = std::move(other);
-}
-
 DescriptorPool::~DescriptorPool() {
-  if (device != VK_NULL_HANDLE && poolHandle != VK_NULL_HANDLE) {
+  if (poolHandle != VK_NULL_HANDLE) {
     vkDestroyDescriptorPool(device, poolHandle, nullptr);
   }
 }
