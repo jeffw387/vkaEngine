@@ -343,10 +343,10 @@ struct AppState {
           pipelineLayout,
           0,
           {render.descriptorSets[0],
-          render.descriptorSets[1],
-          render.descriptorSets[2],
-          render.descriptorSets[3],
-          render.descriptorSets[4]},
+           render.descriptorSets[1],
+           render.descriptorSets[2],
+           render.descriptorSets[3],
+           render.descriptorSets[4]},
           {0});
       auto someModel = shapesAsset.models[0];
       cmd->bindIndexBuffer(
@@ -367,9 +367,9 @@ struct AppState {
           0,
           {terrainAsset.buffer, terrainAsset.buffer},
           {terrainAsset.models[0].positionByteOffset,
-          terrainAsset.models[0].normalByteOffset});
+           terrainAsset.models[0].normalByteOffset});
       cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
-    }                               
+    }
   }
 
   void pipelineTextRender(uint32_t renderIndex, VkExtent2D swapExtent) {
@@ -566,37 +566,37 @@ struct AppState {
     preCopyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     if (auto cmd = transferCmd.lock()) {
       cmd->pipelineBarrier(
-        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0,
-        {},
-        {},
-        {preCopyBarrier});
+          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          0,
+          {},
+          {},
+          {preCopyBarrier});
 
-    VkBufferImageCopy copy{};
-    copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
-    copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
-    copy.imageSubresource = imageSubresource;
+      VkBufferImageCopy copy{};
+      copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
+      copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
+      copy.imageSubresource = imageSubresource;
       cmd->copyBufferToImage(
           staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
 
-    VkImageMemoryBarrier postCopyBarrier{};
-    postCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      VkImageMemoryBarrier postCopyBarrier{};
+      postCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
       postCopyBarrier.image = *image;
-    postCopyBarrier.subresourceRange = subresourceRange;
-    postCopyBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    postCopyBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    postCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    postCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    postCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    postCopyBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      postCopyBarrier.subresourceRange = subresourceRange;
+      postCopyBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      postCopyBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      postCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      postCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      postCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+      postCopyBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       cmd->pipelineBarrier(
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        0,
-        {},
-        {},
-        {postCopyBarrier});
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+          0,
+          {},
+          {},
+          {postCopyBarrier});
     }
     return staging;
   }
