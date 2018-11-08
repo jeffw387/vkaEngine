@@ -336,10 +336,9 @@ struct AppState {
                                1};
 
     if (auto cmd = render.cmd.lock()) {
-      cmd->setViewport(0, {viewport});
-      cmd->setScissor(
-          0, {{{0, 0}, {swapExtent.width, swapExtent.height}}});
       cmd->bindGraphicsPipeline(pipeline);
+      cmd->setViewport(0, {viewport});
+      cmd->setScissor(0, {{{0, 0}, {swapExtent.width, swapExtent.height}}});
       cmd->bindGraphicsDescriptorSets(
           pipelineLayout,
           0,
