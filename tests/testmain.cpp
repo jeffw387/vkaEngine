@@ -1,3 +1,14 @@
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <memory>
+#include <cstring>
+#include <mutex>
+#include <vector>
+#include <experimental/filesystem>
+#include <range/v3/all.hpp>
+#include <fstream>
+#include <string>
+#include "entt/entt.hpp"
 #include "Engine.hpp"
 #include "Surface.hpp"
 #include "Instance.hpp"
@@ -6,20 +17,11 @@
 #include "RenderPass.hpp"
 #include "PipelineLayout.hpp"
 #include "Pipeline.hpp"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include "entt/entt.hpp"
-#include <memory>
-#include <cstring>
-#include <mutex>
-#include <vector>
 #include "Camera.hpp"
 #include "Asset.hpp"
 #include "vulkan_vector.hpp"
-#include <experimental/filesystem>
 #include "VkEnumStrings.hpp"
 #include "Text.hpp"
-#include <range/v3/all.hpp>
 
 namespace fs = std::experimental::filesystem;
 
