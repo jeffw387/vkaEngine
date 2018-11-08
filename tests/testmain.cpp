@@ -392,8 +392,8 @@ struct AppState {
       TextVertexPushData pushData{};
       pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
       for (auto& charData : textData.testText->characters) {
-        pushData.position =
-            textData.testText->screenPosition + glm::vec2(charData.xOffset, 0.f);
+        pushData.position = textData.testText->screenPosition +
+                            glm::vec2(charData.xOffset, 0.f);
         cmd->pushConstants(
             textData.pipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT,
