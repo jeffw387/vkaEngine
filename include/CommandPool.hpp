@@ -155,6 +155,7 @@ private:
   std::vector<std::shared_ptr<PipelineLayout>> pipelineLayouts;
   std::vector<std::shared_ptr<DescriptorSet>> descriptorSets;
   std::vector<std::shared_ptr<Image>> images;
+  std::vector<std::shared_ptr<ImageView>> imageViews;
   std::vector<std::shared_ptr<Buffer>> buffers;
   std::vector<std::shared_ptr<RenderPass>> renderPasses;
   std::vector<std::shared_ptr<Framebuffer>> framebuffers;

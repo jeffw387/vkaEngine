@@ -89,6 +89,7 @@ void CommandBuffer::cmdExecuted() {
   descriptorSets.clear();
   buffers.clear();
   images.clear();
+  imageViews.clear();
   renderPasses.clear();
   framebuffers.clear();
   commandBuffers.clear();
@@ -431,6 +432,8 @@ void CommandBuffer::beginRenderPass(
   vkCmdBeginRenderPass(commandBufferHandle, &beginInfo, contents);
   activeRenderPass = renderPass;
   renderPasses.push_back(std::move(renderPass));
+  imageViews.insert(
+      imageViews.cend(), framebuffer->views.begin(), framebuffer->views.end());
   framebuffers.push_back(std::move(framebuffer));
 }
 
