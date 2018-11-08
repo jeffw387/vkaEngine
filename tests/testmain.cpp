@@ -434,7 +434,7 @@ struct AppState {
     for (auto& set : render.descriptorSets) {
       set->validate(*device);
     }
-    // render.commandPool.reset();
+    render.commandPool->reset();
 
     auto swapExtent = swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
