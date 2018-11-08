@@ -448,7 +448,7 @@ struct AppState {
         swapExtent);
 
     if (auto cmd = render.cmd.lock()) {
-      cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+      cmd->begin();
 
       std::vector<VkClearValue> clearValues = {
           VkClearValue{{{0.f, 0.f, 0.f, 1.f}}}, VkClearValue{{{1.f, 0U}}}};
