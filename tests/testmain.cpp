@@ -1069,7 +1069,7 @@ struct AppState {
     pipeline3DInfo.setDepthCompareOp(VK_COMPARE_OP_LESS);
     pipeline3DInfo.setDepthBounds(0.f, 1.f);
     pipeline3DInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
-    pipeline3DInfo.setFrontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE);
+    pipeline3DInfo.setFrontFace(VK_FRONT_FACE_CLOCKWISE);
 
     MultiLogger::get()->info("creating pipeline");
     pipeline = device->createGraphicsPipeline(*pipelineCache, pipeline3DInfo);
