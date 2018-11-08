@@ -86,13 +86,7 @@ using Descriptor = std::variant<
 
 class DescriptorSet {
 public:
-  DescriptorSet() = default;
   DescriptorSet(VkDescriptorSet, DescriptorSetLayout*);
-  DescriptorSet(DescriptorSet&&) = default;
-  DescriptorSet& operator=(DescriptorSet&&) = default;
-  DescriptorSet(const DescriptorSet&) = delete;
-  DescriptorSet& operator=(const DescriptorSet&) = delete;
-  ~DescriptorSet() = default;
   operator VkDescriptorSet();
   void validate(VkDevice device);
   template <typename T>
@@ -113,10 +107,6 @@ public:
       VkDevice device,
       std::vector<VkDescriptorPoolSize> poolSizes,
       uint32_t maxSets);
-  DescriptorPool(DescriptorPool&&);
-  DescriptorPool& operator=(DescriptorPool&&);
-  DescriptorPool(const DescriptorPool&) = delete;
-  DescriptorPool& operator=(const DescriptorPool&) = delete;
   ~DescriptorPool();
   operator VkDescriptorPool() { return poolHandle; }
 
