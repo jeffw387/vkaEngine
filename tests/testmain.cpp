@@ -139,34 +139,34 @@ struct AppState {
   vka::Device* device;
   tinygltf::TinyGLTF modelLoader;
   std::unique_ptr<vka::CommandPool> transferCommandPool;
-  std::unique_ptr<vka::CommandBuffer> transferCmd;
+  std::weak_ptr<vka::CommandBuffer> transferCmd;
   std::unique_ptr<vka::Fence> transferFence;
   std::unique_ptr<vka::Swapchain> swapchain;
   std::unique_ptr<vka::ShaderModule> vertexShader;
   std::unique_ptr<vka::ShaderModule> fragmentShader;
-  std::unique_ptr<vka::RenderPass> renderPass;
+  std::shared_ptr<vka::RenderPass> renderPass;
   std::vector<std::unique_ptr<vka::DescriptorSetLayout>> descriptorSetLayouts;
-  std::unique_ptr<vka::PipelineLayout> pipelineLayout;
+  std::shared_ptr<vka::PipelineLayout> pipelineLayout;
   std::unique_ptr<vka::PipelineCache> pipelineCache;
-  std::unique_ptr<vka::GraphicsPipeline> pipeline;
+  std::shared_ptr<vka::GraphicsPipeline> pipeline;
   std::unique_ptr<Text::Library> textLibrary;
   struct TextData {
     std::unique_ptr<Text::Font> fontNiocTresni;
     std::map<FT_ULong, std::unique_ptr<Text::Glyph>> glyphMap;
     std::map<FT_ULong, size_t> indexBufferOffsets;
     std::unique_ptr<Text::Tileset> tilesetNiocTresni;
-    std::unique_ptr<vka::Image> fontImage;
+    std::shared_ptr<vka::Image> fontImage;
     std::unique_ptr<vka::ImageView> fontImageView;
     std::unique_ptr<vka::Sampler> fontSampler;
-    std::unique_ptr<vka::Buffer> indexBuffer;
-    std::unique_ptr<vka::Buffer> vertexBuffer;
+    std::shared_ptr<vka::Buffer> indexBuffer;
+    std::shared_ptr<vka::Buffer> vertexBuffer;
     std::unique_ptr<vka::ShaderModule> vertexShader;
     std::unique_ptr<vka::ShaderModule> fragmentShader;
     std::unique_ptr<vka::DescriptorSetLayout> setLayout;
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
     std::unique_ptr<vka::DescriptorSet> descriptorSet;
-    std::unique_ptr<vka::PipelineLayout> pipelineLayout;
-    std::unique_ptr<vka::GraphicsPipeline> pipeline;
+    std::shared_ptr<vka::PipelineLayout> pipelineLayout;
+    std::shared_ptr<vka::GraphicsPipeline> pipeline;
     std::unique_ptr<TextObject> testText;
   } textData;
 
@@ -174,7 +174,7 @@ struct AppState {
   asset::Collection terrainAsset;
   std::vector<VkImage> swapImages;
   std::vector<std::unique_ptr<vka::ImageView>> swapImageViews;
-  std::unique_ptr<vka::Image> depthImage;
+  std::shared_ptr<vka::Image> depthImage;
   std::unique_ptr<vka::ImageView> depthImageView;
 
   struct BufferedState {
@@ -190,9 +190,9 @@ struct AppState {
     std::unique_ptr<vka::Fence> bufferExecuted;
     std::unique_ptr<vka::Semaphore> renderComplete;
     uint32_t swapImageIndex;
-    std::unique_ptr<vka::Framebuffer> framebuffer;
+    std::shared_ptr<vka::Framebuffer> framebuffer;
     std::unique_ptr<vka::CommandPool> commandPool;
-    std::unique_ptr<vka::CommandBuffer> cmd;
+    std::weak_ptr<vka::CommandBuffer> cmd;
     entt::DefaultRegistry ecs;
   };
   std::array<BufferedState, vka::BufferCount> bufState;
@@ -253,10 +253,12 @@ struct AppState {
 
     // TODO: make things return shared_ptr to begin with
     
-    transferCmd->begin();
-    transferCmd->copyBuffer(std::make_shared(stagingBuffer), *result.buffer, {{0U, 0U, bufferSize}});
-    transferCmd->end();
-    device->queueSubmit({}, {*transferCmd}, {}, *copyFence);
+    if (auto cmd = transferCmd.lock()) {
+      cmd->begin();
+      cmd->copyBuffer(stagingBuffer, result.buffer, {{0U, 0U, bufferSize}});
+      cmd->end();
+      device->queueSubmit({}, {cmd}, {}, copyFence);
+    }
     copyFence->wait();
     return result;
   }
@@ -336,41 +338,42 @@ struct AppState {
                                0,
                                1};
 
-    render.cmd->setViewport(0, {viewport});
-    render.cmd->setScissor(
-        0, {{{0, 0}, {swapExtent.width, swapExtent.height}}});
-    render.cmd->bindGraphicsPipeline(*pipeline);
-    render.cmd->bindGraphicsDescriptorSets(
-        *pipelineLayout,
-        0,
-        {*render.descriptorSets[0],
-         *render.descriptorSets[1],
-         *render.descriptorSets[2],
-         *render.descriptorSets[3],
-         *render.descriptorSets[4]},
-        {0});
-    auto someModel = shapesAsset.models[0];
-    render.cmd->bindIndexBuffer(
-        *shapesAsset.buffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
-    render.cmd->bindVertexBuffers(
-        0,
-        {*shapesAsset.buffer, *shapesAsset.buffer},
-        {someModel.positionByteOffset, someModel.normalByteOffset});
-    // render.cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
-    uint32_t matIndex{};
-    render.cmd->pushConstants(
-        *pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
-    auto terrainBuffer = *terrainAsset.buffer;
-    render.cmd->bindIndexBuffer(
-        terrainBuffer,
-        terrainAsset.models[0].indexByteOffset,
-        VK_INDEX_TYPE_UINT16);
-    render.cmd->bindVertexBuffers(
-        0,
-        {terrainBuffer, terrainBuffer},
-        {terrainAsset.models[0].positionByteOffset,
-         terrainAsset.models[0].normalByteOffset});
-    render.cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+    if (auto cmd = render.cmd.lock()) {
+      cmd->setViewport(0, {viewport});
+      cmd->setScissor(
+          0, {{{0, 0}, {swapExtent.width, swapExtent.height}}});
+      cmd->bindGraphicsPipeline(pipeline);
+      cmd->bindGraphicsDescriptorSets(
+          pipelineLayout,
+          0,
+          {render.descriptorSets[0],
+          render.descriptorSets[1],
+          render.descriptorSets[2],
+          render.descriptorSets[3],
+          render.descriptorSets[4]},
+          {0});
+      auto someModel = shapesAsset.models[0];
+      cmd->bindIndexBuffer(
+          shapesAsset.buffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
+      cmd->bindVertexBuffers(
+          0,
+          {shapesAsset.buffer, shapesAsset.buffer},
+          {someModel.positionByteOffset, someModel.normalByteOffset});
+      // cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
+      uint32_t matIndex{};
+      cmd->pushConstants(
+          pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
+      cmd->bindIndexBuffer(
+          terrainAsset.buffer,
+          terrainAsset.models[0].indexByteOffset,
+          VK_INDEX_TYPE_UINT16);
+      cmd->bindVertexBuffers(
+          0,
+          {terrainAsset.buffer, terrainAsset.buffer},
+          {terrainAsset.models[0].positionByteOffset,
+          terrainAsset.models[0].normalByteOffset});
+      cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+    }                               
   }
 
   void pipelineTextRender(uint32_t renderIndex, VkExtent2D swapExtent) {
@@ -382,26 +385,28 @@ struct AppState {
                                0,
                                1};
     auto scissor = VkRect2D{{0, 0}, {swapExtent.width, swapExtent.height}};
-    render.cmd->bindGraphicsPipeline(*textData.pipeline);
-    render.cmd->bindGraphicsDescriptorSets(
-        *textData.pipelineLayout, 0, {*textData.descriptorSet}, {});
-    render.cmd->bindIndexBuffer(*textData.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-    render.cmd->bindVertexBuffers(0, {*textData.vertexBuffer}, {0});
-    render.cmd->setViewport(0, {viewport});
-    render.cmd->setScissor(0, {scissor});
-    TextVertexPushData pushData{};
-    pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
-    for (auto& charData : textData.testText->characters) {
-      pushData.position =
-          textData.testText->screenPosition + glm::vec2(charData.xOffset, 0.f);
-      render.cmd->pushConstants(
-          *textData.pipelineLayout,
-          VK_SHADER_STAGE_VERTEX_BIT,
-          0,
-          sizeof(TextVertexPushData),
-          &pushData);
-      render.cmd->drawIndexed(
-          6, 1, textData.indexBufferOffsets[charData.character], 0, 0);
+    if (auto cmd = render.cmd.lock()) {
+      cmd->bindGraphicsPipeline(textData.pipeline);
+      cmd->bindGraphicsDescriptorSets(
+          textData.pipelineLayout, 0, {textData.descriptorSet}, {});
+      cmd->bindIndexBuffer(textData.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+      cmd->bindVertexBuffers(0, {textData.vertexBuffer}, {0});
+      cmd->setViewport(0, {viewport});
+      cmd->setScissor(0, {scissor});
+      TextVertexPushData pushData{};
+      pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
+      for (auto& charData : textData.testText->characters) {
+        pushData.position =
+            textData.testText->screenPosition + glm::vec2(charData.xOffset, 0.f);
+        cmd->pushConstants(
+            textData.pipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT,
+            0,
+            sizeof(TextVertexPushData),
+            &pushData);
+        cmd->drawIndexed(
+            6, 1, textData.indexBufferOffsets[charData.character], 0, 0);
+      }
     }
   }
 
@@ -445,28 +450,30 @@ struct AppState {
         swapExtent.width,
         swapExtent.height);
 
-    render.cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    if (auto cmd = render.cmd.lock()) {
+      cmd->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-    std::vector<VkClearValue> clearValues = {
-        VkClearValue{{{0.f, 0.f, 0.f, 1.f}}}, VkClearValue{{{1.f, 0U}}}};
+      std::vector<VkClearValue> clearValues = {
+          VkClearValue{{{0.f, 0.f, 0.f, 1.f}}}, VkClearValue{{{1.f, 0U}}}};
 
-    render.cmd->beginRenderPass(
-        *renderPass,
-        render.framebuffer.get(),
-        {{0, 0}, swapExtent},
-        clearValues,
-        VK_SUBPASS_CONTENTS_INLINE);
+      cmd->beginRenderPass(
+          renderPass,
+          render.framebuffer,
+          {{0, 0}, swapExtent},
+          clearValues,
+          VK_SUBPASS_CONTENTS_INLINE);
 
-    pipeline3DRender(renderIndex, swapExtent);
+      pipeline3DRender(renderIndex, swapExtent);
 
-    render.cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
+      cmd->nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
 
-    pipelineTextRender(renderIndex, swapExtent);
+      pipelineTextRender(renderIndex, swapExtent);
 
-    render.cmd->endRenderPass();
-    render.cmd->end();
-    device->queueSubmit(
-        {}, {*render.cmd}, {*render.renderComplete}, *render.bufferExecuted);
+      cmd->endRenderPass();
+      cmd->end();
+      device->queueSubmit(
+          {}, {cmd}, {render.renderComplete}, render.bufferExecuted);
+    }
     auto presentResult = device->presentImage(
         *swapchain, render.swapImageIndex, *render.renderComplete);
 
@@ -505,7 +512,7 @@ struct AppState {
   }
 
   template <typename T>
-  std::unique_ptr<vka::Buffer>
+  std::shared_ptr<vka::Buffer>
   recordBufferUpload(gsl::span<T> data, VkBuffer buffer, VkDeviceSize offset) {
     auto staging = device->createBuffer(
         data.size_bytes(),
@@ -521,7 +528,7 @@ struct AppState {
   }
 
   template <typename T>
-  std::unique_ptr<vka::Buffer> recordImageUpload(
+  std::shared_ptr<vka::Buffer> recordImageUpload(
       gsl::span<T> data,
       VkImage image,
       VkOffset2D imageOffset,
@@ -766,8 +773,8 @@ struct AppState {
         true);
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
-    std::vector<std::unique_ptr<vka::Buffer>> stagingBuffers;
 
+    std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
     stagingBuffers.push_back(
         recordBufferUpload<TextIndex>({textIndices}, *textData.indexBuffer, 0));
     stagingBuffers.push_back(recordBufferUpload<TextVertex>(

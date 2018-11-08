@@ -119,12 +119,12 @@ VkSurfaceCapabilitiesKHR Device::getSurfaceCapabilities() {
   return capabilities;
 }
 
-std::unique_ptr<Buffer> Device::createBuffer(
+std::shared_ptr<Buffer> Device::createBuffer(
     VkDeviceSize size,
     VkBufferUsageFlags usage,
     VmaMemoryUsage memoryUsage,
     bool dedicated) {
-  return std::make_unique<Buffer>(
+  return std::make_shared<Buffer>(
       allocator,
       size,
       usage,
@@ -133,14 +133,14 @@ std::unique_ptr<Buffer> Device::createBuffer(
       dedicated);
 }
 
-std::unique_ptr<Image> Device::createImage2D(
+std::shared_ptr<Image> Device::createImage2D(
     VkExtent2D extent,
     VkFormat format,
     VkImageUsageFlags usage,
     ImageAspect aspect,
     bool dedicated) {
   std::vector<uint32_t> queueIndices = {graphicsQueueIndex};
-  return std::make_unique<Image>(
+  return std::make_shared<Image>(
       allocator,
       std::move(queueIndices),
       VkExtent3D{extent.width, extent.height, 1U},
@@ -256,16 +256,16 @@ std::unique_ptr<PipelineCache> Device::createPipelineCache(
   return std::make_unique<PipelineCache>(device, std::move(initialData));
 }
 
-std::unique_ptr<GraphicsPipeline> Device::createGraphicsPipeline(
+std::shared_ptr<GraphicsPipeline> Device::createGraphicsPipeline(
     VkPipelineCache pipelineCache,
     const VkGraphicsPipelineCreateInfo& createInfo) {
-  return std::make_unique<GraphicsPipeline>(device, pipelineCache, createInfo);
+  return std::make_shared<GraphicsPipeline>(device, pipelineCache, createInfo);
 }
 
-std::unique_ptr<ComputePipeline> Device::createComputePipeline(
+std::shared_ptr<ComputePipeline> Device::createComputePipeline(
     VkPipelineCache pipelineCache,
     const VkComputePipelineCreateInfo& createInfo) {
-  return std::make_unique<ComputePipeline>(device, pipelineCache, createInfo);
+  return std::make_shared<ComputePipeline>(device, pipelineCache, createInfo);
 }
 
 std::unique_ptr<CommandPool> Device::createCommandPool(
@@ -291,10 +291,10 @@ std::unique_ptr<DescriptorSetLayout> Device::createSetLayout(
   return std::make_unique<DescriptorSetLayout>(device, std::move(bindings));
 }
 
-std::unique_ptr<PipelineLayout> Device::createPipelineLayout(
+std::shared_ptr<PipelineLayout> Device::createPipelineLayout(
     std::vector<VkPushConstantRange> pushRanges,
     std::vector<VkDescriptorSetLayout> setLayouts) {
-  return std::make_unique<PipelineLayout>(
+  return std::make_shared<PipelineLayout>(
       device, std::move(pushRanges), std::move(setLayouts));
 }
 
@@ -318,11 +318,11 @@ std::unique_ptr<ShaderModule> Device::createShaderModule(
   }
 }
 
-std::unique_ptr<Framebuffer> Device::createFramebuffer(
+std::shared_ptr<Framebuffer> Device::createFramebuffer(
     VkRenderPass renderPass,
     std::vector<std::shared_ptr<ImageView>> attachments,
     VkExtent2D extent) {
-  return std::make_unique<Framebuffer>(
+  return std::make_shared<Framebuffer>(
       device, renderPass, std::move(attachments), extent);
 }
 
@@ -373,9 +373,9 @@ void Device::queueSubmit(
   vkQueueSubmit(graphicsQueue, 1, &submitInfo, *fence);
 }
 
-std::unique_ptr<RenderPass> Device::createRenderPass(
+std::shared_ptr<RenderPass> Device::createRenderPass(
     const VkRenderPassCreateInfo& createInfo) {
-  return std::make_unique<RenderPass>(device, createInfo);
+  return std::make_shared<RenderPass>(device, createInfo);
 }
 
 void Device::waitIdle() { vkDeviceWaitIdle(device); }

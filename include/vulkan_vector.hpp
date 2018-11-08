@@ -360,7 +360,7 @@ private:
   size_t m_capacity = 0U;
   Device* m_device;
   VkDeviceSize m_alignment;
-  std::unique_ptr<Buffer> m_vulkan_buffer;
+  std::shared_ptr<Buffer> m_vulkan_buffer;
   VkBufferUsageFlags m_buffer_usage = 0;
   VmaMemoryUsage m_memory_usage = VmaMemoryUsage(0);
   std::vector<subscriber_type> m_subscribers;

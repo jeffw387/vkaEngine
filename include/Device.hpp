@@ -97,12 +97,12 @@ public:
   operator VkDevice() { return device; }
   uint32_t gfxQueueIndex() { return graphicsQueueIndex; }
   VmaAllocator getAllocator() { return allocator; }
-  std::unique_ptr<Buffer> createBuffer(
+  std::shared_ptr<Buffer> createBuffer(
       VkDeviceSize,
       VkBufferUsageFlags,
       VmaMemoryUsage,
       bool dedicated = false);
-  std::unique_ptr<Image> createImage2D(
+  std::shared_ptr<Image> createImage2D(
       VkExtent2D,
       VkFormat,
       VkImageUsageFlags,
@@ -112,13 +112,13 @@ public:
   std::unique_ptr<Swapchain> createSwapchain(
       VkSwapchainKHR = VK_NULL_HANDLE,
       VkFormat = VK_FORMAT_B8G8R8A8_UNORM);
-  std::unique_ptr<RenderPass> createRenderPass(const VkRenderPassCreateInfo&);
+  std::shared_ptr<RenderPass> createRenderPass(const VkRenderPassCreateInfo&);
   std::unique_ptr<PipelineCache> createPipelineCache();
   std::unique_ptr<PipelineCache> createPipelineCache(std::vector<char>);
-  std::unique_ptr<GraphicsPipeline> createGraphicsPipeline(
+  std::shared_ptr<GraphicsPipeline> createGraphicsPipeline(
       VkPipelineCache pipelineCache,
       const VkGraphicsPipelineCreateInfo&);
-  std::unique_ptr<ComputePipeline> createComputePipeline(
+  std::shared_ptr<ComputePipeline> createComputePipeline(
       VkPipelineCache pipelineCache,
       const VkComputePipelineCreateInfo&);
   std::unique_ptr<CommandPool> createCommandPool(
@@ -129,7 +129,7 @@ public:
       uint32_t maxSets);
   std::unique_ptr<DescriptorSetLayout> createSetLayout(
       std::vector<VkDescriptorSetLayoutBinding> bindings);
-  std::unique_ptr<PipelineLayout> createPipelineLayout(
+  std::shared_ptr<PipelineLayout> createPipelineLayout(
       std::vector<VkPushConstantRange>,
       std::vector<VkDescriptorSetLayout>);
   std::unique_ptr<ShaderModule> createShaderModule(std::string shaderPath);
@@ -149,7 +149,7 @@ public:
       float maxLod = 0.f,
       VkBorderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
       VkBool32 unnormalizedCoordinates = false);
-  std::unique_ptr<Framebuffer> createFramebuffer(
+  std::shared_ptr<Framebuffer> createFramebuffer(
       VkRenderPass renderPass,
       std::vector<std::shared_ptr<ImageView>> attachments,
       VkExtent2D extent);
