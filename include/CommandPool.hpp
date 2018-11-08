@@ -147,8 +147,8 @@ public:
 private:
   VkCommandBuffer commandBufferHandle = {};
   VkCommandBufferLevel level = {};
-  State state = {};
   bool transient = {};
+  State state = {};
 
   std::vector<std::shared_ptr<GraphicsPipeline>> graphicsPipelines;
   std::vector<std::shared_ptr<ComputePipeline>> computePipelines;

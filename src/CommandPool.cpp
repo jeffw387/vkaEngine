@@ -6,7 +6,10 @@ CommandBuffer::CommandBuffer(
     VkCommandBuffer commandBuffer,
     VkCommandBufferLevel level,
     bool transient)
-    : commandBufferHandle(commandBuffer), level(level), transient(transient) {}
+    : commandBufferHandle(commandBuffer),
+      level(level),
+      transient(transient),
+      state(Initial) {}
 
 void CommandBuffer::checkInitial() {
   if (state != Initial) {
