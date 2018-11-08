@@ -140,6 +140,7 @@ void CommandBuffer::bindGraphicsPipeline(
   checkRecording();
   vkCmdBindPipeline(
       commandBufferHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+  boundGraphicsPipeline = pipeline;
   graphicsPipelines.push_back(std::move(pipeline));
 }
 
@@ -148,6 +149,7 @@ void CommandBuffer::bindComputePipeline(
   checkRecording();
   vkCmdBindPipeline(
       commandBufferHandle, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
+  boundComputePipeline = pipeline;
   computePipelines.push_back(std::move(pipeline));
 }
 
