@@ -487,6 +487,9 @@ CommandPool::CommandPool(
   createInfo.flags = transient ? VK_COMMAND_POOL_CREATE_TRANSIENT_BIT : 0;
   auto poolResult =
       vkCreateCommandPool(device, &createInfo, nullptr, &poolHandle);
+  if (poolResult != VK_SUCCESS) {
+    MultiLogger::get()->error("Error creating command pool!");
+  }
 }
 
 std::shared_ptr<CommandBuffer> CommandPool::allocateCommandBuffer() {
