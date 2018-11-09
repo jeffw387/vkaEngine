@@ -1,4 +1,4 @@
-#include "ft2build.h"
+#include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include <memory>
@@ -8,8 +8,8 @@
 #include <algorithm>
 #include <optional>
 #include <gsl-lite.hpp>
-#include "Logger.hpp"
 #include <range/v3/all.hpp>
+#include "Logger.hpp"
 
 namespace Text {
 
