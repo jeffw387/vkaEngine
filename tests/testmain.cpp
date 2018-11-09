@@ -564,7 +564,7 @@ struct AppState {
     preCopyBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     preCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     preCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    preCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    preCopyBarrier.oldLayout = image->layout;
     preCopyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     if (auto cmd = transferCmd.lock()) {
       cmd->pipelineBarrier(
@@ -794,16 +794,7 @@ struct AppState {
       if (tile.size() == 0) {
         continue;
       }
-      [&]() {
-        auto fileName =
-            std::string("glyphs/") + std::to_string(tileIndex) +
-            std::string("glyph") + std::to_string(glyphDimensions.width) +
-            std::string("x") + std::to_string(glyphDimensions.height) +
-            std::string(".buf");
-        std::basic_fstream<uint32_t> outFile{
-            fileName, std::ios_base::out | std::ios_base::binary};
-        outFile.write(tile.data(), tile.size());
-      }();
+
       stagingBuffers.push_back(recordImageUpload(
           tile,
           textData.fontImage,

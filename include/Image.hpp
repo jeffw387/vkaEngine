@@ -32,6 +32,7 @@ public:
   operator VkImage() const noexcept;
   operator VmaAllocation() const noexcept;
 
+  VkImageLayout layout = {};
 private:
   VmaAllocator allocator = nullptr;
   VkImage image = VK_NULL_HANDLE;
