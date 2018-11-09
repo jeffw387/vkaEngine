@@ -26,6 +26,7 @@ struct Rect {
   T ymax;
 };
 
+using Tile = gsl::span<unsigned char>;
 auto outputGlyphBitmap = [](Tile tile, auto tileIndex, Dimensions dimensions) {
   if (tile.size() == 0) return;
   auto fileName = std::string("glyph") + std::to_string(tileIndex) +
@@ -81,7 +82,7 @@ public:
 private:
   FT_Glyph glyph = {};
   FT_BitmapGlyph bitmapGlyph = {};
-  std::vector<uint32_t> bitmap;
+  std::vector<unsigned char> bitmap;
   bool rendered = false;
 };
 

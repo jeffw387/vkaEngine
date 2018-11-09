@@ -51,9 +51,9 @@ void Glyph::render() {
 Tile Glyph::getTile() {
   render();
   auto& bmp = bitmapGlyph->bitmap;
-  auto bmpPtr = reinterpret_cast<uint32_t*>(bmp.buffer);
+  auto bmpPtr = bmp.buffer;
   for (size_t rowIndex{}; rowIndex < bmp.rows; ++rowIndex) {
-    auto rowPixels = gsl::span<uint32_t>(bmpPtr, bmp.width);
+    auto rowPixels = gsl::span<unsigned char>(bmpPtr, bmp.width);
     ranges::action::push_back(bitmap, rowPixels);
     bmpPtr += bmp.pitch;
   }
