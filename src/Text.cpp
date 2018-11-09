@@ -52,6 +52,7 @@ Tile Glyph::getTile() {
   render();
   auto& bmp = bitmapGlyph->bitmap;
   auto bmpPtr = bmp.buffer;
+  // bitmap.resize(bmp.width * bmp.rows)
   for (size_t rowIndex{}; rowIndex < bmp.rows; ++rowIndex) {
     auto rowPixels = gsl::span<unsigned char>(bmpPtr, bmp.width);
     ranges::action::push_back(bitmap, rowPixels);
