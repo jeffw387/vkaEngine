@@ -347,7 +347,7 @@ VkResult Device::presentImage(
   presentInfo.pWaitSemaphores = &waitSemaphore;
   return vkQueuePresentKHR(graphicsQueue, &presentInfo);
 }
-
+// TODO: fix uploaded image layouts (right now it's assuming undefined layout before upload)
 void Device::queueSubmit(
     const std::vector<VkSemaphore>& waitSemaphores,
     std::vector<std::shared_ptr<CommandBuffer>> commandBuffers,
