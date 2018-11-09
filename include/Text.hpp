@@ -9,6 +9,7 @@
 #include <optional>
 #include <gsl-lite.hpp>
 #include <range/v3/all.hpp>
+#include <fstream>
 #include "Logger.hpp"
 
 namespace Text {
