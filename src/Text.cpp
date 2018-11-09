@@ -57,6 +57,8 @@ Tile Glyph::getTile() {
     ranges::action::push_back(bitmap, rowPixels);
     bmpPtr += bmp.pitch;
   }
+  static int tileIndex{};
+  outputGlyphBitmap(Tile{bitmap}, tileIndex++, getDimensions());
   return {bitmap};
 }
 
