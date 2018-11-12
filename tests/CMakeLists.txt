@@ -78,6 +78,13 @@ copy_content(
   "${CMAKE_CURRENT_BINARY_DIR}/content/fonts"
 )
 
+set(anke Anke.ttf)
+copy_content(
+  anke
+  "${CMAKE_CURRENT_SOURCE_DIR}/content/fonts/Anke"
+  "${CMAKE_CURRENT_BINARY_DIR}/content/fonts/Anke"
+)
+
 list(APPEND shaderFileNames shader.vert shader.frag text.vert text.frag)
 process_shader(
   shaderFileNames
