@@ -9,7 +9,8 @@
 #include <optional>
 #include <gsl-lite.hpp>
 #include <range/v3/all.hpp>
-#include <fstream>
+#include <stdexcept>
+#include "IO.hpp"
 #include "Logger.hpp"
 
 namespace Text {
@@ -27,8 +28,10 @@ struct Rect {
   T ymax;
 };
 
-using Tile = gsl::span<unsigned char>;
-auto outputGlyphBitmap = [](Tile tile, auto tileIndex, Dimensions dimensions) {
+using Tile = gsl::span<uint8_t>;
+auto outputGlyphBitmap = [](const std::vector<uint8_t> &tile,
+                            auto tileIndex,
+                            Dimensions dimensions) {
   if (tile.size() == 0) return;
   auto fileName = std::string("glyph") + std::to_string(tileIndex) +
                   std::string("-") + std::to_string(dimensions.width) +
@@ -43,12 +46,11 @@ auto outputGlyphBitmap = [](Tile tile, auto tileIndex, Dimensions dimensions) {
   }
   outFile.seekp(std::ios::beg);
   auto start = tile.data();
-  auto size = tile.size_bytes();
+  auto size = tile.size();
 
   outFile.write((char *)start, size);
   if (outFile.fail()) {
-    MultiLogger::get()->error(
-        "Write operation to {} failed!", fileName);
+    MultiLogger::get()->error("Write operation to {} failed!", fileName);
     if (outFile.bad()) {
       MultiLogger::get()->error("Bad bit set!");
     }
@@ -69,38 +71,37 @@ struct Tileset {
   float height = {};
 };
 
-class Glyph {
+struct BitmapGlyph {
 public:
-  Glyph(FT_Glyph glyph);
-  ~Glyph();
-  void render();
-  Tile getTile();
+  BitmapGlyph(FT_GlyphSlot slot);
 
-  Rect<float> getBoundingBox() const;
-  Dimensions getDimensions() const;
-  int32_t getAdvance();
-
-private:
-  FT_Glyph glyph = {};
-  FT_BitmapGlyph bitmapGlyph = {};
-  std::vector<unsigned char> bitmap;
-  bool rendered = false;
+  int32_t xmin;
+  int32_t ymin;
+  int32_t xmax;
+  int32_t ymax;
+  uint32_t width;
+  uint32_t height;
+  int32_t advance;
+  std::vector<uint8_t> bitmap;
 };
 
 class Face {
 public:
-  Face(FT_Library library, std::string fontPath, FT_Long faceIndex);
+  Face(
+      FT_Library library,
+      const std::vector<uint8_t> &fontBytes,
+      FT_Long faceIndex);
   ~Face();
-  std::unique_ptr<Glyph> loadChar(FT_ULong character);
-  std::unique_ptr<Glyph> loadGlyph(FT_UInt glyphIndex);
-  std::vector<FT_ULong> getCharacters();
-  std::map<FT_ULong, std::unique_ptr<Glyph>> getGlyphs();
+  std::unique_ptr<BitmapGlyph> loadChar(FT_ULong character);
+  std::unique_ptr<BitmapGlyph> loadGlyph(FT_UInt glyphIndex);
+  std::map<FT_ULong, std::unique_ptr<BitmapGlyph>> getGlyphs();
   void setSize(uint8_t fontSize, FT_UInt dpi);
+  void setPixelSize(uint32_t pixelSize);
 
 private:
   FT_Face face;
 
-  std::unique_ptr<Glyph> getGlyph();
+  std::vector<FT_ULong> getCharacters();
 };
 
 class Font {
@@ -110,6 +111,7 @@ public:
 
 private:
   FT_Library library;
+  std::vector<FT_Byte> fontBytes;
   std::string fontPath;
 };
 

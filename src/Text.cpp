@@ -34,93 +34,75 @@ Tileset::Tileset(
   }
 }
 
-Glyph::Glyph(FT_Glyph glyph) : glyph(glyph){};
-
-Glyph::~Glyph() { FT_Done_Glyph(glyph); }
-
-void Glyph::render() {
-  if (!rendered) {
-    if (FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, 1)) {
-      MultiLogger::get()->error("Error rendering glyph.");
-    }
-    bitmapGlyph = (FT_BitmapGlyph)glyph;
-    rendered = true;
-  }
-}
-
-Tile Glyph::getTile() {
-  render();
-  auto& bmp = bitmapGlyph->bitmap;
-  auto bmpPtr = bmp.buffer;
-  // bitmap.resize(bmp.width * bmp.rows)
-  for (size_t rowIndex{}; rowIndex < bmp.rows; ++rowIndex) {
-    auto rowPixels = gsl::span<unsigned char>(bmpPtr, bmp.width);
-    ranges::action::push_back(bitmap, rowPixels);
-    bmpPtr += bmp.pitch;
-  }
-  static int tileIndex{};
-  outputGlyphBitmap(Tile{bitmap}, tileIndex++, getDimensions());
-  return {bitmap};
-}
-
-Rect<float> Glyph::getBoundingBox() const {
-  auto xmin = bitmapGlyph->left;
-  auto ymin = -bitmapGlyph->top;
-  auto xmax = xmin + bitmapGlyph->bitmap.width;
-  auto ymax = ymin + bitmapGlyph->bitmap.rows;
-  return Rect<float>{static_cast<float>(std::move(xmin)),
-                     static_cast<float>(std::move(ymin)),
-                     static_cast<float>(std::move(xmax)),
-                     static_cast<float>(std::move(ymax))};
-}
-
-Dimensions Glyph::getDimensions() const {
-  return {bitmapGlyph->bitmap.width, bitmapGlyph->bitmap.rows};
-}
-
-int32_t Glyph::getAdvance() { return glyph->advance.x >> 16; }
-
-Face::Face(FT_Library library, std::string fontPath, FT_Long faceIndex) {
-  if (FT_New_Face(library, fontPath.c_str(), faceIndex, &face)) {
-    MultiLogger::get()->error(
-        "Error creating face {} from font {}.", faceIndex, fontPath);
-  }
+BitmapGlyph::BitmapGlyph(FT_GlyphSlot slot) {
+  auto bufferPtr = slot->bitmap.buffer;
+  auto pitch = slot->bitmap.pitch;
+  width = slot->bitmap.width;
+  height = slot->bitmap.rows;
+  xmin = slot->bitmap_left;
+  ymin = -slot->bitmap_top;
+  xmax = xmin + width;
+  ymax = ymin + height;
+  advance = static_cast<int32_t>(slot->advance.x >> 6);
+  bitmap.resize(width * height);
   MultiLogger::get()->info(
-      "Created face {} for font {}.", face->family_name, fontPath);
-}
+      "Creating bitmap glyph index {}, size {}w {}h.",
+      slot->glyph_index,
+      width,
+      height);
 
-Face::~Face() { FT_Done_Face(face); }
+  auto bitmapPtr = bitmap.data();
+  for (size_t rowIndex{}; rowIndex < height; ++rowIndex) {
+    std::memcpy(bitmapPtr, bufferPtr, width);
 
-std::unique_ptr<Glyph> Face::getGlyph() {
-  FT_Glyph glyph{};
-  if (FT_Get_Glyph(face->glyph, &glyph)) {
-    MultiLogger::get()->error("Error creating glyph from face.");
+    bitmapPtr += width;
+    bufferPtr += pitch;
   }
-  return std::make_unique<Glyph>(glyph);
+};
+
+Face::Face(
+    FT_Library library,
+    const std::vector<uint8_t>& fontBytes,
+    FT_Long faceIndex) {
+  MultiLogger::get()->info(
+      "Creating face index {} from font in memory with size {}.",
+      faceIndex,
+      fontBytes.size());
+  if (FT_New_Memory_Face(
+          library,
+          (FT_Byte*)fontBytes.data(),
+          (FT_Long)fontBytes.size(),
+          faceIndex,
+          &face)) {
+    MultiLogger::get()->error("Error creating face {}.", faceIndex);
+    exit(1);
+  }
+  MultiLogger::get()->info("Created face {}.", face->family_name);
 }
 
-std::unique_ptr<Glyph> Face::loadChar(FT_ULong character) {
-  if (FT_Load_Char(face, character, FT_LOAD_DEFAULT)) {
+Face::~Face() {
+  MultiLogger::get()->info("Destroying face {}.", face->family_name);
+  FT_Done_Face(face);
+}
+
+std::unique_ptr<BitmapGlyph> Face::loadChar(FT_ULong character) {
+  if (FT_Load_Char(face, character, FT_LOAD_RENDER)) {
     MultiLogger::get()->error(
         "Error loading character {} from face {}.",
         character,
         face->family_name);
   }
-  auto glyph = getGlyph();
-  glyph->render();
-  return glyph;
+  return std::make_unique<BitmapGlyph>(face->glyph);
 }
 
-std::unique_ptr<Glyph> Face::loadGlyph(FT_UInt glyphIndex) {
-  if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT)) {
+std::unique_ptr<BitmapGlyph> Face::loadGlyph(FT_UInt glyphIndex) {
+  if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_RENDER)) {
     MultiLogger::get()->error(
         "Error loading glyph index {} from face {}.",
         glyphIndex,
         face->family_name);
   }
-  auto glyph = getGlyph();
-  glyph->render();
-  return glyph;
+  return std::make_unique<BitmapGlyph>(face->glyph);
 }
 
 std::vector<FT_ULong> Face::getCharacters() {
@@ -137,8 +119,8 @@ std::vector<FT_ULong> Face::getCharacters() {
   return result;
 }
 
-std::map<FT_ULong, std::unique_ptr<Glyph>> Face::getGlyphs() {
-  std::map<FT_ULong, std::unique_ptr<Glyph>> result;
+std::map<FT_ULong, std::unique_ptr<BitmapGlyph>> Face::getGlyphs() {
+  std::map<FT_ULong, std::unique_ptr<BitmapGlyph>> result;
   for (auto character : getCharacters()) {
     result[character] = loadChar(character);
   }
@@ -155,13 +137,25 @@ void Face::setSize(uint8_t fontSize, FT_UInt dpi) {
   MultiLogger::get()->info("Set font {} to {}", face->family_name, fontSize);
 }
 
+void Face::setPixelSize(uint32_t pixelSize) {
+  if (FT_Set_Pixel_Sizes(face, 0, pixelSize)) {
+    MultiLogger::get()->error(
+        "Error setting font pixel height {} for face {}.",
+        pixelSize,
+        face->family_name);
+  }
+}
+
 Font::Font(FT_Library library, std::string fontPath)
     : library(library), fontPath(fontPath) {
-  MultiLogger::get()->info("Created font {}.", fontPath);
+  MultiLogger::get()->info("Loading font file {} into memory.", this->fontPath);
+  if (auto loadResult = vka::loadBinaryFile({this->fontPath})) {
+    fontBytes = std::move(loadResult.value());
+  }
 }
 
 std::unique_ptr<Face> Font::createFace(FT_Long faceIndex) {
-  return std::make_unique<Face>(library, fontPath, faceIndex);
+  return std::make_unique<Face>(library, fontBytes, faceIndex);
 }
 
 Library::Library() {
@@ -171,9 +165,12 @@ Library::Library() {
   MultiLogger::get()->info("Initialized freetype.");
 }
 
-Library::~Library() { FT_Done_FreeType(library); }
+Library::~Library() {
+  MultiLogger::get()->info("Destroying freetype library.");
+  FT_Done_FreeType(library);
+}
 
 std::unique_ptr<Font> Library::loadFont(std::string fontPath) {
-  return std::make_unique<Font>(library, std::move(fontPath));
+  return std::make_unique<Font>(library, fontPath);
 }
 }  // namespace Text
