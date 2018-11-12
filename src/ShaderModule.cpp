@@ -12,7 +12,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& other) {
   }
   return *this;
 }
-ShaderModule::ShaderModule(VkDevice device, std::vector<char> shaderBytes)
+ShaderModule::ShaderModule(VkDevice device, std::vector<uint8_t> shaderBytes)
     : device(device) {
   VkShaderModuleCreateInfo createInfo{
       VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};

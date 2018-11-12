@@ -50,6 +50,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Config.hpp"
   "${includeDir}/Text.hpp"
   "${includeDir}/Logger.hpp"
+  "${includeDir}/IO.hpp"
   "${includeDir}/Camera.hpp"
   "${includeDir}/Engine.hpp"
   "${includeDir}/LevelData.hpp"

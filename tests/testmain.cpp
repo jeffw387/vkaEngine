@@ -40,7 +40,7 @@ struct TextObject {
   glm::vec2 screenPosition;
   std::vector<CharacterData> characters;
   TextObject(
-      std::map<FT_ULong, std::unique_ptr<Text::Glyph>>& charMap,
+      std::map<FT_ULong, std::unique_ptr<Text::BitmapGlyph>>& charMap,
       std::string text,
       glm::vec2 screenPosition = {})
       : screenPosition(screenPosition) {
@@ -49,10 +49,10 @@ struct TextObject {
       if (charMap.find(character) != charMap.end()) {
         auto& glyph = charMap[character];
         characters.push_back({offset, static_cast<FT_ULong>(character)});
-        offset += glyph->getAdvance();
+        offset += glyph->advance;
 
       } else {
-        offset += charMap.at('i')->getAdvance();
+        offset += charMap.at('i')->advance;
         characters.push_back({offset, 0});
       }
     }
@@ -154,7 +154,7 @@ struct AppState {
   std::unique_ptr<Text::Library> textLibrary;
   struct TextData {
     std::unique_ptr<Text::Font> fontNiocTresni;
-    std::map<FT_ULong, std::unique_ptr<Text::Glyph>> glyphMap;
+    std::map<FT_ULong, std::unique_ptr<Text::BitmapGlyph>> glyphMap;
     std::map<FT_ULong, size_t> indexBufferOffsets;
     std::unique_ptr<Text::Tileset> tilesetNiocTresni;
     std::shared_ptr<vka::Image> fontImage;
@@ -654,21 +654,19 @@ struct AppState {
     textLibrary = std::make_unique<Text::Library>();
 
     textData.fontNiocTresni =
-        textLibrary->loadFont("content/fonts/NiocTresni/NiocTresni.ttf");
+        textLibrary->loadFont("content/fonts/Anke/Anke.ttf");
     auto niocFace = textData.fontNiocTresni->createFace(0);
-    niocFace->setSize(64, 100);
+    // niocFace->setSize(64, 100);
+    niocFace->setPixelSize(100);
     textData.glyphMap = niocFace->getGlyphs();
     textData.testText = std::make_unique<TextObject>(
         textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
     Text::Dimensions tileDimensions{};
     RANGES_FOR(const auto& glyphPtr, ranges::view::values(textData.glyphMap)) {
-      auto glyphDimensions = glyphPtr->getDimensions();
-      tileDimensions.width =
-          std::max(glyphDimensions.width, tileDimensions.width);
-      tileDimensions.height =
-          std::max(glyphDimensions.height, tileDimensions.height);
+      tileDimensions.width = std::max(glyphPtr->width, tileDimensions.width);
+      tileDimensions.height = std::max(glyphPtr->height, tileDimensions.height);
     };
-    std::vector<Text::Glyph*> glyphs;
+    std::vector<Text::BitmapGlyph*> glyphs;
     ranges::action::push_back(
         glyphs,
         ranges::view::transform(
@@ -677,7 +675,7 @@ struct AppState {
     std::vector<Text::Tile> tiles;
     ranges::action::push_back(
         tiles, ranges::view::transform(glyphs, [](auto& glyph) {
-          return glyph->getTile();
+          return Text::Tile{glyph->bitmap};
         }));
 
     textData.tilesetNiocTresni = std::make_unique<Text::Tileset>(
@@ -742,15 +740,15 @@ struct AppState {
       ranges::action::push_back(textIndices, std::move(nextIndices));
       textData.indexBufferOffsets[glyphPair.first] = indexOffset;
 
-      auto glyphBounds = glyphPair.second->getBoundingBox();
+      auto& glyphPtr = glyphPair.second;
       std::vector<TextVertex> nextVertices{
-          {glm::vec2(glyphBounds.xmin, glyphBounds.ymax),
+          {glm::vec2(glyphPtr->xmin, glyphPtr->ymax),
            glm::vec2(uv.xmin, uv.ymin)},
-          {glm::vec2(glyphBounds.xmin, glyphBounds.ymin),
+          {glm::vec2(glyphPtr->xmin, glyphPtr->ymin),
            glm::vec2(uv.xmin, uv.ymax)},
-          {glm::vec2(glyphBounds.xmax, glyphBounds.ymin),
+          {glm::vec2(glyphPtr->xmax, glyphPtr->ymin),
            glm::vec2(uv.xmax, uv.ymax)},
-          {glm::vec2(glyphBounds.xmax, glyphBounds.ymax),
+          {glm::vec2(glyphPtr->xmax, glyphPtr->ymax),
            glm::vec2(uv.xmax, uv.ymin)}};
       ranges::action::push_back(textVertices, std::move(nextVertices));
       indexOffset += 6;
@@ -790,7 +788,7 @@ struct AppState {
       auto& pos = textData.tilesetNiocTresni->tileRects[tileIndex];
       auto glyph = glyphs[tileIndex];
 
-      auto glyphDimensions = glyph->getDimensions();
+      // auto glyphDimensions = glyph->getDimensions();
       if (tile.size() == 0) {
         continue;
       }
@@ -799,7 +797,7 @@ struct AppState {
           tile,
           textData.fontImage,
           {pos.xmin, pos.ymin},
-          {glyphDimensions.width, glyphDimensions.height}));
+          {glyph->width, glyph->height}));
     }
     if (auto cmd = transferCmd.lock()) {
       cmd->end();
