@@ -300,21 +300,10 @@ std::shared_ptr<PipelineLayout> Device::createPipelineLayout(
 
 std::unique_ptr<ShaderModule> Device::createShaderModule(
     std::string shaderPath) {
-  auto cwd = fs::current_path();
-  try {
-    std::vector<char> binaryData;
-    std::ifstream shaderFile(
-        shaderPath,
-        std::ios_base::binary | std::ios_base::ate | std::ios_base::in);
-    auto fileLength = shaderFile.tellg();
-    MultiLogger::get()->info("shader file length == {} bytes", fileLength);
-    shaderFile.seekg(std::ios::beg);
-    binaryData.resize(fileLength);
-    shaderFile.read(binaryData.data(), fileLength);
-    return std::make_unique<ShaderModule>(device, binaryData);
-  } catch (const std::exception& e) {
-    MultiLogger::get()->critical("error while creating shader: {}", e.what());
-    throw e;
+  if (auto binaryData = loadBinaryFile({shaderPath})) {
+    return std::make_unique<ShaderModule>(device, binaryData.value());
+  } else {
+    throw binaryData.error();
   }
 }
 
@@ -347,7 +336,8 @@ VkResult Device::presentImage(
   presentInfo.pWaitSemaphores = &waitSemaphore;
   return vkQueuePresentKHR(graphicsQueue, &presentInfo);
 }
-// TODO: fix uploaded image layouts (right now it's assuming undefined layout before upload)
+// TODO: fix uploaded image layouts (right now it's assuming undefined layout
+// before upload)
 void Device::queueSubmit(
     const std::vector<VkSemaphore>& waitSemaphores,
     std::vector<std::shared_ptr<CommandBuffer>> commandBuffers,
