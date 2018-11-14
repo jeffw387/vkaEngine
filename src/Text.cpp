@@ -82,7 +82,9 @@ Face::Face(
 
 Face::~Face() {
   MultiLogger::get()->info("Destroying face {}.", face->family_name);
-  FT_Done_Face(face);
+  if (FT_Done_Face(face)) {
+    MultiLogger::get()->error("Error destroying face {}.", face->family_name);
+  }
 }
 
 std::unique_ptr<BitmapGlyph> Face::loadChar(FT_ULong character) {
@@ -144,6 +146,7 @@ void Face::setPixelSize(uint32_t pixelSize) {
         pixelSize,
         face->family_name);
   }
+  MultiLogger::get()->info("Font pixel height set to {}.", pixelSize);
 }
 
 Font::Font(FT_Library library, std::string fontPath)
