@@ -38,3 +38,4 @@ version.hpp
 vkaEngineLog.txt
 compile-commands.json
 Config.hpp
+vkaEngine-cppcheck-build-dir/
