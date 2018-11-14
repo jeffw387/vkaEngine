@@ -1,3 +1,4 @@
+#define STB_TRUETYPE_IMPLEMENTATION
 #include "Text.hpp"
 
 namespace Text {

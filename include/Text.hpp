@@ -1,6 +1,7 @@
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+// #include <ft2build.h>
+// #include FT_FREETYPE_H
+// #include FT_GLYPH_H
+#include <stb_truetype.h>
 #include <memory>
 #include <vector>
 #include <map>
@@ -72,9 +73,6 @@ struct Tileset {
 };
 
 struct BitmapGlyph {
-public:
-  BitmapGlyph(FT_GlyphSlot slot);
-
   int32_t xmin;
   int32_t ymin;
   int32_t xmax;
@@ -92,10 +90,9 @@ public:
       const std::vector<uint8_t> &fontBytes,
       FT_Long faceIndex);
   ~Face();
-  std::unique_ptr<BitmapGlyph> loadChar(FT_ULong character);
-  std::unique_ptr<BitmapGlyph> loadGlyph(FT_UInt glyphIndex);
-  std::map<FT_ULong, std::unique_ptr<BitmapGlyph>> getGlyphs();
-  void setSize(uint8_t fontSize, FT_UInt dpi);
+  std::unique_ptr<BitmapGlyph> loadChar(int character);
+  std::unique_ptr<BitmapGlyph> loadGlyph(int glyphIndex);
+  std::map<int, std::unique_ptr<BitmapGlyph>> getGlyphs();
   void setPixelSize(uint32_t pixelSize);
 
 private:
