@@ -285,6 +285,9 @@ struct AppState {
     initial.cameraUniform.push_back(std::move(camData));
     initial.cameraUniform.flushMemory(device);
 
+    std::vector<uint32_t> entities;
+    entities.push_back(initial.ecs.create());
+
     initial.instanceUniform.push_back(
         {glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f))});
     initial.instanceUniform.flushMemory(device);
