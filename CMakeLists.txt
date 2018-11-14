@@ -101,10 +101,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
   target_link_libraries(vkaEngine PUBLIC stdc++fs)
 endif()
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/freetype2")
-target_link_libraries(vkaEngine PUBLIC freetype)
-get_target_property(freetypeIncludes freetype INTERFACE_INCLUDE_DIRECTORIES)
-message("Freetype interface includes: ${freetypeIncludes}")
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE external/stb)
+target_link_libraries(vkaEngine PRIVATE stb)
+
+# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/freetype2")
+# target_link_libraries(vkaEngine PUBLIC freetype)
+# get_target_property(freetypeIncludes freetype INTERFACE_INCLUDE_DIRECTORIES)
+# message("Freetype interface includes: ${freetypeIncludes}")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
@@ -124,12 +128,12 @@ message("vk libs: ${Vulkan_LIBRARIES}")
 target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
 
-add_library(dear_imgui 
-external/imgui/imgui.cpp
-external/imgui/imgui_draw.cpp
-external/imgui/imgui_widgets.cpp)
-target_include_directories(dear_imgui PUBLIC external/imgui)
-target_link_libraries(vkaEngine PUBLIC dear_imgui)
+# add_library(dear_imgui 
+# external/imgui/imgui.cpp
+# external/imgui/imgui_draw.cpp
+# external/imgui/imgui_widgets.cpp)
+# target_include_directories(dear_imgui PUBLIC external/imgui)
+# target_link_libraries(vkaEngine PUBLIC dear_imgui)
 
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator 
