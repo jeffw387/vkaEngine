@@ -83,6 +83,13 @@ struct BitmapGlyph {
   std::vector<uint8_t> bitmap;
 };
 
+struct BasicCharacters {
+  std::vector<uint8_t> characters;
+  constexpr BasicCharacters() {
+    ranges::view::closed_ints(32, 126) | ranges::action::push_back(characters);
+  }
+};
+
 class Font {
 public:
   Font(std::string fontPath);
@@ -95,6 +102,5 @@ private:
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   float scale = 1.f;
-  std::vector<int> getCharacters();
 };
 }  // namespace Text
