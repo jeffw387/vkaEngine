@@ -83,46 +83,18 @@ struct BitmapGlyph {
   std::vector<uint8_t> bitmap;
 };
 
-class Face {
+class Font {
 public:
-  Face(
-      FT_Library library,
-      const std::vector<uint8_t> &fontBytes,
-      FT_Long faceIndex);
-  ~Face();
+  Font(std::string fontPath);
   std::unique_ptr<BitmapGlyph> loadChar(int character);
   std::unique_ptr<BitmapGlyph> loadGlyph(int glyphIndex);
   std::map<int, std::unique_ptr<BitmapGlyph>> getGlyphs();
   void setPixelSize(uint32_t pixelSize);
 
 private:
-  FT_Face face;
-
-  std::vector<FT_ULong> getCharacters();
+  std::vector<uint8_t> fontBytes;
+  stbtt_fontinfo fontInfo;
+  float scale = 1.f;
+  std::vector<int> getCharacters();
 };
-
-class Font {
-public:
-  Font(FT_Library library, std::string fontPath);
-  std::unique_ptr<Face> createFace(FT_Long faceIndex);
-
-private:
-  FT_Library library;
-  std::vector<FT_Byte> fontBytes;
-  std::string fontPath;
-};
-
-class Library {
-public:
-  Library();
-  ~Library();
-  Library(const Library &) = delete;
-  Library &operator=(const Library &) = delete;
-
-  std::unique_ptr<Font> loadFont(std::string fontPath);
-
-private:
-  FT_Library library;
-};
-
 }  // namespace Text
