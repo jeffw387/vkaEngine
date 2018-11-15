@@ -366,9 +366,19 @@ struct AppState {
       cmd->setScissor(0, {scissor});
       TextVertexPushData pushData{};
       pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
-      for (auto& charData : textData.testText->characters) {
+      auto& currentFont = *textData.testText.font;
+      auto& currentString = textData.testText.text;
+      for (int i{}; i < currentString.size(); ++i) {
+        int currentGlyph = currentFont.getGlyphIndex(currentString[i]);
+        int nextGlyph{-1};
+        float kerning{};
+        if ((i + 1) < currentString.size()) {
+          nextGlyph = currentFont.getGlyphIndex(currentString[i + 1]);
+          kerning = getKerning(currentGlyph, nextGlyph);
+        }
+
         pushData.position = textData.testText->screenPosition +
-                            glm::vec2(charData.xOffset, 0.f);
+                            glm::vec2(character.xOffset, 0.f);
         cmd->pushConstants(
             textData.pipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT,
@@ -376,7 +386,7 @@ struct AppState {
             sizeof(TextVertexPushData),
             &pushData);
         cmd->drawIndexed(
-            6, 1, textData.indexBufferOffsets[charData.character], 0, 0);
+            6, 1, textData.indexBufferOffsets[character.character], 0, 0);
       }
     }
   }
