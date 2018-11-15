@@ -66,7 +66,7 @@ struct BasicCharacters {
 struct VertexData {
   std::vector<Index> indices;
   std::vector<Vertex> vertices;
-  std::map<uint8_t, size_t> glyphIndexToIndexOffsets;
+  std::map<uint8_t /*GlyphIndex*/, size_t /*IndexOffset*/> offsets;
 };
 
 struct Atlas {
