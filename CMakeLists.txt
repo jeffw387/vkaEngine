@@ -103,7 +103,7 @@ endif()
 
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE external/stb)
-target_link_libraries(vkaEngine PRIVATE stb)
+target_link_libraries(vkaEngine PUBLIC stb)
 
 # add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/freetype2")
 # target_link_libraries(vkaEngine PUBLIC freetype)
