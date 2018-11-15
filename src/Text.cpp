@@ -58,16 +58,16 @@ Atlas Font<>::getTextureAtlas(int atlasWidth, int atlasHeight) {
   auto charRanges = charSet();
 
   for (auto charRange : charRanges) {
-  std::vector<stbtt_packedchar> atlasData;
+    std::vector<stbtt_packedchar> atlasData;
     atlasData.resize(charRange.charCount);
-  stbtt_PackFontRange(
-      &packContext,
-      fontBytes.data(),
-      0,
-      scale,
+    stbtt_PackFontRange(
+        &packContext,
+        fontBytes.data(),
+        0,
+        scale,
         charRange.firstChar,
         static_cast<int>(charRange.charCount),
-      atlasData.data());
+        atlasData.data());
     atlasDatas.push_back(std::move(atlasData));
   }
   stbtt_PackEnd(&packContext);

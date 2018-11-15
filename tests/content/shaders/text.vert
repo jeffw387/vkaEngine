@@ -7,7 +7,7 @@ layout(push_constant) uniform uPushConstant{
     layout(offset=16) vec2 pos;
 } pc;
 
-// screenspace pos, scale factor to switch to clip space
+// screenspace pos relative to center of screen, scale factor to switch to clip space
 // pos: 250, 250
 // screen size: 1000, 1000
 // scale: 1/1000, 1/1000
