@@ -70,7 +70,7 @@ struct Atlas {
   std::vector<uint8_t> pixels;
   int width = {};
   int height = {};
-  std::map<uint8_t, stbtt_packedchar> atlasData;
+  std::map<uint8_t /*GlyphIndex*/, stbtt_packedchar /*GlyphAtlasData*/> data;
 };
 
 class Font {
