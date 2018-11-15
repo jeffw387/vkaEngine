@@ -71,6 +71,11 @@ struct Atlas {
   int width = {};
   int height = {};
   std::map<uint8_t /*GlyphIndex*/, stbtt_packedchar /*GlyphAtlasData*/> data;
+
+  VertexData getVertexData();
+private:
+  stbtt_aligned_quad getQuad(int glyphIndex);
+  std::vector<stbtt_aligned_quad> getQuads();
 };
 
 class Font {
