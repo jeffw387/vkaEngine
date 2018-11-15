@@ -41,6 +41,7 @@ Atlas Font::getTextureAtlas(int width, int height) {
   RANGES_FOR(auto pair, ranges::view::zip(charSet.characters, atlasData)) {
     atlas.atlasData[std::get<0>(pair)] = std::get<1>(pair);
   }
+  return atlas;
 }
 
 }  // namespace Text
