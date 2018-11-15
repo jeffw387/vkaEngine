@@ -721,20 +721,20 @@ struct AppState {
     transferCommandPool = device->createCommandPool(true, false);
     transferCmd = transferCommandPool->allocateCommandBuffer();
     transferFence = device->createFence(false);
+    std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
     if (auto cmd = transferCmd.lock()) {
       cmd->begin();
-    }
 
       stagingBuffers.push_back(recordBufferUpload<Text::Index>(
+          {textData.vertexData.indices}, textData.indexBuffer, 0));
       stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
-
-      stagingBuffers.push_back(recordImageUpload(
-          tile,
+          {textData.vertexData.vertices}, textData.vertexBuffer, 0));
+      stagingBuffers.push_back(recordImageUpload<uint8_t>(
+          {textData.atlas.pixels},
           textData.fontImage,
-          {pos.xmin, pos.ymin},
-          {glyph->width, glyph->height}));
-    }
-    if (auto cmd = transferCmd.lock()) {
+          {0, 0},
+          {atlasWidth, atlasHeight}));
+
       cmd->end();
       device->queueSubmit({}, {cmd}, {}, transferFence.get());
     }
