@@ -134,7 +134,7 @@ struct AppState {
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
   struct TextData {
-    std::unique_ptr<Text::Font> testFont;
+    std::unique_ptr<Text::Font<>> testFont;
     Text::Atlas atlas;
     Text::VertexData vertexData;
     std::shared_ptr<vka::Image> fontImage;
