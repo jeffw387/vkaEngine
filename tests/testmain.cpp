@@ -149,7 +149,7 @@ struct AppState {
     std::shared_ptr<vka::DescriptorSet> descriptorSet;
     std::shared_ptr<vka::PipelineLayout> pipelineLayout;
     std::shared_ptr<vka::GraphicsPipeline> pipeline;
-    TextObject testText;
+    std::unique_ptr<TextObject> testText;
   } textData;
 
   asset::Collection shapesAsset;
@@ -373,8 +373,7 @@ struct AppState {
       cmd->setScissor(0, {scissor});
       TextVertexPushData pushData{};
       pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
-      auto& currentFont = *textData.testText.font;
-      auto& currentString = textData.testText.text;
+      auto& currentString = textData.testText->str;
       for (int i{}; i < currentString.size(); ++i) {
         int currentGlyph = currentFont.getGlyphIndex(currentString[i]);
         int nextGlyph{-1};
@@ -650,23 +649,11 @@ struct AppState {
     niocFace->setPixelSize(100);
     textData.glyphMap = niocFace->getGlyphs();
     textData.testText = std::make_unique<TextObject>(
-        textData.glyphMap, std::string{"Test Text!"}, glm::vec2(50.f, 50.f));
-    Text::Dimensions tileDimensions{};
-    RANGES_FOR(const auto& glyphPtr, ranges::view::values(textData.glyphMap)) {
-      tileDimensions.width = std::max(glyphPtr->width, tileDimensions.width);
-      tileDimensions.height = std::max(glyphPtr->height, tileDimensions.height);
-    };
-    std::vector<Text::BitmapGlyph*> glyphs;
-    ranges::action::push_back(
-        glyphs,
-        ranges::view::transform(
-            ranges::view::values(textData.glyphMap),
-            [](auto& glyphPtr) { return glyphPtr.get(); }));
-    std::vector<Text::Tile> tiles;
-    ranges::action::push_back(
-        tiles, ranges::view::transform(glyphs, [](auto& glyph) {
-          return Text::Tile{glyph->bitmap};
-        }));
+        glm::vec2(50.f, 50.f),
+        std::string{"Test Text!"},
+        100,
+        textData.testFont.get());
+
 
     textData.tilesetNiocTresni = std::make_unique<Text::Tileset>(
         tiles, 2048, tileDimensions.width, tileDimensions.height);
