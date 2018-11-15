@@ -92,11 +92,12 @@ public:
   float getAdvance(int glyphIndex);
   float getKerning(int glyphIndex1, int glyphIndex2);
   auto getFontBytes() { return fontBytes; }
+  float getScaleFactor();
 
 private:
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;
-  float scale = 1.f;
+  uint32_t font_size = 12;
 };
 }  // namespace Text

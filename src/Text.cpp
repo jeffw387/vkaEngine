@@ -15,7 +15,12 @@ Font<>::Font(std::string fontPath) {
 
 template <>
 void Font<>::setFontPixelHeight(uint32_t height) {
-  scale = stbtt_ScaleForPixelHeight(&fontInfo, static_cast<float>(height));
+  font_size = height;
+}
+
+template <>
+float Font<>::getScaleFactor() {
+  return stbtt_ScaleForPixelHeight(&fontInfo, font_size);
 }
 
 template <>
@@ -23,13 +28,13 @@ float Font<>::getAdvance(int glyphIndex) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
-  return scale * static_cast<float>(adv);
+  return getScaleFactor() * static_cast<float>(adv);
 }
 
 template <>
 float Font<>::getKerning(int glyphIndex1, int glyphIndex2) {
-  return scale * static_cast<float>(stbtt_GetGlyphKernAdvance(
-                     &fontInfo, glyphIndex1, glyphIndex2));
+  return getScaleFactor() * static_cast<float>(stbtt_GetGlyphKernAdvance(
+                                &fontInfo, glyphIndex1, glyphIndex2));
 }
 
 template <>
@@ -45,7 +50,7 @@ Atlas Font<>::getTextureAtlas(int atlasWidth, int atlasHeight) {
   atlas.height = atlasHeight;
 
   stbtt_pack_context packContext{};
-  stbtt_PackBegin(
+  auto packBeginResult = stbtt_PackBegin(
       &packContext,
       atlas.pixels.data(),
       atlasWidth,
@@ -60,11 +65,11 @@ Atlas Font<>::getTextureAtlas(int atlasWidth, int atlasHeight) {
   for (auto charRange : charRanges) {
     std::vector<stbtt_packedchar> atlasData;
     atlasData.resize(charRange.charCount);
-    stbtt_PackFontRange(
+    auto packResult = stbtt_PackFontRange(
         &packContext,
         fontBytes.data(),
         0,
-        scale,
+        font_size,
         charRange.firstChar,
         static_cast<int>(charRange.charCount),
         atlasData.data());

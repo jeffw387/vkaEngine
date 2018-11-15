@@ -377,6 +377,7 @@ struct AppState {
       pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
       auto currentFont = textData.testText->font;
       auto& currentString = textData.testText->str;
+      glm::vec2 pen = textData.testText->screenPosition;
       for (int i{}; i < currentString.size(); ++i) {
         int currentGlyph = currentFont->getGlyphIndex(currentString[i]);
         int nextGlyph{-1};
@@ -386,10 +387,7 @@ struct AppState {
           kerning = currentFont->getKerning(currentGlyph, nextGlyph);
         }
         float advanceX = currentFont->getAdvance(currentGlyph);
-        pushData.position =
-            textData.testText->screenPosition +
-            glm::vec2(advanceX + kerning, 0.f) -
-            halfExtent;  // TODO should this be added instead? testing needed
+        pushData.position = pen - halfExtent;
         cmd->pushConstants(
             textData.pipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT,
@@ -402,6 +400,7 @@ struct AppState {
             textData.vertexData.offsets[currentGlyph],
             0,
             0);
+        pen.x += advanceX + kerning;
       }
     }
   }
@@ -649,38 +648,17 @@ struct AppState {
 
     createSwapchain();
 
-    constexpr auto atlasWidth = 256U;
-    constexpr auto atlasHeight = 256;
-    constexpr auto fontPixelHeight = 15U;
+    constexpr auto atlasWidth = 512;
+    constexpr auto atlasHeight = 512;
+    constexpr auto fontPixelHeight = 60;
 
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
-    std::vector<uint8_t> pixels;
-    pixels.resize(atlasWidth * atlasHeight);
-    std::array<stbtt_bakedchar, 95> bakedChars{};
-    auto bakeResult = stbtt_BakeFontBitmap(
-        textData.testFont->getFontBytes().data(),
-        0,
-        fontPixelHeight,
-        pixels.data(),
-        atlasWidth,
-        atlasHeight,
-        32,
-        95,
-        bakedChars.data());
+
     textData.testFont->setFontPixelHeight(fontPixelHeight);
     textData.atlas =
         textData.testFont->getTextureAtlas(atlasWidth, atlasHeight);
-    size_t nonzeroPixels{};
-    size_t pixelIndex{};
-    std::vector<size_t> nonzeroPixelIndices;
-    for (auto pixel : textData.atlas.pixels) {
-      if (pixel != 0) {
-        ++nonzeroPixels;
-        nonzeroPixelIndices.push_back(pixelIndex);
-      }
-      ++pixelIndex;
-    }
+
     textData.vertexData = textData.atlas.getVertexData();
     textData.testText = std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
