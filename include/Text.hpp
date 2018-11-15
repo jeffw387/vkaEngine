@@ -78,6 +78,7 @@ private:
   std::vector<stbtt_aligned_quad> getQuads();
 };
 
+template <typename T = BasicCharacters>
 class Font {
 public:
   Font(std::string fontPath);
@@ -87,7 +88,7 @@ public:
 private:
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
-  BasicCharacters charSet;
+  T charSet;
   float scale = 1.f;
 };
 }  // namespace Text
