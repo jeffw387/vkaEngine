@@ -25,38 +25,13 @@
 
 namespace fs = std::experimental::filesystem;
 
-using TextIndex = uint16_t;
-struct TextVertex {
-  glm::vec2 pos;
-  glm::vec2 uv;
-};
-
-struct CharacterData {
-  int32_t xOffset;
-  FT_ULong character;
-};
-
 struct TextObject {
   glm::vec2 screenPosition;
-  std::vector<CharacterData> characters;
-  TextObject(
-      std::map<FT_ULong, std::unique_ptr<Text::BitmapGlyph>>& charMap,
-      std::string text,
-      glm::vec2 screenPosition = {})
-      : screenPosition(screenPosition) {
-    int32_t offset{};
-    for (auto character : text) {
-      if (charMap.find(character) != charMap.end()) {
-        auto& glyph = charMap[character];
-        characters.push_back({offset, static_cast<FT_ULong>(character)});
-        offset += glyph->advance;
-
-      } else {
-        offset += charMap.at('i')->advance;
-        characters.push_back({offset, 0});
-      }
-    }
-  }
+  std::string str;
+  uint32_t pixelHeight;
+  Text::Font* font;
+  TextObject(glm::vec2 screenPosition, std::string str, uint32_t pixelHeight, Text::Font& font) 
+    : screenPosition(std::move(screenPosition)) 
 };
 
 struct TextVertexPushData {
