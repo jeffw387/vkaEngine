@@ -44,6 +44,13 @@ namespace Text {
 //     exit(1);
 //   }
 // };
+using Index = uint16_t;
+struct Vertex {
+  glm::vec2 pos = {};
+  glm::vec2 uv = {};
+};
+constexpr uint8_t IndicesPerQuad = 6;
+constexpr uint8_t VerticesPerQuad = 4;
 
 struct BasicCharacters {
   std::vector<uint8_t> characters;
@@ -51,6 +58,12 @@ struct BasicCharacters {
     ranges::action::push_back(
         characters, ranges::view::closed_indices(32, 126));
   }
+};
+
+struct VertexData {
+  std::vector<Index> indices;
+  std::vector<Vertex> vertices;
+  std::map<uint8_t, size_t> glyphIndexToIndexOffsets;
 };
 
 struct Atlas {
