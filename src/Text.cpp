@@ -135,7 +135,7 @@ VertexData Atlas::getVertexData() {
                             {{left, bottom}, {leftuv, bottomuv}},
                             {{right, bottom}, {rightuv, bottomuv}},
                             {{right, top}, {rightuv, topuv}}});
-    result.glyphIndexToIndexOffsets[std::get<0>(zipTuple)] = indexOffset;
+    result.offsets[std::get<0>(zipTuple)] = indexOffset;
 
     indexOffset += IndicesPerQuad;
     vertexOffset += VerticesPerQuad;
