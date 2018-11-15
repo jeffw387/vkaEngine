@@ -52,12 +52,15 @@ struct Vertex {
 constexpr uint8_t IndicesPerQuad = 6;
 constexpr uint8_t VerticesPerQuad = 4;
 
+struct CharacterRange {
+  int firstChar = {};
+  size_t charCount = {};
+};
+
 struct BasicCharacters {
-  std::vector<uint8_t> characters;
-  BasicCharacters() {
-    ranges::action::push_back(
-        characters, ranges::view::closed_indices(32, 126));
-  }
+  CharacterRange basicSet = {32, 127 - 32 /*TODO: could be off-by-one*/};
+
+  std::vector<CharacterRange> operator()() { return {basicSet}; }
 };
 
 struct VertexData {
