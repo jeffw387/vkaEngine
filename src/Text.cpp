@@ -13,7 +13,7 @@ Font<>::Font(std::string fontPath) {
 }
 
 template <>
-void Font<>::setPixelHeight(uint32_t height) {
+void Font<>::setFontPixelHeight(uint32_t height) {
   scale = stbtt_ScaleForPixelHeight(&fontInfo, static_cast<float>(height));
 }
 
