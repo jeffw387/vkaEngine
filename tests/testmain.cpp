@@ -649,7 +649,8 @@ struct AppState {
 
     createSwapchain();
 
-    textLibrary = std::make_unique<Text::Library>();
+    constexpr auto atlasWidth = 2048U;
+    constexpr auto atlasHeight = 256U;
 
     textData.fontNiocTresni =
         textLibrary->loadFont("content/fonts/Anke/Anke.ttf");
