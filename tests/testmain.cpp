@@ -654,9 +654,9 @@ struct AppState {
         100,
         textData.testFont.get());
 
+        textData.vertexData.indices.size() * sizeof(Text::Index),
 
-    textData.tilesetNiocTresni = std::make_unique<Text::Tileset>(
-        tiles, 2048, tileDimensions.width, tileDimensions.height);
+        textData.vertexData.vertices.size() * sizeof(Text::Vertex),
     textData.fontImage = device->createImage2D(
         {static_cast<uint32_t>(textData.tilesetNiocTresni->width),
          static_cast<uint32_t>(textData.tilesetNiocTresni->height)},
@@ -739,36 +739,8 @@ struct AppState {
       cmd->begin();
     }
 
-    textData.indexBuffer = device->createBuffer(
-        textIndices.size() * sizeof(TextIndex),
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        true);
-    device->debugNameObject<VkBuffer>(
-        VK_OBJECT_TYPE_BUFFER, *textData.indexBuffer, "TextIndexBuffer");
-    textData.vertexBuffer = device->createBuffer(
-        textVertices.size() * sizeof(TextVertex),
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        true);
-    device->debugNameObject<VkBuffer>(
-        VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
-
-    std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
-    stagingBuffers.push_back(
-        recordBufferUpload<TextIndex>({textIndices}, textData.indexBuffer, 0));
-    stagingBuffers.push_back(recordBufferUpload<TextVertex>(
-        {textVertices}, textData.vertexBuffer, 0));
-
-    for (size_t tileIndex{}; tileIndex < tiles.size(); ++tileIndex) {
-      auto& tile = tiles[tileIndex];
-      auto& pos = textData.tilesetNiocTresni->tileRects[tileIndex];
-      auto glyph = glyphs[tileIndex];
-
-      // auto glyphDimensions = glyph->getDimensions();
-      if (tile.size() == 0) {
-        continue;
-      }
+      stagingBuffers.push_back(recordBufferUpload<Text::Index>(
+      stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
 
       stagingBuffers.push_back(recordImageUpload(
           tile,
@@ -992,7 +964,7 @@ struct AppState {
     textPipelineInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
     textPipelineInfo.addVertexAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
     textPipelineInfo.addVertexBinding(
-        0, sizeof(TextVertex), VK_VERTEX_INPUT_RATE_VERTEX);
+        0, sizeof(Text::Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
     textPipelineInfo.addViewportScissor({}, {});
     textPipelineInfo.setCullMode(VK_CULL_MODE_NONE);
 
