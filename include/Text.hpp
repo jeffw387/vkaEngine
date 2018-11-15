@@ -8,6 +8,7 @@
 #include <gsl-lite.hpp>
 #include <range/v3/all.hpp>
 #include <stdexcept>
+#include <glm/glm.hpp>
 #include "IO.hpp"
 #include "Logger.hpp"
 
