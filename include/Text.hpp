@@ -86,8 +86,11 @@ template <typename T = BasicCharacters>
 class Font {
 public:
   Font(std::string fontPath);
-  void setPixelSize(uint32_t pixelSize);
+  int getGlyphIndex(int charIndex);
   Atlas getTextureAtlas(int width, int height);
+  void setPixelHeight(uint32_t height);
+  float getAdvance(int glyphIndex);
+  float getKerning(int glyphIndex1, int glyphIndex2);
 
 private:
   std::vector<uint8_t> fontBytes;
