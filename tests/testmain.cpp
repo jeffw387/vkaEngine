@@ -652,24 +652,36 @@ struct AppState {
     constexpr auto atlasWidth = 2048U;
     constexpr auto atlasHeight = 256U;
 
-    textData.fontNiocTresni =
-        textLibrary->loadFont("content/fonts/Anke/Anke.ttf");
-    auto niocFace = textData.fontNiocTresni->createFace(0);
-    // niocFace->setSize(64, 100);
-    niocFace->setPixelSize(100);
-    textData.glyphMap = niocFace->getGlyphs();
+    textData.testFont =
+        std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
+    textData.testFont->setFontPixelHeight(100);
+    textData.atlas =
+        textData.testFont->getTextureAtlas(atlasWidth, atlasHeight);
+    textData.vertexData = textData.atlas.getVertexData();
     textData.testText = std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
         std::string{"Test Text!"},
         100,
         textData.testFont.get());
 
+    textData.indexBuffer = device->createBuffer(
         textData.vertexData.indices.size() * sizeof(Text::Index),
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY,
+        true);
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *textData.indexBuffer, "TextIndexBuffer");
 
+    textData.vertexBuffer = device->createBuffer(
         textData.vertexData.vertices.size() * sizeof(Text::Vertex),
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY,
+        true);
+    device->debugNameObject<VkBuffer>(
+        VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
+
     textData.fontImage = device->createImage2D(
-        {static_cast<uint32_t>(textData.tilesetNiocTresni->width),
-         static_cast<uint32_t>(textData.tilesetNiocTresni->height)},
+        {static_cast<uint32_t>(atlasWidth), static_cast<uint32_t>(atlasHeight)},
         VK_FORMAT_R8_UNORM,
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         vka::ImageAspect::Color,
