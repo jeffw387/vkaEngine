@@ -718,42 +718,6 @@ struct AppState {
     textData.fragmentShader =
         device->createShaderModule("content/shaders/text.frag.spv");
 
-    std::vector<TextIndex> textIndices;
-    std::vector<TextVertex> textVertices;
-    size_t indexOffset{};
-    size_t vertexOffset{};
-    RANGES_FOR(
-        const auto& zipped,
-        ranges::view::zip(
-            textData.glyphMap, textData.tilesetNiocTresni->tileUVs)) {
-      const auto& glyphPair = std::get<0>(zipped);
-      const auto& uv = std::get<1>(zipped);
-
-      std::vector<TextIndex> nextIndices{
-          static_cast<TextIndex>(vertexOffset + 0),
-          static_cast<TextIndex>(vertexOffset + 1),
-          static_cast<TextIndex>(vertexOffset + 2),
-          static_cast<TextIndex>(vertexOffset + 2),
-          static_cast<TextIndex>(vertexOffset + 3),
-          static_cast<TextIndex>(vertexOffset + 0)};
-      ranges::action::push_back(textIndices, std::move(nextIndices));
-      textData.indexBufferOffsets[glyphPair.first] = indexOffset;
-
-      auto& glyphPtr = glyphPair.second;
-      std::vector<TextVertex> nextVertices{
-          {glm::vec2(glyphPtr->xmin, glyphPtr->ymax),
-           glm::vec2(uv.xmin, uv.ymin)},
-          {glm::vec2(glyphPtr->xmin, glyphPtr->ymin),
-           glm::vec2(uv.xmin, uv.ymax)},
-          {glm::vec2(glyphPtr->xmax, glyphPtr->ymin),
-           glm::vec2(uv.xmax, uv.ymax)},
-          {glm::vec2(glyphPtr->xmax, glyphPtr->ymax),
-           glm::vec2(uv.xmax, uv.ymin)}};
-      ranges::action::push_back(textVertices, std::move(nextVertices));
-      indexOffset += 6;
-      vertexOffset += 4;
-    }
-
     transferCommandPool = device->createCommandPool(true, false);
     transferCmd = transferCommandPool->allocateCommandBuffer();
     transferFence = device->createFence(false);
