@@ -1,3 +1,4 @@
+#define STB_RECT_PACK_IMPLEMENTATION
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "Text.hpp"
 
