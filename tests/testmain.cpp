@@ -649,19 +649,43 @@ struct AppState {
 
     createSwapchain();
 
-    constexpr auto atlasWidth = 2048U;
-    constexpr auto atlasHeight = 256U;
+    constexpr auto atlasWidth = 256U;
+    constexpr auto atlasHeight = 256;
+    constexpr auto fontPixelHeight = 15U;
 
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
-    textData.testFont->setFontPixelHeight(100);
+    std::vector<uint8_t> pixels;
+    pixels.resize(atlasWidth * atlasHeight);
+    std::array<stbtt_bakedchar, 95> bakedChars{};
+    auto bakeResult = stbtt_BakeFontBitmap(
+        textData.testFont->getFontBytes().data(),
+        0,
+        fontPixelHeight,
+        pixels.data(),
+        atlasWidth,
+        atlasHeight,
+        32,
+        95,
+        bakedChars.data());
+    textData.testFont->setFontPixelHeight(fontPixelHeight);
     textData.atlas =
         textData.testFont->getTextureAtlas(atlasWidth, atlasHeight);
+    size_t nonzeroPixels{};
+    size_t pixelIndex{};
+    std::vector<size_t> nonzeroPixelIndices;
+    for (auto pixel : textData.atlas.pixels) {
+      if (pixel != 0) {
+        ++nonzeroPixels;
+        nonzeroPixelIndices.push_back(pixelIndex);
+      }
+      ++pixelIndex;
+    }
     textData.vertexData = textData.atlas.getVertexData();
     textData.testText = std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
         std::string{"Test Text!"},
-        100,
+        fontPixelHeight,
         textData.testFont.get());
 
     textData.indexBuffer = device->createBuffer(

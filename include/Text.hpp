@@ -91,6 +91,7 @@ public:
   void setFontPixelHeight(uint32_t height);
   float getAdvance(int glyphIndex);
   float getKerning(int glyphIndex1, int glyphIndex2);
+  auto getFontBytes() { return fontBytes; }
 
 private:
   std::vector<uint8_t> fontBytes;
