@@ -126,12 +126,10 @@ struct AppState {
   std::shared_ptr<vka::PipelineLayout> pipelineLayout;
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
-  std::unique_ptr<Text::Library> textLibrary;
   struct TextData {
-    std::unique_ptr<Text::Font> fontNiocTresni;
-    std::map<FT_ULong, std::unique_ptr<Text::BitmapGlyph>> glyphMap;
-    std::map<FT_ULong, size_t> indexBufferOffsets;
-    std::unique_ptr<Text::Tileset> tilesetNiocTresni;
+    std::unique_ptr<Text::Font> testFont;
+    Text::Atlas atlas;
+    Text::VertexData vertexData;
     std::shared_ptr<vka::Image> fontImage;
     std::shared_ptr<vka::ImageView> fontImageView;
     std::unique_ptr<vka::Sampler> fontSampler;
@@ -144,7 +142,7 @@ struct AppState {
     std::shared_ptr<vka::DescriptorSet> descriptorSet;
     std::shared_ptr<vka::PipelineLayout> pipelineLayout;
     std::shared_ptr<vka::GraphicsPipeline> pipeline;
-    std::unique_ptr<TextObject> testText;
+    TextObject testText;
   } textData;
 
   asset::Collection shapesAsset;
