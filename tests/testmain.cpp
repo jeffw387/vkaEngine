@@ -371,20 +371,25 @@ struct AppState {
       cmd->bindVertexBuffers(0, {textData.vertexBuffer}, {0});
       cmd->setViewport(0, {viewport});
       cmd->setScissor(0, {scissor});
+      auto halfExtent =
+          glm::vec2((float)swapExtent.width, (float)swapExtent.height) * 0.5f;
       TextVertexPushData pushData{};
       pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
+      auto currentFont = textData.testText->font;
       auto& currentString = textData.testText->str;
       for (int i{}; i < currentString.size(); ++i) {
-        int currentGlyph = currentFont.getGlyphIndex(currentString[i]);
+        int currentGlyph = currentFont->getGlyphIndex(currentString[i]);
         int nextGlyph{-1};
         float kerning{};
         if ((i + 1) < currentString.size()) {
-          nextGlyph = currentFont.getGlyphIndex(currentString[i + 1]);
-          kerning = getKerning(currentGlyph, nextGlyph);
+          nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
+          kerning = currentFont->getKerning(currentGlyph, nextGlyph);
         }
-
-        pushData.position = textData.testText->screenPosition +
-                            glm::vec2(character.xOffset, 0.f);
+        float advanceX = currentFont->getAdvance(currentGlyph);
+        pushData.position =
+            textData.testText->screenPosition +
+            glm::vec2(advanceX + kerning, 0.f) -
+            halfExtent;  // TODO should this be added instead? testing needed
         cmd->pushConstants(
             textData.pipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT,
@@ -392,7 +397,11 @@ struct AppState {
             sizeof(TextVertexPushData),
             &pushData);
         cmd->drawIndexed(
-            6, 1, textData.indexBufferOffsets[character.character], 0, 0);
+            Text::IndicesPerQuad,
+            1,
+            textData.vertexData.offsets[currentGlyph],
+            0,
+            0);
       }
     }
   }
