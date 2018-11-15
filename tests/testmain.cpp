@@ -29,9 +29,16 @@ struct TextObject {
   glm::vec2 screenPosition;
   std::string str;
   uint32_t pixelHeight;
-  Text::Font* font;
-  TextObject(glm::vec2 screenPosition, std::string str, uint32_t pixelHeight, Text::Font& font) 
-    : screenPosition(std::move(screenPosition)) 
+  Text::Font<>* font;
+  TextObject(
+      glm::vec2 screenPosition,
+      std::string str,
+      uint32_t pixelHeight,
+      Text::Font<>* font)
+      : screenPosition(std::move(screenPosition)),
+        str(std::move(str)),
+        pixelHeight(pixelHeight),
+        font(font) {}
 };
 
 struct TextVertexPushData {
