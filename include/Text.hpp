@@ -88,7 +88,7 @@ public:
   Font(std::string fontPath);
   int getGlyphIndex(int charIndex);
   Atlas getTextureAtlas(int width, int height);
-  void setPixelHeight(uint32_t height);
+  void setFontPixelHeight(uint32_t height);
   float getAdvance(int glyphIndex);
   float getKerning(int glyphIndex1, int glyphIndex2);
 
