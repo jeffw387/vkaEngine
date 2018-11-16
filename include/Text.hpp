@@ -10,6 +10,7 @@
 #include <range/v3/all.hpp>
 #include <stdexcept>
 #include <glm/glm.hpp>
+#include <msdfgen.h>
 #include "IO.hpp"
 #include "Logger.hpp"
 
@@ -73,7 +74,7 @@ struct Atlas {
   std::vector<uint8_t> pixels;
   int width = {};
   int height = {};
-  std::map<uint8_t /*GlyphIndex*/, stbtt_packedchar /*GlyphAtlasData*/> data;
+  std::map<int /*GlyphIndex*/, stbtt_packedchar /*GlyphAtlasData*/> data;
 
   VertexData getVertexData();
 
@@ -82,19 +83,53 @@ private:
   std::vector<stbtt_aligned_quad> getQuads();
 };
 
+struct MSDFPixel {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+
+  auto operator[](const size_t& index) {
+    switch (index) {
+      case 0:
+      return r;
+      case 1:
+      return g;
+      case 2:
+      return b;
+      default:
+      throw std::runtime_error("Invalid array index");
+    }
+  }
+};
+
+struct MSDFBitmap {
+  std::vector<MSDFPixel> pixels;
+  int width = {};
+  int height = {};
+};
+
+struct MSDFAtlas {
+  MSDFBitmap bitmap;
+  VertexData getVertexData();
+};
+
 template <typename T = BasicCharacters>
 class Font {
 public:
   Font(std::string fontPath);
   int getGlyphIndex(int charIndex);
-  Atlas getTextureAtlas(int width, int height);
   void setFontPixelHeight(uint32_t height);
   float getAdvance(int glyphIndex);
   float getKerning(int glyphIndex1, int glyphIndex2);
   auto getFontBytes() { return fontBytes; }
   float getScaleFactor();
 
+  Atlas getTextureAtlas(int width, int height);
+  MSDFAtlas getMSDFAtlas(int width, int height);
+
 private:
+  std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
+  MSDFBitmap getMSDFBitmap(std::vector<stbtt_vertex> shape);
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;

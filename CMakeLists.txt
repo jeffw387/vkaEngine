@@ -105,10 +105,8 @@ add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE external/stb)
 target_link_libraries(vkaEngine PUBLIC stb)
 
-# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/freetype2")
-# target_link_libraries(vkaEngine PUBLIC freetype)
-# get_target_property(freetypeIncludes freetype INTERFACE_INCLUDE_DIRECTORIES)
-# message("Freetype interface includes: ${freetypeIncludes}")
+add_subdirectory(external/msdfgen)
+target_link_libraries(vkaEngine PUBLIC lib_msdfgen)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
