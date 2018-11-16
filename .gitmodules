@@ -34,3 +34,6 @@
 [submodule "external/stb"]
 	path = external/stb
 	url = https://github.com/nothings/stb.git
+[submodule "external/msdfgen"]
+	path = external/msdfgen
+	url = https://github.com/Chlumsky/msdfgen.git
