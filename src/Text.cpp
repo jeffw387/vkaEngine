@@ -92,6 +92,120 @@ Atlas Font<>::getTextureAtlas(int atlasWidth, int atlasHeight) {
   return atlas;
 }
 
+template <>
+std::vector<stbtt_vertex> Font<>::getGlyphShape(int glyphIndex) {
+  stbtt_vertex* vertArray{};
+  auto vertCount = stbtt_GetGlyphShape(&fontInfo, glyphIndex, &vertArray);
+  std::vector<stbtt_vertex> result;
+  result.reserve(vertCount);
+  for (int i{}; i < vertCount; ++i) {
+    result.push_back(vertArray[i]);
+  }
+  stbtt_FreeShape(&fontInfo, vertArray);
+  return result;
+}
+
+// typedef struct {
+//   stbtt_vertex_type x, y, cx, cy, cx1, cy1;
+//   unsigned char type, padding;
+// } stbtt_vertex;
+
+auto addContourStart = [](msdfgen::Contour& contour,
+                          msdfgen::Point2 startPoint) {
+  auto& newEdge = contour.addEdge();
+  newEdge = msdfgen::EdgeHolder(msdfgen::Point2{}, startPoint);
+  return startPoint;
+};
+
+auto addLineEdge = [](msdfgen::Contour& contour,
+                      msdfgen::Point2 priorEndPoint,
+                      msdfgen::Point2 nextEndPoint) {
+  auto& newEdge = contour.addEdge();
+  newEdge = msdfgen::EdgeHolder(priorEndPoint, nextEndPoint);
+  return nextEndPoint;
+};
+
+auto addQuadraticEdge = [](msdfgen::Contour& contour,
+                           msdfgen::Point2 priorEndPoint,
+                           msdfgen::Point2 midpoint,
+                           msdfgen::Point2 nextEndPoint) {
+  auto& newEdge = contour.addEdge();
+  newEdge = msdfgen::EdgeHolder(priorEndPoint, midpoint, nextEndPoint);
+  return nextEndPoint;
+};
+
+auto addCubicEdge = [](msdfgen::Contour& contour,
+                       msdfgen::Point2 priorEndPoint,
+                       msdfgen::Point2 midpoint1,
+                       msdfgen::Point2 midpoint2,
+                       msdfgen::Point2 nextEndPoint) {
+  auto& newEdge = contour.addEdge();
+  newEdge =
+      msdfgen::EdgeHolder(priorEndPoint, midpoint1, midpoint2, nextEndPoint);
+  return nextEndPoint;
+};
+
+template <>
+std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> Font<>::getMSDFBitmap(
+    std::vector<stbtt_vertex> stbtt_shape,
+    int bitmapWidth,
+    int bitmapHeight) {
+  msdfgen::Shape shape{};
+  shape.addContour();
+  msdfgen::Point2 lastEndPoint{};
+  for (auto& vert : stbtt_shape) {
+    switch (vert.type) {
+      case STBTT_vmove:
+        shape.addContour();
+        lastEndPoint = addContourStart(
+            shape.contours.back(),
+            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+        break;
+      case STBTT_vline:
+        lastEndPoint = addLineEdge(
+            shape.contours.back(),
+            lastEndPoint,
+            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+        break;
+      case STBTT_vcurve:
+        lastEndPoint = addQuadraticEdge(
+            shape.contours.back(),
+            lastEndPoint,
+            {static_cast<double>(vert.cx), static_cast<double>(vert.cy)},
+            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+        break;
+      case STBTT_vcubic:
+        lastEndPoint = addCubicEdge(
+            shape.contours.back(),
+            lastEndPoint,
+            {static_cast<double>(vert.cx), static_cast<double>(vert.cy)},
+            {static_cast<double>(vert.cx1), static_cast<double>(vert.cy1)},
+            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+        break;
+    }
+  }
+  msdfgen::edgeColoringSimple(shape, 3);
+  shape.normalize();
+  double left{};
+  double bottom{};
+  double right{};
+  double top{};
+  shape.bounds(left, bottom, right, top);
+  auto output = std::make_unique<msdfgen::Bitmap<msdfgen::FloatRGB>>(
+      bitmapWidth, bitmapHeight);
+  // TODO: calculate correct translation (and scale?) per glyph
+  // TODO: figure out how to use range correctly
+  msdfgen::generateMSDF(*output, shape, (right - left) * 1.25, {1, 1}, {0, 0});
+
+  return output;
+}
+
+// TODO: implement
+template <>
+MSDFArray Font<>::getMSDFArray(int width, int height) {
+  return {};
+}
+
 stbtt_aligned_quad Atlas::getQuad(int glyphIndex) {
   stbtt_aligned_quad quad{};
   float xAdvance{};
