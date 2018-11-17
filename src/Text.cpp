@@ -199,6 +199,13 @@ std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> Font<>::getMSDFBitmap(
 
   return output;
 }
+
+// TODO: implement
+template <>
+MSDFArray Font<>::getMSDFArray(int width, int height) {
+  return {};
+}
+
 stbtt_aligned_quad Atlas::getQuad(int glyphIndex) {
   stbtt_aligned_quad quad{};
   float xAdvance{};
