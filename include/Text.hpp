@@ -83,33 +83,8 @@ private:
   std::vector<stbtt_aligned_quad> getQuads();
 };
 
-struct MSDFPixel {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-
-  auto operator[](const size_t& index) {
-    switch (index) {
-      case 0:
-      return r;
-      case 1:
-      return g;
-      case 2:
-      return b;
-      default:
-      throw std::runtime_error("Invalid array index");
-    }
-  }
-};
-
-struct MSDFBitmap {
-  std::vector<MSDFPixel> pixels;
-  int width = {};
-  int height = {};
-};
-
-struct MSDFAtlas {
-  MSDFBitmap bitmap;
+struct MSDFArray {
+  std::vector<std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>> bitmaps;
   VertexData getVertexData();
 };
 
@@ -129,7 +104,10 @@ public:
 
 private:
   std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
-  MSDFBitmap getMSDFBitmap(std::vector<stbtt_vertex> shape);
+  std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> getMSDFBitmap(
+      std::vector<stbtt_vertex> shape,
+      int bitmapWidth,
+      int bitmapHeight);
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;
