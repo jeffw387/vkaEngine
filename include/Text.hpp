@@ -125,7 +125,7 @@ public:
   float getScaleFactor();
 
   Atlas getTextureAtlas(int width, int height);
-  MSDFAtlas getMSDFAtlas(int width, int height);
+  MSDFArray getMSDFArray(int width, int height);
 
 private:
   std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
