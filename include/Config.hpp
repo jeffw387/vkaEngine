@@ -1,3 +1,3 @@
 #pragma once
 
-static constexpr bool Debug = true;
+static constexpr bool Debug = ;

@@ -146,10 +146,9 @@ auto addCubicEdge = [](msdfgen::Contour& contour,
 };
 
 template <>
-std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> Font<>::getMSDFBitmap(
-    std::vector<stbtt_vertex> stbtt_shape,
-    int bitmapWidth,
-    int bitmapHeight) {
+std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
+Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
+  auto stbtt_shape = getGlyphShape(glyphIndex);
   msdfgen::Shape shape{};
   shape.addContour();
   msdfgen::Point2 lastEndPoint{};
@@ -195,15 +194,28 @@ std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> Font<>::getMSDFBitmap(
       bitmapWidth, bitmapHeight);
   // TODO: calculate correct translation (and scale?) per glyph
   // TODO: figure out how to use range correctly
-  msdfgen::generateMSDF(*output, shape, (right - left) * 1.25, {1, 1}, {0, 0});
+  msdfgen::generateMSDF(
+      *output, shape, (right - left) * 1.25, {0.1, 0.1}, {0, 0});
 
   return output;
 }
 
-// TODO: implement
 template <>
 MSDFArray Font<>::getMSDFArray(int width, int height) {
-  return {};
+  auto charRanges = charSet();
+  auto glyphIndexView =
+      charRanges | ranges::view::transform([&](auto charRange) {
+        return ranges::view::closed_indices(
+            charRange.firstChar, charRange.firstChar + charRange.charCount - 1);
+      }) |
+      ranges::view::join;
+  MSDFArray result{};
+  ranges::action::push_back(
+      result.bitmaps,
+      glyphIndexView | ranges::view::transform([&](auto glyphIndex) {
+        return getMSDFBitmap(glyphIndex, width, height);
+      }));
+  return result;
 }
 
 stbtt_aligned_quad Atlas::getQuad(int glyphIndex) {

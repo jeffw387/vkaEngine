@@ -652,8 +652,33 @@ struct AppState {
     constexpr auto atlasHeight = 512;
     constexpr auto fontPixelHeight = 60;
 
+    auto convertToInt32Bitmap =
+        [](msdfgen::FloatRGB* float32Bitmap, int width, int height) {
+          std::vector<uint32_t> result;
+          result.reserve(width * height);
+          for (int i{}; i < width * height; ++i) {
+            const auto& pixel = float32Bitmap[i];
+            result.push_back(pixel.r * ~(0U));
+            result.push_back(pixel.g * ~(0U));
+            result.push_back(pixel.b * ~(0U));
+          }
+          return result;
+        };
+
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
+    auto msdfArray = textData.testFont->getMSDFArray(128, 128);
+    for (size_t i{}; i < msdfArray.bitmaps.size(); ++i) {
+      auto& bitmap = msdfArray.bitmaps[i];
+      auto intBitmap = convertToInt32Bitmap(bitmap->data(), 128, 128);
+      auto outputFilename = "testMSDFOutput" + std::to_string(i) + ".buffer";
+      auto writeResult =
+          vka::writeBinaryFile<uint32_t>(outputFilename, {intBitmap});
+      if (writeResult != IOError::Success) {
+        MultiLogger::get()->error(
+            "IO error: {}", std::error_code(writeResult).message());
+      }
+    }
 
     textData.testFont->setFontPixelHeight(fontPixelHeight);
     textData.atlas =

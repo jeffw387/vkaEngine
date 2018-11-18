@@ -54,7 +54,7 @@ constexpr uint8_t IndicesPerQuad = 6;
 constexpr uint8_t VerticesPerQuad = 4;
 
 struct CharacterRange {
-  int firstChar = {};
+  size_t firstChar = {};
   size_t charCount = {};
 };
 
@@ -104,10 +104,8 @@ public:
 
 private:
   std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
-  std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> getMSDFBitmap(
-      std::vector<stbtt_vertex> shape,
-      int bitmapWidth,
-      int bitmapHeight);
+  std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
+  getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight);
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;

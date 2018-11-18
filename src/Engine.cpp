@@ -12,7 +12,7 @@
 #include "Device.hpp"
 #include "spdlog/spdlog.h"
 #include "Surface.hpp"
-#include "Config.hpp"
+// #include "Config.hpp"
 #include "Logger.hpp"
 
 namespace vka {

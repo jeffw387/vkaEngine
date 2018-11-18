@@ -17,11 +17,11 @@ configure_file("${includeDir}/version.hpp.in"
 
 set(DebugBool "$<$<CONFIG:Debug>:true>")
 
-configure_file("${includeDir}/Config.hpp.in" 
-    "${includeDir}/Config.hpp.cfg" @ONLY)
+# configure_file("${includeDir}/Config.hpp.in" 
+#     "${includeDir}/Config.hpp.cfg" @ONLY)
 
-file(GENERATE OUTPUT "${includeDir}/Config.hpp"
-  INPUT "${includeDir}/Config.hpp.cfg")
+# file(GENERATE OUTPUT "${includeDir}/Config.hpp"
+#   INPUT "${includeDir}/Config.hpp.cfg")
 
 list(APPEND vkaEngineSources 
   "${srcDir}/Logger.cpp"
@@ -47,7 +47,7 @@ list(APPEND vkaEngineSources
   
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
-  "${includeDir}/Config.hpp"
+  # "${includeDir}/Config.hpp"
   "${includeDir}/Text.hpp"
   "${includeDir}/Logger.hpp"
   "${includeDir}/IO.hpp"
