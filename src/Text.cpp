@@ -184,7 +184,8 @@ Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
     }
   }
   msdfgen::edgeColoringSimple(shape, 3);
-  shape.normalize();
+  shape.inverseYAxis = true;
+  // shape.normalize();
   double left{};
   double bottom{};
   double right{};
@@ -194,8 +195,9 @@ Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
       bitmapWidth, bitmapHeight);
   // TODO: calculate correct translation (and scale?) per glyph
   // TODO: figure out how to use range correctly
-  msdfgen::generateMSDF(
-      *output, shape, (right - left) * 1.25, {0.1, 0.1}, {0, 0});
+  auto scale = stbtt_ScaleForPixelHeight(&fontInfo, bitmapHeight);
+  auto range = right - left;
+  msdfgen::generateMSDF(*output, shape, range * .4, {scale, scale}, {0, 0});
 
   return output;
 }

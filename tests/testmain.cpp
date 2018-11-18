@@ -667,10 +667,10 @@ struct AppState {
 
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
-    auto msdfArray = textData.testFont->getMSDFArray(128, 128);
+    auto msdfArray = textData.testFont->getMSDFArray(64, 64);
     for (size_t i{}; i < msdfArray.bitmaps.size(); ++i) {
       auto& bitmap = msdfArray.bitmaps[i];
-      auto intBitmap = convertToInt32Bitmap(bitmap->data(), 128, 128);
+      auto intBitmap = convertToInt32Bitmap(bitmap->data(), 64, 64);
       auto outputFilename = "testMSDFOutput" + std::to_string(i) + ".buffer";
       auto writeResult =
           vka::writeBinaryFile<uint32_t>(outputFilename, {intBitmap});
