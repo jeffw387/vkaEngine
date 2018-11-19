@@ -652,28 +652,39 @@ struct AppState {
     constexpr auto atlasHeight = 512;
     constexpr auto fontPixelHeight = 60;
 
-    auto convertToInt32Bitmap =
-        [](msdfgen::FloatRGB* float32Bitmap, int width, int height) {
-          std::vector<uint32_t> result;
-          result.reserve(width * height);
-          for (int i{}; i < width * height; ++i) {
-            const auto& pixel = float32Bitmap[i];
-            result.push_back(pixel.r * ~(0U));
-            result.push_back(pixel.g * ~(0U));
-            result.push_back(pixel.b * ~(0U));
-          }
-          return result;
-        };
+    auto convertToInt32Bitmap = [](msdfgen::Bitmap<msdfgen::FloatRGB>* bitmap) {
+      std::vector<uint8_t> result;
+      result.reserve(bitmap->width() * bitmap->height());
+      for (int i{}; i < bitmap->width() * bitmap->height(); ++i) {
+        const auto& pixel = bitmap->data()[i];
+        result.push_back(pixel.r * 255);
+        result.push_back(pixel.g * 255);
+        result.push_back(pixel.b * 255);
+      }
+      return result;
+    };
+
+    auto convertFloatToInt32Bitmap = [](msdfgen::Bitmap<float>* bitmap) {
+      std::vector<uint8_t> result;
+      result.reserve(bitmap->width() * bitmap->height());
+      for (int i{}; i < bitmap->width() * bitmap->height(); ++i) {
+        const auto& pixel = bitmap->data()[i];
+        result.push_back(std::clamp(pixel * 256, 0.f, 255.f));
+      }
+      return result;
+    };
 
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
-    auto msdfArray = textData.testFont->getMSDFArray(64, 64);
+    auto msdfArray = textData.testFont->getMSDFArray(32, 32);
     for (size_t i{}; i < msdfArray.bitmaps.size(); ++i) {
       auto& bitmap = msdfArray.bitmaps[i];
-      auto intBitmap = convertToInt32Bitmap(bitmap->data(), 64, 64);
+      auto testRender = msdfgen::Bitmap<float>(64, 64);
+      msdfgen::renderSDF(testRender, *bitmap, 1.5);
+      auto intBitmap = convertFloatToInt32Bitmap(&testRender);
       auto outputFilename = "testMSDFOutput" + std::to_string(i) + ".buffer";
       auto writeResult =
-          vka::writeBinaryFile<uint32_t>(outputFilename, {intBitmap});
+          vka::writeBinaryFile<uint8_t>(outputFilename, {intBitmap});
       if (writeResult != IOError::Success) {
         MultiLogger::get()->error(
             "IO error: {}", std::error_code(writeResult).message());

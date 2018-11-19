@@ -10,6 +10,7 @@
 #include <range/v3/all.hpp>
 #include <stdexcept>
 #include <glm/glm.hpp>
+#include <optional>
 #include <msdfgen.h>
 #include "IO.hpp"
 #include "Logger.hpp"

@@ -110,82 +110,112 @@ std::vector<stbtt_vertex> Font<>::getGlyphShape(int glyphIndex) {
 //   unsigned char type, padding;
 // } stbtt_vertex;
 
-auto addContourStart = [](msdfgen::Contour& contour,
-                          msdfgen::Point2 startPoint) {
-  auto& newEdge = contour.addEdge();
-  newEdge = msdfgen::EdgeHolder(msdfgen::Point2{}, startPoint);
-  return startPoint;
-};
-
 auto addLineEdge = [](msdfgen::Contour& contour,
-                      msdfgen::Point2 priorEndPoint,
-                      msdfgen::Point2 nextEndPoint) {
+                      msdfgen::Point2 startPoint,
+                      msdfgen::Point2 endPoint) {
   auto& newEdge = contour.addEdge();
-  newEdge = msdfgen::EdgeHolder(priorEndPoint, nextEndPoint);
-  return nextEndPoint;
+  newEdge = msdfgen::EdgeHolder(startPoint, endPoint);
+  return endPoint;
 };
 
 auto addQuadraticEdge = [](msdfgen::Contour& contour,
-                           msdfgen::Point2 priorEndPoint,
-                           msdfgen::Point2 midpoint,
-                           msdfgen::Point2 nextEndPoint) {
+                           msdfgen::Point2 startPoint,
+                           msdfgen::Point2 controlPoint,
+                           msdfgen::Point2 endPoint) {
   auto& newEdge = contour.addEdge();
-  newEdge = msdfgen::EdgeHolder(priorEndPoint, midpoint, nextEndPoint);
-  return nextEndPoint;
+  newEdge = msdfgen::EdgeHolder(startPoint, controlPoint, endPoint);
+  return endPoint;
 };
 
 auto addCubicEdge = [](msdfgen::Contour& contour,
-                       msdfgen::Point2 priorEndPoint,
-                       msdfgen::Point2 midpoint1,
-                       msdfgen::Point2 midpoint2,
-                       msdfgen::Point2 nextEndPoint) {
+                       msdfgen::Point2 startPoint,
+                       msdfgen::Point2 controlPoint1,
+                       msdfgen::Point2 controlPoint2,
+                       msdfgen::Point2 endPoint) {
   auto& newEdge = contour.addEdge();
   newEdge =
-      msdfgen::EdgeHolder(priorEndPoint, midpoint1, midpoint2, nextEndPoint);
-  return nextEndPoint;
+      msdfgen::EdgeHolder(startPoint, controlPoint1, controlPoint2, endPoint);
+  return endPoint;
 };
 
-template <>
-std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
-Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
-  auto stbtt_shape = getGlyphShape(glyphIndex);
+auto makePoint = [](short x, short y) {
+  return msdfgen::Point2{static_cast<double>(x), static_cast<double>(y)};
+};
+
+auto makeShape = [](auto stbtt_shape) {
   msdfgen::Shape shape{};
-  shape.addContour();
-  msdfgen::Point2 lastEndPoint{};
+  msdfgen::Point2 nextStartPoint{};
   for (auto& vert : stbtt_shape) {
     switch (vert.type) {
       case STBTT_vmove:
+        // MultiLogger::get()->info("Adding new contour.");
         shape.addContour();
-        lastEndPoint = addContourStart(
-            shape.contours.back(),
-            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+        nextStartPoint = makePoint(vert.x, vert.y);
         break;
       case STBTT_vline:
-        lastEndPoint = addLineEdge(
-            shape.contours.back(),
-            lastEndPoint,
-            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+        // MultiLogger::get()->info(
+        //     "Creating Line edge: {}x,{}y to {}x,{}y",
+        //     nextStartPoint.x,
+        //     nextStartPoint.y,
+        //     vert.x,
+        //     vert.y);
+        nextStartPoint = addLineEdge(
+            shape.contours.back(), nextStartPoint, makePoint(vert.x, vert.y));
         break;
       case STBTT_vcurve:
-        lastEndPoint = addQuadraticEdge(
+        // MultiLogger::get()->info(
+        //     "Creating Quadratic edge: {}x,{}y to {}x,{}y",
+        //     nextStartPoint.x,
+        //     nextStartPoint.y,
+        //     vert.x,
+        //     vert.y);
+        nextStartPoint = addQuadraticEdge(
             shape.contours.back(),
-            lastEndPoint,
-            {static_cast<double>(vert.cx), static_cast<double>(vert.cy)},
-            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+            nextStartPoint,
+            makePoint(vert.cx, vert.cy),
+            makePoint(vert.x, vert.y));
         break;
       case STBTT_vcubic:
-        lastEndPoint = addCubicEdge(
+        // MultiLogger::get()->info(
+        //     "Creating Cubic edge: {}x,{}y to {}x,{}y",
+        //     nextStartPoint.x,
+        //     nextStartPoint.y,
+        //     vert.x,
+        //     vert.y);
+        nextStartPoint = addCubicEdge(
             shape.contours.back(),
-            lastEndPoint,
-            {static_cast<double>(vert.cx), static_cast<double>(vert.cy)},
-            {static_cast<double>(vert.cx1), static_cast<double>(vert.cy1)},
-            {static_cast<double>(vert.x), static_cast<double>(vert.y)});
+            nextStartPoint,
+            makePoint(vert.cx, vert.cy),
+            makePoint(vert.cx1, vert.cy1),
+            makePoint(vert.x, vert.y));
         break;
     }
   }
-  msdfgen::edgeColoringSimple(shape, 3);
   shape.inverseYAxis = true;
-  // shape.normalize();
+  return shape;
+};
+
+auto findCenter = [](double min, double max) { return (max - min) * 0.5; };
+
+// calculate translation to center shape in frame
+auto calcTranslation =
+    [](double shapeMin, double shapeMax, double frameMin, double frameMax) {
+      auto shapeCenter = findCenter(shapeMin, shapeMax);
+      auto frameCenter = findCenter(frameMin, frameMax);
+      return frameCenter - shapeCenter;
+    };
+    
+template <>
+std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
+Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
+  auto shape = makeShape(getGlyphShape(glyphIndex));
+  if (!shape.validate()) {
+    MultiLogger::get()->error(
+        "Error: problem with shape from glyph index {}.", glyphIndex);
+  }
+
+  msdfgen::edgeColoringSimple(shape, 3);
+  shape.normalize();
   double left{};
   double bottom{};
   double right{};
@@ -193,12 +223,15 @@ Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
   shape.bounds(left, bottom, right, top);
   auto output = std::make_unique<msdfgen::Bitmap<msdfgen::FloatRGB>>(
       bitmapWidth, bitmapHeight);
-  // TODO: calculate correct translation (and scale?) per glyph
-  // TODO: figure out how to use range correctly
-  auto scale = stbtt_ScaleForPixelHeight(&fontInfo, bitmapHeight);
-  auto range = right - left;
-  msdfgen::generateMSDF(*output, shape, range * .4, {scale, scale}, {0, 0});
+  auto vscale = stbtt_ScaleForPixelHeight(&fontInfo, bitmapHeight * 0.75);
+  msdfgen::Vector2 scale{vscale, vscale};
+  msdfgen::Vector2 translate{
+      calcTranslation(left, right, 0, bitmapWidth / vscale),
+      calcTranslation(bottom, top, 0, bitmapHeight / vscale)};
+  auto range = 2 / vscale;
+  msdfgen::generateMSDF(*output, shape, range, scale, translate);
 
+  msdfgen::simulate8bit(*output);
   return output;
 }
 
