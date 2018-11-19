@@ -80,8 +80,8 @@ public:
 
 private:
   std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
-  std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
-  getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight);
+  MSDFGlyph
+  getMSDFGlyph(int glyphIndex, int bitmapWidth, int bitmapHeight, int framePadding = 4);
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;

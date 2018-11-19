@@ -206,8 +206,8 @@ auto calcTranslation =
     };
 
 template <>
-std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
-Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
+MSDFGlyph
+Font<>::getMSDFGlyph(int glyphIndex, int bitmapWidth, int bitmapHeight, int framePadding) {
   auto shape = makeShape(getGlyphShape(glyphIndex));
   if (!shape.validate()) {
     MultiLogger::get()->error(
@@ -223,7 +223,7 @@ Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
   shape.bounds(left, bottom, right, top);
   auto output = std::make_unique<msdfgen::Bitmap<msdfgen::FloatRGB>>(
       bitmapWidth, bitmapHeight);
-  auto vscale = stbtt_ScaleForPixelHeight(&fontInfo, bitmapHeight * 0.75);
+  auto vscale = stbtt_ScaleForPixelHeight(&fontInfo, bitmapHeight - (framePadding * 2));
   msdfgen::Vector2 scale{vscale, vscale};
   msdfgen::Vector2 translate{
       calcTranslation(left, right, 0, bitmapWidth / vscale),
