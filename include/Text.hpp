@@ -54,6 +54,11 @@ private:
   std::vector<stbtt_aligned_quad> getQuads();
 };
 
+struct MSDFGlyph {
+  std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> bitmap;
+  float scale;
+};
+
 struct MSDFArray {
   std::vector<std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>> bitmaps;
   VertexData getVertexData();
