@@ -16,36 +16,6 @@
 #include "Logger.hpp"
 
 namespace Text {
-
-// using Tile = gsl::span<uint8_t>;
-// auto outputGlyphBitmap = [](const std::vector<uint8_t> &tile,
-//                             auto tileIndex,
-//                             Dimensions dimensions) {
-//   if (tile.size() == 0) return;
-//   auto fileName = std::string("glyph") + std::to_string(tileIndex) +
-//                   std::string("-") + std::to_string(dimensions.width) +
-//                   std::string("x") + std::to_string(dimensions.height) +
-//                   std::string(".buf");
-//   std::ofstream outFile{
-//       fileName,
-//       std::ios_base::out | std::ios_base::binary | std::ios_base::trunc};
-//   if (!outFile.is_open()) {
-//     MultiLogger::get()->error("File {} was not opened!", fileName);
-//     exit(1);
-//   }
-//   outFile.seekp(std::ios::beg);
-//   auto start = tile.data();
-//   auto size = tile.size();
-
-//   outFile.write((char *)start, size);
-//   if (outFile.fail()) {
-//     MultiLogger::get()->error("Write operation to {} failed!", fileName);
-//     if (outFile.bad()) {
-//       MultiLogger::get()->error("Bad bit set!");
-//     }
-//     exit(1);
-//   }
-// };
 using Index = uint16_t;
 struct Vertex {
   glm::vec2 pos = {};
