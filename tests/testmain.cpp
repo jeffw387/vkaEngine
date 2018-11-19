@@ -29,12 +29,12 @@ struct TextObject {
   glm::vec2 screenPosition;
   std::string str;
   uint32_t pixelHeight;
-  Text::Font<>* font;
+  Text::Font* font;
   TextObject(
       glm::vec2 screenPosition,
       std::string str,
       uint32_t pixelHeight,
-      Text::Font<>* font)
+      Text::Font* font)
       : screenPosition(std::move(screenPosition)),
         str(std::move(str)),
         pixelHeight(pixelHeight),
@@ -134,7 +134,7 @@ struct AppState {
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
   struct TextData {
-    std::unique_ptr<Text::Font<>> testFont;
+    std::unique_ptr<Text::Font> testFont;
     Text::Atlas atlas;
     Text::VertexData vertexData;
     std::shared_ptr<vka::Image> fontImage;
@@ -675,21 +675,21 @@ struct AppState {
     };
 
     textData.testFont =
-        std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
+        std::make_unique<Text::Font>("content/fonts/Anke/Anke.ttf");
     auto msdfArray = textData.testFont->getMSDFArray(32, 32);
-    for (size_t i{}; i < msdfArray.bitmaps.size(); ++i) {
-      auto& bitmap = msdfArray.bitmaps[i];
-      auto testRender = msdfgen::Bitmap<float>(64, 64);
-      msdfgen::renderSDF(testRender, *bitmap, 1.5);
-      auto intBitmap = convertFloatToInt32Bitmap(&testRender);
-      auto outputFilename = "testMSDFOutput" + std::to_string(i) + ".buffer";
-      auto writeResult =
-          vka::writeBinaryFile<uint8_t>(outputFilename, {intBitmap});
-      if (writeResult != IOError::Success) {
-        MultiLogger::get()->error(
-            "IO error: {}", std::error_code(writeResult).message());
-      }
-    }
+    // for (size_t i{}; i < msdfArray.bitmaps.size(); ++i) {
+    //   auto& bitmap = msdfArray.bitmaps[i];
+    //   auto testRender = msdfgen::Bitmap<float>(64, 64);
+    //   msdfgen::renderSDF(testRender, *bitmap, 1.5);
+    //   auto intBitmap = convertFloatToInt32Bitmap(&testRender);
+    //   auto outputFilename = "testMSDFOutput" + std::to_string(i) + ".buffer";
+    //   auto writeResult =
+    //       vka::writeBinaryFile<uint8_t>(outputFilename, {intBitmap});
+    //   if (writeResult != IOError::Success) {
+    //     MultiLogger::get()->error(
+    //         "IO error: {}", std::error_code(writeResult).message());
+    //   }
+    // }
 
     textData.testFont->setFontPixelHeight(fontPixelHeight);
     textData.atlas =

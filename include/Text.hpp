@@ -54,37 +54,48 @@ private:
   std::vector<stbtt_aligned_quad> getQuads();
 };
 
-struct MSDFGlyph {
-  std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>> bitmap;
-  float scale;
-};
+struct MSDFGlyph;
 
 struct MSDFArray {
-  std::vector<std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>> bitmaps;
+  std::map<int, std::unique_ptr<MSDFGlyph>> glyphs;
   VertexData getVertexData();
 };
 
 template <typename T = BasicCharacters>
-class Font {
+class BasicFont {
 public:
-  Font(std::string fontPath);
+  BasicFont(std::string fontPath);
   int getGlyphIndex(int charIndex);
-  void setFontPixelHeight(uint32_t height);
-  float getAdvance(int glyphIndex);
-  float getKerning(int glyphIndex1, int glyphIndex2);
+  // void setFontPixelHeight(uint32_t height);
+  float getAdvance(int glyphIndex, uint32_t fontPixelHeight);
+  float getKerning(int glyphIndex1, int glyphIndex2, uint32_t fontPixelHeight);
   auto getFontBytes() { return fontBytes; }
-  float getScaleFactor();
+  // float getScaleFactor();
 
-  Atlas getTextureAtlas(int width, int height);
-  MSDFArray getMSDFArray(int width, int height);
+  // Atlas getTextureAtlas(int width, int height);
 
 private:
   std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
-  MSDFGlyph
-  getMSDFGlyph(int glyphIndex, int bitmapWidth, int bitmapHeight, int framePadding = 4);
+  std::unique_ptr<MSDFGlyph> getMSDFGlyph(
+      int glyphIndex,
+      int bitmapWidth,
+      int bitmapHeight,
+      int framePadding);
+  MSDFArray getMSDFArray(int width, int height, int framePadding = 4);
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;
-  uint32_t font_size = 12;
+  MSDFArray glyphArray;
+};
+using Font = BasicFont<>;
+
+struct MSDFGlyph {
+  Font* font;
+  msdfgen::Bitmap<msdfgen::FloatRGB> bitmap;
+  float scale;
+  float left;
+  float top;
+  float right;
+  float bottom;
 };
 }  // namespace Text
