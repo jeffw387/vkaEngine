@@ -204,7 +204,7 @@ auto calcTranslation =
       auto frameCenter = findCenter(frameMin, frameMax);
       return frameCenter - shapeCenter;
     };
-    
+
 template <>
 std::unique_ptr<msdfgen::Bitmap<msdfgen::FloatRGB>>
 Font<>::getMSDFBitmap(int glyphIndex, int bitmapWidth, int bitmapHeight) {
