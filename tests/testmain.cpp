@@ -771,7 +771,6 @@ struct AppState {
 
     constexpr auto fontPixelHeight = 60;
 
-
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
 
