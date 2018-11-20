@@ -839,26 +839,21 @@ struct AppState {
     textData.descriptorSet0->validate(*device);
 
     textData.pipelineLayout = device->createPipelineLayout(
-        {{
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            0,
-            sizeof(glm::float32)},
-            {
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            4,
-            sizeof(glm::uint32)},
-            {
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            8,
-            sizeof(glm::vec2)},
-            {
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            16,
-            sizeof(glm::vec2)},
-            {
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            32,
-            sizeof(glm::vec4)}},
+        {{VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          0,
+          sizeof(glm::float32)},
+         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          4,
+          sizeof(glm::uint32)},
+         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          8,
+          sizeof(glm::vec2)},
+         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          16,
+          sizeof(glm::vec2)},
+         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          32,
+          sizeof(glm::vec4)}},
         {*textData.setLayout0});
 
     textData.vertexShader =
