@@ -37,10 +37,11 @@ public:
 private:
   VmaAllocator allocator = nullptr;
 public:
-  ThsvsImageLayout layout = {};
-  ImageAspect aspect = {};
   VkExtent3D extent = {};
+  VkFormat format = {};
+  ImageAspect aspect = {};
   uint32_t layerCount = 1;
+  ThsvsImageLayout layout = {};
 
 private:
   VkImage image = VK_NULL_HANDLE;

@@ -816,7 +816,7 @@ struct AppState {
         vka::ImageAspect::Color,
         true);
     textData.fontImageView = device->createImageView2D(
-        *textData.fontImage, VK_FORMAT_R8_UNORM, vka::ImageAspect::Color);
+        *textData.fontImage, textData.fontImage->format, vka::ImageAspect::Color);
     textData.fontSampler = device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
     textData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);

@@ -18,10 +18,11 @@ Image::Image(
     ThsvsImageLayout initialLayout,
     VkImageTiling tiling)
     : allocator(allocator), 
-      layout(initialLayout),
-      aspect(aspect),
       extent(extent),
-      layerCount(arrayLayers) {
+      format(format),
+      aspect(aspect),
+      layerCount(arrayLayers),
+      layout(initialLayout) {
   VkImageCreateInfo imageCreateInfo{};
   imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imageCreateInfo.usage = usage;
