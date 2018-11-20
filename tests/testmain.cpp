@@ -147,10 +147,10 @@ struct AppState {
     std::unique_ptr<vka::ShaderModule> vertexShader;
     std::unique_ptr<vka::ShaderModule> fragmentShader;
     std::unique_ptr<vka::DescriptorSetLayout> setLayout0;
-    std::unique_ptr<vka::DescriptorSetLayout> setLayout1;
+    // std::unique_ptr<vka::DescriptorSetLayout> setLayout1;
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
     std::shared_ptr<vka::DescriptorSet> descriptorSet0;
-    std::shared_ptr<vka::DescriptorSet> descriptorSet1;
+    // std::shared_ptr<vka::DescriptorSet> descriptorSet1;
     std::shared_ptr<vka::PipelineLayout> pipelineLayout;
     std::shared_ptr<vka::GraphicsPipeline> pipeline;
   } textData;
@@ -422,7 +422,7 @@ struct AppState {
     if (auto cmd = render.cmd.lock()) {
       cmd->bindGraphicsPipeline(textData.pipeline);
       cmd->bindGraphicsDescriptorSets(
-          textData.pipelineLayout, 0, {textData.descriptorSet}, {});
+          textData.pipelineLayout, 0, {textData.descriptorSet0}, {});
       cmd->bindIndexBuffer(textData.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
       cmd->bindVertexBuffers(0, {textData.vertexBuffer}, {0});
       cmd->setViewport(0, {viewport});
@@ -821,7 +821,8 @@ struct AppState {
         *textData.fontImage, textData.fontImage->format, vka::ImageAspect::Color);
     textData.fontSampler = device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
     textData.descriptorPool = device->createDescriptorPool(
-        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);
+        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}, 
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}}, 1);
     textData.setLayout0 =
         device->createSetLayout({{0,
                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -830,19 +831,19 @@ struct AppState {
                                   *textData.fontSampler}});
 
     textData.descriptorSet0 = textData.descriptorPool->allocateDescriptorSet(
-        textData.setLayout.get());
+        textData.setLayout0.get());
 
     auto fontImageDescriptor =
-        textData.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
+        textData.descriptorSet0->getDescriptor<vka::ImageSamplerDescriptor>(
             vka::DescriptorReference{});
     (*fontImageDescriptor)(
         *textData.fontImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    textData.descriptorSet->validate(*device);
+    textData.descriptorSet0->validate(*device);
 
     textData.pipelineLayout = device->createPipelineLayout(
         {VkPushConstantRange{
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(TextVertexPushData)}},
-        {*textData.setLayout});
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextVertexPushData)}},
+        {*textData.setLayout0});
 
     textData.vertexShader =
         device->createShaderModule("content/shaders/text.vert.spv");

@@ -4,8 +4,10 @@ layout(location = 1) in vec2 aUV;
 
 layout(push_constant) uniform uPushConstant{
   layout(offset=0) float textScale;
-  layout(offset=16) vec2 screenPos;
-  layout(offset=32) vec2 clipSpaceScale;
+  layout(offset=4) uint glyphIndex;
+  layout(offset=8) vec2 screenPos;
+  layout(offset=16) vec2 clipSpaceScale;
+  layout(offset=32) vec4 fontColor;
 } pc;
 
 // screenspace screenPos relative to center of screen, scale factor to switch to clip space

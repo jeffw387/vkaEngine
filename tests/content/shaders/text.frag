@@ -2,14 +2,13 @@
 layout(location = 0) out vec4 outColor;
 
 layout(set=0) uniform sampler2DArray sTexture;
-layout(set=1) uniform Material {
-  vec4 color;
-} material;
 
 layout(push_constant) uniform uPushConstant{
+  layout(offset=0) float textScale;
   layout(offset=4) uint glyphIndex;
-  layout(offset=8) float pxRange;
-  layout(offset=32) vec2 clipSpaceScale;
+  layout(offset=8) vec2 screenPos;
+  layout(offset=16) vec2 clipSpaceScale;
+  layout(offset=32) vec4 fontColor;
 } pc;
 
 layout(location = 0) in struct{
@@ -27,5 +26,5 @@ void main()
   float signedDistanceInPixels = signedDistance * length(clipSpaceScale);
   float opacity = clamp(signedDistanceInPixels + 0.5, 0.0, 1.0);
 
-  outColor = vec4(material.color.rgb, opacity) ;
+  outColor = vec4(pc.fontColor.rgb, opacity) ;
 }
