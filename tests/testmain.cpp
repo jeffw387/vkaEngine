@@ -196,8 +196,7 @@ struct AppState {
     thsvsGetVulkanMemoryBarrier(thBarrier, &src, &dst, &barrier);
 
     if (auto cmd = transferCmd.lock()) {
-      cmd->pipelineBarrier(
-          src, dst, 0, {barrier}, {}, {});
+      cmd->pipelineBarrier(src, dst, 0, {barrier}, {}, {});
     }
   }
 
@@ -217,21 +216,18 @@ struct AppState {
     thBarrier.prevLayout = image->layout;
     image->layout = newLayout;
     thBarrier.nextLayout = newLayout;
-    thBarrier.subresourceRange = {
-      VK_IMAGE_ASPECT_COLOR_BIT,
-      0,
-      VK_REMAINING_MIP_LEVELS,
-      0,
-      VK_REMAINING_ARRAY_LAYERS
-    };
+    thBarrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT,
+                                  0,
+                                  VK_REMAINING_MIP_LEVELS,
+                                  0,
+                                  VK_REMAINING_ARRAY_LAYERS};
     VkPipelineStageFlags src{};
     VkPipelineStageFlags dst{};
     VkImageMemoryBarrier barrier{};
     thsvsGetVulkanImageMemoryBarrier(thBarrier, &src, &dst, &barrier);
 
     if (auto cmd = transferCmd.lock()) {
-      cmd->pipelineBarrier(
-          src, dst, 0, {}, {}, {barrier});
+      cmd->pipelineBarrier(src, dst, 0, {}, {}, {barrier});
     }
   }
 
@@ -818,11 +814,13 @@ struct AppState {
         vka::ImageAspect::Color,
         true);
     textData.fontImageView = device->createImageView2D(
-        *textData.fontImage, textData.fontImage->format, vka::ImageAspect::Color);
-    textData.fontSampler = device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
+        *textData.fontImage,
+        textData.fontImage->format,
+        vka::ImageAspect::Color);
+    textData.fontSampler =
+        device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
     textData.descriptorPool = device->createDescriptorPool(
-        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}, 
-        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}}, 1);
+        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);
     textData.setLayout0 =
         device->createSetLayout({{0,
                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -842,7 +840,9 @@ struct AppState {
 
     textData.pipelineLayout = device->createPipelineLayout(
         {VkPushConstantRange{
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextVertexPushData)}},
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            0,
+            sizeof(TextVertexPushData)}},
         {*textData.setLayout0});
 
     textData.vertexShader =
@@ -862,29 +862,30 @@ struct AppState {
       stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
           {textData.vertexData.vertices}, textData.vertexBuffer, 0));
       recordImageBarrier(
-        {}, 
-        {THSVS_ACCESS_TRANSFER_WRITE}, 
-        intermediateFontImage, 
-        THSVS_IMAGE_LAYOUT_OPTIMAL, 
-        true);
+          {},
+          {THSVS_ACCESS_TRANSFER_WRITE},
+          intermediateFontImage,
+          THSVS_IMAGE_LAYOUT_OPTIMAL,
+          true);
       recordImageBarrier(
-        {}, 
-        {THSVS_ACCESS_TRANSFER_WRITE}, 
-        textData.fontImage, 
-        THSVS_IMAGE_LAYOUT_OPTIMAL, 
-        true);
-      stagingBuffers.push_back(recordImageArrayUpload<msdfgen::FloatRGB>({fontPixels}, intermediateFontImage));
+          {},
+          {THSVS_ACCESS_TRANSFER_WRITE},
+          textData.fontImage,
+          THSVS_IMAGE_LAYOUT_OPTIMAL,
+          true);
+      stagingBuffers.push_back(recordImageArrayUpload<msdfgen::FloatRGB>(
+          {fontPixels}, intermediateFontImage));
       recordImageBarrier(
-        {THSVS_ACCESS_TRANSFER_WRITE}, 
-        {THSVS_ACCESS_TRANSFER_READ}, 
-        intermediateFontImage, 
-        THSVS_IMAGE_LAYOUT_OPTIMAL);
+          {THSVS_ACCESS_TRANSFER_WRITE},
+          {THSVS_ACCESS_TRANSFER_READ},
+          intermediateFontImage,
+          THSVS_IMAGE_LAYOUT_OPTIMAL);
       recordImageBlit(intermediateFontImage, textData.fontImage);
       recordImageBarrier(
-        {THSVS_ACCESS_TRANSFER_WRITE}, 
-        {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER}, 
-        textData.fontImage, 
-        THSVS_IMAGE_LAYOUT_OPTIMAL);
+          {THSVS_ACCESS_TRANSFER_WRITE},
+          {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
+          textData.fontImage,
+          THSVS_IMAGE_LAYOUT_OPTIMAL);
 
       cmd->end();
       device->queueSubmit({}, {cmd}, {}, transferFence.get());
