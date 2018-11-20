@@ -1,6 +1,5 @@
 #version 450 core
 layout (constant_id = 0) const uint GLYPHCOUNT = 1;
-layout (constant_id = 1) const vec2 MSDFSIZE = vec2(32, 32);
 
 layout(location = 0) out vec4 outColor;
 
@@ -25,7 +24,6 @@ float median(float r, float g, float b) {
 
 void main()
 {
-  vec2 msdfUnit = pxRange/MSDFSIZE;
   vec3 sample = texture(sTexture[glyphIndex], In.UV).rgb;
   float signedDistance = median(sample.r, sample.g, sample.b) - 0.5;
   float signedDistanceInPixels = signedDistance * length(clipSpaceScale);
