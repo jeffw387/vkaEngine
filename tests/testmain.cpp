@@ -573,8 +573,8 @@ struct AppState {
     swapchain = device->createSwapchain();
     swapImages = swapchain->getSwapImages();
     for (const auto& swapImage : swapImages) {
-      swapImageViews.push_back(device->createImageView2D(
-          swapImage, swapFormat, vka::ImageAspect::Color));
+      swapImageViews.push_back(std::make_shared<vka::ImageView>(
+          *device, swapImage, swapFormat, vka::ImageAspect::Color));
     }
     depthImage = device->createImage2D(
         swapchain->getSwapExtent(),
@@ -583,7 +583,7 @@ struct AppState {
         vka::ImageAspect::Depth,
         true);
     depthImageView = device->createImageView2D(
-        *depthImage, depthFormat, vka::ImageAspect::Depth);
+        depthImage, depthFormat, vka::ImageAspect::Depth);
   }
 
   template <typename T>
@@ -656,7 +656,7 @@ struct AppState {
     VkImageSubresourceLayers imageSubresource = {};
     imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     imageSubresource.baseArrayLayer = 0;
-    imageSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    imageSubresource.layerCount = image->layerCount;
     imageSubresource.mipLevel = 0;
 
     if (auto cmd = transferCmd.lock()) {
