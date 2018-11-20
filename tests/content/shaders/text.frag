@@ -4,11 +4,9 @@ layout(location = 0) out vec4 outColor;
 layout(set=0, binding=0) uniform sampler2DArray sTexture;
 
 layout(push_constant) uniform uPushConstant{
-  layout(offset=0) float textScale;
-  layout(offset=4) uint glyphIndex;
-  layout(offset=8) vec2 screenPos;
-  layout(offset=16) vec2 clipSpaceScale;
   layout(offset=32) vec4 fontColor;
+  layout(offset=48) vec2 clipSpaceScale;
+  layout(offset=56) uint glyphIndex;
 } pc;
 
 layout(location = 0) in struct{

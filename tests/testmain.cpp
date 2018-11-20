@@ -47,11 +47,18 @@ struct TextObject {
 };
 
 struct TextPushData {
-  glm::float32 textScale;    // per text object
-  glm::uint32 glyphIndex;    // per draw
-  glm::vec2 screenPos;       // per draw
-  glm::vec2 clipSpaceScale;  // per frame
-  glm::vec4 fontColor;       // per text object
+  struct TextVertexPushData {
+    glm::vec2 screenPos;       // per draw        - vert
+    glm::vec2 clipSpaceScale;  // per frame       - vert/frag
+    glm::float32 textScale;    // per text object - vert
+    glm::vec3 padding;
+  } vertex;
+  struct TextFragmentPushData {
+    glm::vec4 fontColor;       // per text object - frag
+    glm::vec2 clipSpaceScale;  // per frame       - vert/frag
+    glm::uint32 glyphIndex;    // per draw        - frag
+    glm::float32 padding;
+  } fragment;
 };
 
 struct Material {
@@ -431,42 +438,21 @@ struct AppState {
       cmd->setScissor(0, {scissor});
       auto halfExtent =
           glm::vec2((float)swapExtent.width, (float)swapExtent.height) * 0.5f;
-      pushData.clipSpaceScale = {1.f / swapExtent.width,
+      pushData.vertex.clipSpaceScale = {1.f / swapExtent.width,
                                  1.f / swapExtent.height};
-      cmd->pushConstants(
-          textData.pipelineLayout,
-          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          offsetof(TextPushData, clipSpaceScale),
-          sizeof(pushData.clipSpaceScale),
-          &pushData.clipSpaceScale);
+      pushData.fragment.clipSpaceScale = {1.f / swapExtent.width,
+                                          1.f / swapExtent.height};
       auto& currentText = textData.testText;
-      pushData.fontColor = currentText->color;
-      cmd->pushConstants(
-          textData.pipelineLayout,
-          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          offsetof(TextPushData, fontColor),
-          sizeof(pushData.fontColor),
-          &pushData.fontColor);
+      pushData.fragment.fontColor = currentText->color;
       auto currentFont = currentText->font;
-      pushData.textScale =
+      pushData.vertex.textScale =
           currentFont->msdfToRenderRatio(currentText->pixelHeight);
-      cmd->pushConstants(
-          textData.pipelineLayout,
-          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          offsetof(TextPushData, textScale),
-          sizeof(pushData.textScale),
-          &pushData.textScale);
+
       auto& currentString = currentText->str;
       glm::vec2 pen = currentText->screenPosition;
       for (int i{}; i < currentString.size(); ++i) {
         int currentGlyph = currentFont->getGlyphIndex(currentString[i]);
-        pushData.glyphIndex = currentGlyph;
-        cmd->pushConstants(
-            textData.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            offsetof(TextPushData, glyphIndex),
-            sizeof(pushData.glyphIndex),
-            &pushData.glyphIndex);
+        pushData.fragment.glyphIndex = currentGlyph;
         int nextGlyph{-1};
         float kerning{};
         if ((i + 1) < currentString.size()) {
@@ -476,13 +462,19 @@ struct AppState {
         }
         float advanceX =
             currentFont->getAdvance(currentGlyph, currentText->pixelHeight);
-        pushData.screenPos = pen - halfExtent;
+        pushData.vertex.screenPos = pen - halfExtent;
         cmd->pushConstants(
             textData.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            offsetof(TextPushData, screenPos),
-            sizeof(pushData.screenPos),
-            &pushData.screenPos);
+            VK_SHADER_STAGE_VERTEX_BIT,
+            offsetof(TextPushData, vertex),
+            sizeof(pushData.vertex),
+            &pushData.vertex);
+        cmd->pushConstants(
+            textData.pipelineLayout,
+            VK_SHADER_STAGE_FRAGMENT_BIT,
+            offsetof(TextPushData, fragment),
+            sizeof(pushData.fragment),
+            &pushData.fragment);
         cmd->drawIndexed(
             Text::IndicesPerQuad,
             1,
@@ -869,21 +861,12 @@ struct AppState {
     textData.descriptorSet0->validate(*device);
 
     textData.pipelineLayout = device->createPipelineLayout(
-        {{VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          0,
-          sizeof(glm::float32)},
-         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          4,
-          sizeof(glm::uint32)},
-         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          8,
-          sizeof(glm::vec2)},
-         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          16,
-          sizeof(glm::vec2)},
-         {VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          32,
-          sizeof(glm::vec4)}},
+        {{VK_SHADER_STAGE_VERTEX_BIT,
+          offsetof(TextPushData, vertex),
+          sizeof(TextPushData::TextVertexPushData)},
+         {VK_SHADER_STAGE_FRAGMENT_BIT,
+          offsetof(TextPushData, fragment),
+          sizeof(TextPushData::TextFragmentPushData)}},
         {*textData.setLayout0});
 
     textData.vertexShader =
