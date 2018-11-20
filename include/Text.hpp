@@ -71,6 +71,8 @@ public:
   int getGlyphIndex(int charIndex);
   float getAdvance(int glyphIndex, int fontPixelHeight);
   float getKerning(int glyphIndex1, int glyphIndex2, int fontPixelHeight);
+  float msdfToRenderRatio(int fontPixelHeight);
+  float vectorToRenderRatio(int fontPixelHeight);
   auto getFontBytes() { return fontBytes; }
   VertexData getVertexData();
   std::vector<msdfgen::FloatRGB> getTextureData();
@@ -83,9 +85,8 @@ private:
   getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor);
   MSDFGlyphMap getGlyphMap(int bitmapSize, float scaleFactor);
 
-  // multiply scaleFactor by desired font height in pixels
   int msdfSize;
-  float scaleFactor;
+  int originalPixelHeight;
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;

@@ -16,20 +16,6 @@ PipelineLayout::PipelineLayout(
   vkCreatePipelineLayout(device, &createInfo, nullptr, &layoutHandle);
 }
 
-PipelineLayout& PipelineLayout::operator=(PipelineLayout&& other) {
-  if (this != &other) {
-    device = other.device;
-    layoutHandle = other.layoutHandle;
-    other.device = {};
-    other.layoutHandle = {};
-  }
-  return *this;
-}
-
-PipelineLayout::PipelineLayout(PipelineLayout&& other) {
-  *this = std::move(other);
-}
-
 PipelineLayout::~PipelineLayout() {
   if (device != VK_NULL_HANDLE && layoutHandle != VK_NULL_HANDLE) {
     vkDestroyPipelineLayout(device, layoutHandle, nullptr);

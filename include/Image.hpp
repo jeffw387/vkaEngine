@@ -36,6 +36,7 @@ public:
 
 private:
   VmaAllocator allocator = nullptr;
+
 public:
   VkExtent3D extent = {};
   VkFormat format = {};

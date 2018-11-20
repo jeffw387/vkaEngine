@@ -17,7 +17,7 @@ Image::Image(
     VmaMemoryUsage memoryUsage,
     ThsvsImageLayout initialLayout,
     VkImageTiling tiling)
-    : allocator(allocator), 
+    : allocator(allocator),
       extent(extent),
       format(format),
       aspect(aspect),

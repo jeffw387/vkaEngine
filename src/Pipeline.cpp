@@ -258,20 +258,6 @@ GraphicsPipeline::GraphicsPipeline(
       device, cache, 1, &createInfo, nullptr, &pipelineHandle);
 }
 
-GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& other) {
-  if (this != &other) {
-    device = other.device;
-    pipelineHandle = other.pipelineHandle;
-    other.device = {};
-    other.pipelineHandle = {};
-  }
-  return *this;
-}
-
-GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& other) {
-  *this = std::move(other);
-}
-
 GraphicsPipeline::~GraphicsPipeline() {
   if (device != VK_NULL_HANDLE && pipelineHandle != VK_NULL_HANDLE) {
     vkDestroyPipeline(device, pipelineHandle, nullptr);

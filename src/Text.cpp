@@ -6,11 +6,22 @@ namespace Text {
 using namespace ranges;
 
 template <>
+float Font<>::msdfToRenderRatio(int fontPixelHeight) {
+  return static_cast<float>(fontPixelHeight) /
+         static_cast<float>(originalPixelHeight);
+}
+
+template <>
+float Font<>::vectorToRenderRatio(int fontPixelHeight) {
+  return stbtt_ScaleForPixelHeight(&fontInfo, fontPixelHeight);
+}
+
+template <>
 float Font<>::getAdvance(int glyphIndex, int fontPixelHeight) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
-  return scaleFactor * fontPixelHeight * static_cast<float>(adv);
+  return vectorToRenderRatio(fontPixelHeight) * static_cast<float>(adv);
 }
 
 template <>
@@ -18,7 +29,7 @@ float Font<>::getKerning(
     int glyphIndex1,
     int glyphIndex2,
     int fontPixelHeight) {
-  return scaleFactor * fontPixelHeight *
+  return vectorToRenderRatio(fontPixelHeight) *
          static_cast<float>(
              stbtt_GetGlyphKernAdvance(&fontInfo, glyphIndex1, glyphIndex2));
 }
@@ -228,10 +239,9 @@ Font<>::Font(std::string fontPath, int msdfSize, int padding)
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
   }
-  auto scaledGlyphHeight = msdfSize - (padding * 2);
-  scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, scaledGlyphHeight);
+  originalPixelHeight = msdfSize - (padding * 2);
+  auto scaleFactor = vectorToRenderRatio(originalPixelHeight);
   glyphMap = getGlyphMap(msdfSize, scaleFactor);
-  scaleFactor /= msdfSize;
 }
 
 stbtt_aligned_quad Atlas::getQuad(int glyphIndex) {

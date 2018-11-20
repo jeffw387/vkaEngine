@@ -86,8 +86,9 @@ void CommandBuffer::cmdPending() { state = Pending; }
 
 void CommandBuffer::cmdExecuted() {
   state = transient ? Invalid : Initial;
-  for (auto& resource : dependentResources) {
-    std::visit([](auto& resourceVariant) { resourceVariant->cmdExecuted(); });
+  for (auto& resourceVariant : dependentResources) {
+    std::visit(
+        [](auto& resource) { resource->cmdExecuted(); }, resourceVariant);
   }
   dependentResources.clear();
   activeRenderPass.reset();
@@ -341,9 +342,9 @@ void CommandBuffer::blitImage(
   vkCmdBlitImage(
       commandBufferHandle,
       *srcImage,
-      srcImage->layout,
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
       *dstImage,
-      dstImage->layout,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
       static_cast<uint32_t>(regions.size()),
       regions.data(),
       filter);

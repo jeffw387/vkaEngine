@@ -148,16 +148,16 @@ private:
   State state = {};
 
   using ResourceVariant = std::variant<
-    GraphicsPipeline,
-    ComputePipeline,
-    PipelineLayout,
-    DescriptorSet,
-    Image,
-    ImageView,
-    Buffer,
-    RenderPass,
-    Framebuffer,
-    CommandBuffer>;
+      std::shared_ptr<GraphicsPipeline>,
+      std::shared_ptr<ComputePipeline>,
+      std::shared_ptr<PipelineLayout>,
+      std::shared_ptr<DescriptorSet>,
+      std::shared_ptr<Image>,
+      std::shared_ptr<ImageView>,
+      std::shared_ptr<Buffer>,
+      std::shared_ptr<RenderPass>,
+      std::shared_ptr<Framebuffer>,
+      std::shared_ptr<CommandBuffer>>;
 
   std::vector<ResourceVariant> dependentResources;
 
@@ -165,9 +165,11 @@ private:
   std::shared_ptr<ComputePipeline> boundComputePipeline;
   std::shared_ptr<GraphicsPipeline> boundGraphicsPipeline;
 
+public:
   void cmdPending();
   void cmdExecuted();
 
+private:
   void checkInitial();
   void checkRecording();
   void checkExecutable();

@@ -443,9 +443,9 @@ struct AppState {
         pushData.position = pen - halfExtent;
         cmd->pushConstants(
             textData.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT,
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             0,
-            sizeof(TextVertexPushData),
+            sizeof(float),
             &pushData);
         cmd->drawIndexed(
             Text::IndicesPerQuad,

@@ -66,8 +66,8 @@ class RenderPass {
 public:
   RenderPass(VkDevice device, const VkRenderPassCreateInfo& createInfo);
   ~RenderPass();
-  void cmdExecuted() {};
-  
+  void cmdExecuted(){};
+
   operator VkRenderPass() { return renderPassHandle; }
 
 private:

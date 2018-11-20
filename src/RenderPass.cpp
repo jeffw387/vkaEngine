@@ -130,16 +130,6 @@ RenderPass::RenderPass(
   vkCreateRenderPass(device, &createInfo, nullptr, &renderPassHandle);
 }
 
-RenderPass& RenderPass::operator=(RenderPass&& other) {
-  if (this != &other) {
-    device = other.device;
-    renderPassHandle = other.renderPassHandle;
-    other.device = {};
-    other.renderPassHandle = {};
-  }
-  return *this;
-}
-
 RenderPass::~RenderPass() {
   if (device != VK_NULL_HANDLE && renderPassHandle != VK_NULL_HANDLE) {
     vkDestroyRenderPass(device, renderPassHandle, nullptr);
