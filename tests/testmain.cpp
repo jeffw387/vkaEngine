@@ -439,7 +439,7 @@ struct AppState {
       auto halfExtent =
           glm::vec2((float)swapExtent.width, (float)swapExtent.height) * 0.5f;
       pushData.vertex.clipSpaceScale = {1.f / swapExtent.width,
-                                 1.f / swapExtent.height};
+                                        1.f / swapExtent.height};
       pushData.fragment.clipSpaceScale = {1.f / swapExtent.width,
                                           1.f / swapExtent.height};
       auto& currentText = textData.testText;
@@ -823,7 +823,7 @@ struct AppState {
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
 
-    auto fontPixels = textData.testFont->getTextureData();
+    auto fontPixelsF32 = textData.testFont->getTextureData();
     auto fontTextureSize = textData.testFont->getTextureSize();
     auto textureLayers = textData.testFont->getTextureLayerCount();
 
@@ -836,7 +836,7 @@ struct AppState {
         vka::ImageAspect::Color,
         true);
     textData.fontImageView = device->createImageView2D(
-        *textData.fontImage,
+        textData.fontImage,
         textData.fontImage->format,
         vka::ImageAspect::Color);
     textData.fontSampler =
@@ -878,6 +878,23 @@ struct AppState {
     transferCmd = transferCommandPool->allocateCommandBuffer();
     transferFence = device->createFence(false);
     std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
+
+    auto F32ToU8 = [](auto& F32Bitmap) {
+      std::vector<uint8_t> result;
+      for (auto& pixel : F32Bitmap) {
+        uint8_t r = msdfgen::clamp(int(pixel.r * 0x100), 0xff);
+        uint8_t g = msdfgen::clamp(int(pixel.g * 0x100), 0xff);
+        uint8_t b = msdfgen::clamp(int(pixel.b * 0x100), 0xff);
+        uint8_t a = {};
+        result.push_back(r);
+        result.push_back(g);
+        result.push_back(b);
+        result.push_back(a);
+      }
+      return result;
+    };
+    auto fontPixelsU8 = F32ToU8(fontPixelsF32);
+
     if (auto cmd = transferCmd.lock()) {
       cmd->begin();
 
@@ -888,23 +905,11 @@ struct AppState {
       recordImageBarrier(
           {},
           {THSVS_ACCESS_TRANSFER_WRITE},
-          intermediateFontImage,
-          THSVS_IMAGE_LAYOUT_OPTIMAL,
-          true);
-      recordImageBarrier(
-          {},
-          {THSVS_ACCESS_TRANSFER_WRITE},
           textData.fontImage,
           THSVS_IMAGE_LAYOUT_OPTIMAL,
           true);
-      stagingBuffers.push_back(recordImageArrayUpload<msdfgen::FloatRGB>(
-          {fontPixels}, intermediateFontImage));
-      recordImageBarrier(
-          {THSVS_ACCESS_TRANSFER_WRITE},
-          {THSVS_ACCESS_TRANSFER_READ},
-          intermediateFontImage,
-          THSVS_IMAGE_LAYOUT_OPTIMAL);
-      recordImageBlit(intermediateFontImage, textData.fontImage);
+      stagingBuffers.push_back(
+          recordImageArrayUpload<uint8_t>({fontPixelsU8}, textData.fontImage));
       recordImageBarrier(
           {THSVS_ACCESS_TRANSFER_WRITE},
           {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
