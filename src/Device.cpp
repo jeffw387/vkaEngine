@@ -173,9 +173,15 @@ std::shared_ptr<Image> Device::createImage2D(
       dedicated);
 }
 
-std::shared_ptr<ImageView>
-Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
-  return std::make_shared<ImageView>(device, image, format, aspect);
+std::shared_ptr<ImageView> Device::createImageView2D(
+    std::shared_ptr<Image> image,
+    VkFormat format,
+    ImageAspect aspect) {
+  VkImageViewType viewType = {VK_IMAGE_VIEW_TYPE_2D};
+  if (image->layerCount > 1) {
+    viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+  }
+  return std::make_shared<ImageView>(device, *image, format, aspect, viewType);
 }
 
 std::shared_ptr<Image> Device::createImageArray2D(

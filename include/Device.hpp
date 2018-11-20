@@ -116,7 +116,8 @@ public:
       VkImageUsageFlags,
       ImageAspect,
       bool dedicated = false);
-  std::shared_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
+  std::shared_ptr<ImageView>
+      createImageView2D(std::shared_ptr<Image>, VkFormat, ImageAspect);
   std::shared_ptr<Image> createImageArray2D(
       VkExtent2D,
       uint32_t arrayLayers,
