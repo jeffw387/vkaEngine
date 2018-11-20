@@ -774,9 +774,6 @@ struct AppState {
     textData.testFont =
         std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
 
-    // textData.atlas =
-    //     textData.testFont->getTextureAtlas(atlasWidth, atlasHeight);
-
     textData.vertexData = textData.testFont->getVertexData();
     textData.testText = std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
