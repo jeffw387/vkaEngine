@@ -146,9 +146,11 @@ struct AppState {
     std::shared_ptr<vka::Buffer> vertexBuffer;
     std::unique_ptr<vka::ShaderModule> vertexShader;
     std::unique_ptr<vka::ShaderModule> fragmentShader;
-    std::unique_ptr<vka::DescriptorSetLayout> setLayout;
+    std::unique_ptr<vka::DescriptorSetLayout> setLayout0;
+    std::unique_ptr<vka::DescriptorSetLayout> setLayout1;
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
-    std::shared_ptr<vka::DescriptorSet> descriptorSet;
+    std::shared_ptr<vka::DescriptorSet> descriptorSet0;
+    std::shared_ptr<vka::DescriptorSet> descriptorSet1;
     std::shared_ptr<vka::PipelineLayout> pipelineLayout;
     std::shared_ptr<vka::GraphicsPipeline> pipeline;
   } textData;
@@ -820,14 +822,14 @@ struct AppState {
     textData.fontSampler = device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
     textData.descriptorPool = device->createDescriptorPool(
         {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);
-    textData.setLayout =
+    textData.setLayout0 =
         device->createSetLayout({{0,
                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                   1,
                                   VK_SHADER_STAGE_FRAGMENT_BIT,
                                   *textData.fontSampler}});
 
-    textData.descriptorSet = textData.descriptorPool->allocateDescriptorSet(
+    textData.descriptorSet0 = textData.descriptorPool->allocateDescriptorSet(
         textData.setLayout.get());
 
     auto fontImageDescriptor =
