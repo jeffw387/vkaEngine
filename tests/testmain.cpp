@@ -32,22 +32,26 @@ struct TextObject {
   std::string str;
   int pixelHeight;
   Text::Font<>* font;
+  glm::vec4 color;
   TextObject(
       glm::vec2 screenPosition,
       std::string str,
       int pixelHeight,
-      Text::Font<>* font)
+      Text::Font<>* font,
+      glm::vec4 color = glm::vec4(0.f))
       : screenPosition(std::move(screenPosition)),
         str(std::move(str)),
         pixelHeight(pixelHeight),
-        font(font) {}
+        font(font),
+        color(color) {}
 };
 
-struct TextVertexPushData {
-  glm::vec2 scale;
-  glm::float32 padding0[2];
-  glm::vec2 position;
-  glm::float32 padding1[2];
+struct TextPushData {
+  glm::float32 textScale;    // per text object
+  glm::uint32 glyphIndex;    // per draw
+  glm::vec2 screenPos;       // per draw
+  glm::vec2 clipSpaceScale;  // per frame
+  glm::vec4 fontColor;       // per text object
 };
 
 struct Material {
@@ -414,6 +418,8 @@ struct AppState {
                                static_cast<float>(swapExtent.height),
                                0,
                                1};
+
+    TextPushData pushData{};
     auto scissor = VkRect2D{{0, 0}, {swapExtent.width, swapExtent.height}};
     if (auto cmd = render.cmd.lock()) {
       cmd->bindGraphicsPipeline(textData.pipeline);
@@ -425,28 +431,58 @@ struct AppState {
       cmd->setScissor(0, {scissor});
       auto halfExtent =
           glm::vec2((float)swapExtent.width, (float)swapExtent.height) * 0.5f;
-      TextVertexPushData pushData{};
-      pushData.scale = {1.f / swapExtent.width, 1.f / swapExtent.height};
-      auto currentFont = textData.testText->font;
-      auto& currentString = textData.testText->str;
-      glm::vec2 pen = textData.testText->screenPosition;
+      pushData.clipSpaceScale = {1.f / swapExtent.width,
+                                 1.f / swapExtent.height};
+      cmd->pushConstants(
+          textData.pipelineLayout,
+          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          offsetof(TextPushData, clipSpaceScale),
+          sizeof(pushData.clipSpaceScale),
+          &pushData.clipSpaceScale);
+      auto& currentText = textData.testText;
+      pushData.fontColor = currentText->color;
+      cmd->pushConstants(
+          textData.pipelineLayout,
+          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          offsetof(TextPushData, fontColor),
+          sizeof(pushData.fontColor),
+          &pushData.fontColor);
+      auto currentFont = currentText->font;
+      pushData.textScale =
+          currentFont->msdfToRenderRatio(currentText->pixelHeight);
+      cmd->pushConstants(
+          textData.pipelineLayout,
+          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          offsetof(TextPushData, textScale),
+          sizeof(pushData.textScale),
+          &pushData.textScale);
+      auto& currentString = currentText->str;
+      glm::vec2 pen = currentText->screenPosition;
       for (int i{}; i < currentString.size(); ++i) {
         int currentGlyph = currentFont->getGlyphIndex(currentString[i]);
-        int nextGlyph{-1};
-        int fontSize = textData.testText->pixelHeight;
-        float kerning{};
-        if ((i + 1) < currentString.size()) {
-          nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
-          kerning = currentFont->getKerning(currentGlyph, nextGlyph, fontSize);
-        }
-        float advanceX = currentFont->getAdvance(currentGlyph, fontSize);
-        pushData.position = pen - halfExtent;
+        pushData.glyphIndex = currentGlyph;
         cmd->pushConstants(
             textData.pipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            0,
-            sizeof(float),
-            &pushData);
+            offsetof(TextPushData, glyphIndex),
+            sizeof(pushData.glyphIndex),
+            &pushData.glyphIndex);
+        int nextGlyph{-1};
+        float kerning{};
+        if ((i + 1) < currentString.size()) {
+          nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
+          kerning = currentFont->getKerning(
+              currentGlyph, nextGlyph, currentText->pixelHeight);
+        }
+        float advanceX =
+            currentFont->getAdvance(currentGlyph, currentText->pixelHeight);
+        pushData.screenPos = pen - halfExtent;
+        cmd->pushConstants(
+            textData.pipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            offsetof(TextPushData, screenPos),
+            sizeof(pushData.screenPos),
+            &pushData.screenPos);
         cmd->drawIndexed(
             Text::IndicesPerQuad,
             1,
@@ -743,7 +779,8 @@ struct AppState {
 
     constexpr auto fontPixelHeight = 60;
 
-    // auto convertToInt32Bitmap = [](msdfgen::Bitmap<msdfgen::FloatRGB>* bitmap) {
+    // auto convertToInt32Bitmap = [](msdfgen::Bitmap<msdfgen::FloatRGB>*
+    // bitmap) {
     //   std::vector<uint8_t> result;
     //   result.reserve(bitmap->width() * bitmap->height());
     //   for (int i{}; i < bitmap->width() * bitmap->height(); ++i) {
@@ -797,19 +834,12 @@ struct AppState {
     auto fontPixels = textData.testFont->getTextureData();
     auto fontTextureSize = textData.testFont->getTextureSize();
     auto textureLayers = textData.testFont->getTextureLayerCount();
-    auto intermediateFontImage = device->createImageArray2D(
-        {static_cast<uint32_t>(fontTextureSize),
-         static_cast<uint32_t>(fontTextureSize)},
-        static_cast<uint32_t>(textureLayers),
-        VK_FORMAT_R32G32B32_SFLOAT,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-        vka::ImageAspect::Color,
-        true);
+
     textData.fontImage = device->createImageArray2D(
         {static_cast<uint32_t>(fontTextureSize),
          static_cast<uint32_t>(fontTextureSize)},
         static_cast<uint32_t>(textureLayers),
-        VK_FORMAT_R8G8B8A8_UNORM,
+        VK_FORMAT_R8G8B8A8_UINT,
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         vka::ImageAspect::Color,
         true);
