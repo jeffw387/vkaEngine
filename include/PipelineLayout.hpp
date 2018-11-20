@@ -12,11 +12,8 @@ public:
       VkDevice device,
       std::vector<VkPushConstantRange> pushRanges,
       std::vector<VkDescriptorSetLayout> setLayouts);
-  PipelineLayout(PipelineLayout&&);
-  PipelineLayout& operator=(PipelineLayout&&);
-  PipelineLayout(const PipelineLayout&) = delete;
-  PipelineLayout& operator=(const PipelineLayout&) = delete;
   ~PipelineLayout();
+  void cmdExecuted() {}
 
   operator VkPipelineLayout() { return layoutHandle; }
 

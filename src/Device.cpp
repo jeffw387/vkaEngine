@@ -133,16 +133,39 @@ std::shared_ptr<Buffer> Device::createBuffer(
       dedicated);
 }
 
+VkFormatProperties Device::getFormatProperties(VkFormat format) {
+  VkFormatProperties properties{};
+  vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
+  return properties;
+}
+
+VkImageFormatProperties Device::getImageFormatProperties(
+    VkFormat format,
+    VkImageType imageType,
+    VkImageTiling tiling,
+    VkImageUsageFlags usage,
+    VkImageCreateFlags createFlags) {
+  VkImageFormatProperties properties{};
+  vkGetPhysicalDeviceImageFormatProperties(
+      physicalDevice,
+      format,
+      imageType,
+      tiling,
+      usage,
+      createFlags,
+      &properties);
+  return properties;
+}
+
 std::shared_ptr<Image> Device::createImage2D(
     VkExtent2D extent,
     VkFormat format,
     VkImageUsageFlags usage,
     ImageAspect aspect,
     bool dedicated) {
-  std::vector<uint32_t> queueIndices = {graphicsQueueIndex};
   return std::make_shared<Image>(
       allocator,
-      std::move(queueIndices),
+      std::vector<uint32_t>{graphicsQueueIndex},
       VkExtent3D{extent.width, extent.height, 1U},
       std::move(format),
       std::move(usage),
@@ -153,6 +176,26 @@ std::shared_ptr<Image> Device::createImage2D(
 std::shared_ptr<ImageView>
 Device::createImageView2D(VkImage image, VkFormat format, ImageAspect aspect) {
   return std::make_shared<ImageView>(device, image, format, aspect);
+}
+
+std::shared_ptr<Image> Device::createImageArray2D(
+    VkExtent2D extent,
+    uint32_t arrayLayers,
+    VkFormat format,
+    VkImageUsageFlags usage,
+    ImageAspect aspect,
+    bool dedicated) {
+  return std::make_shared<Image>(
+      allocator,
+      std::vector<uint32_t>{graphicsQueueIndex},
+      VkExtent3D{extent.width, extent.height, 1U},
+      std::move(format),
+      std::move(usage),
+      std::move(aspect),
+      dedicated,
+      VK_SAMPLE_COUNT_1_BIT,
+      VK_IMAGE_TYPE_2D,
+      arrayLayers);
 }
 
 std::unique_ptr<Sampler> Device::createSampler(

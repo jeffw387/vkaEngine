@@ -22,19 +22,21 @@
 #include "vulkan_vector.hpp"
 #include "VkEnumStrings.hpp"
 #include "Text.hpp"
+#define THSVS_SIMPLER_VULKAN_SYNCHRONIZATION_IMPLEMENTATION
+#include "thsvs_simpler_vulkan_synchronization.h"
 
 namespace fs = std::experimental::filesystem;
 
 struct TextObject {
   glm::vec2 screenPosition;
   std::string str;
-  uint32_t pixelHeight;
-  Text::Font* font;
+  int pixelHeight;
+  Text::Font<>* font;
   TextObject(
       glm::vec2 screenPosition,
       std::string str,
-      uint32_t pixelHeight,
-      Text::Font* font)
+      int pixelHeight,
+      Text::Font<>* font)
       : screenPosition(std::move(screenPosition)),
         str(std::move(str)),
         pixelHeight(pixelHeight),
@@ -134,8 +136,8 @@ struct AppState {
   std::unique_ptr<vka::PipelineCache> pipelineCache;
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
   struct TextData {
-    std::unique_ptr<Text::Font> testFont;
-    Text::Atlas atlas;
+    std::unique_ptr<Text::Font<>> testFont;
+    std::unique_ptr<TextObject> testText;
     Text::VertexData vertexData;
     std::shared_ptr<vka::Image> fontImage;
     std::shared_ptr<vka::ImageView> fontImageView;
@@ -149,7 +151,6 @@ struct AppState {
     std::shared_ptr<vka::DescriptorSet> descriptorSet;
     std::shared_ptr<vka::PipelineLayout> pipelineLayout;
     std::shared_ptr<vka::GraphicsPipeline> pipeline;
-    std::unique_ptr<TextObject> testText;
   } textData;
 
   asset::Collection shapesAsset;
@@ -178,6 +179,59 @@ struct AppState {
     entt::DefaultRegistry ecs;
   };
   std::array<BufferedState, vka::BufferCount> bufState;
+
+  void recordGlobalBarrier(
+      std::vector<ThsvsAccessType> previous,
+      std::vector<ThsvsAccessType> next) {
+    ThsvsGlobalBarrier thBarrier{};
+    thBarrier.prevAccessCount = static_cast<uint32_t>(previous.size());
+    thBarrier.pPrevAccesses = previous.data();
+    thBarrier.nextAccessCount = static_cast<uint32_t>(next.size());
+    thBarrier.pNextAccesses = next.data();
+    VkPipelineStageFlags src{};
+    VkPipelineStageFlags dst{};
+    VkMemoryBarrier barrier{};
+    thsvsGetVulkanMemoryBarrier(thBarrier, &src, &dst, &barrier);
+
+    if (auto cmd = transferCmd.lock()) {
+      cmd->pipelineBarrier(
+          src, dst, 0, {barrier}, {}, {});
+    }
+  }
+
+  void recordImageBarrier(
+      std::vector<ThsvsAccessType> previous,
+      std::vector<ThsvsAccessType> next,
+      std::shared_ptr<vka::Image> image,
+      ThsvsImageLayout newLayout,
+      bool discardContents = false) {
+    ThsvsImageBarrier thBarrier{};
+    thBarrier.discardContents = VkBool32(discardContents);
+    thBarrier.prevAccessCount = static_cast<uint32_t>(previous.size());
+    thBarrier.pPrevAccesses = previous.data();
+    thBarrier.nextAccessCount = static_cast<uint32_t>(next.size());
+    thBarrier.pNextAccesses = next.data();
+    thBarrier.image = *image;
+    thBarrier.prevLayout = image->layout;
+    image->layout = newLayout;
+    thBarrier.nextLayout = newLayout;
+    thBarrier.subresourceRange = {
+      VK_IMAGE_ASPECT_COLOR_BIT,
+      0,
+      VK_REMAINING_MIP_LEVELS,
+      0,
+      VK_REMAINING_ARRAY_LAYERS
+    };
+    VkPipelineStageFlags src{};
+    VkPipelineStageFlags dst{};
+    VkImageMemoryBarrier barrier{};
+    thsvsGetVulkanImageMemoryBarrier(thBarrier, &src, &dst, &barrier);
+
+    if (auto cmd = transferCmd.lock()) {
+      cmd->pipelineBarrier(
+          src, dst, 0, {}, {}, {barrier});
+    }
+  }
 
   asset::Collection loadCollection(const std::string& assetPath) {
     tinygltf::Model gltfModel;
@@ -381,12 +435,13 @@ struct AppState {
       for (int i{}; i < currentString.size(); ++i) {
         int currentGlyph = currentFont->getGlyphIndex(currentString[i]);
         int nextGlyph{-1};
+        int fontSize = textData.testText->pixelHeight;
         float kerning{};
         if ((i + 1) < currentString.size()) {
           nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
-          kerning = currentFont->getKerning(currentGlyph, nextGlyph);
+          kerning = currentFont->getKerning(currentGlyph, nextGlyph, fontSize);
         }
-        float advanceX = currentFont->getAdvance(currentGlyph);
+        float advanceX = currentFont->getAdvance(currentGlyph, fontSize);
         pushData.position = pen - halfExtent;
         cmd->pushConstants(
             textData.pipelineLayout,
@@ -546,58 +601,64 @@ struct AppState {
     imageSubresource.baseArrayLayer = 0;
     imageSubresource.layerCount = 1;
     imageSubresource.mipLevel = 0;
-    VkImageSubresourceRange subresourceRange{};
-    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresourceRange.baseArrayLayer = 0;
-    subresourceRange.baseMipLevel = 0;
-    subresourceRange.layerCount = 1;
-    subresourceRange.levelCount = 1;
 
-    VkImageMemoryBarrier preCopyBarrier{};
-    preCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    preCopyBarrier.image = *image;
-    preCopyBarrier.subresourceRange = subresourceRange;
-    preCopyBarrier.srcAccessMask = 0;
-    preCopyBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    preCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    preCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    preCopyBarrier.oldLayout = image->layout;
-    preCopyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     if (auto cmd = transferCmd.lock()) {
-      cmd->pipelineBarrier(
-          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          0,
-          {},
-          {},
-          {preCopyBarrier});
-
       VkBufferImageCopy copy{};
       copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
       copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
       copy.imageSubresource = imageSubresource;
       cmd->copyBufferToImage(
           staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
-
-      VkImageMemoryBarrier postCopyBarrier{};
-      postCopyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-      postCopyBarrier.image = *image;
-      postCopyBarrier.subresourceRange = subresourceRange;
-      postCopyBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-      postCopyBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-      postCopyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-      postCopyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-      postCopyBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-      postCopyBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      cmd->pipelineBarrier(
-          VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-          0,
-          {},
-          {},
-          {postCopyBarrier});
     }
     return staging;
+  }
+
+  template <typename T>
+  std::shared_ptr<vka::Buffer> recordImageArrayUpload(
+      gsl::span<T> data,
+      std::shared_ptr<vka::Image> image) {
+    auto staging = device->createBuffer(
+        data.size_bytes(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        false);
+    void* stagePtr = staging->map();
+    std::memcpy(stagePtr, data.data(), data.size_bytes());
+    staging->flush();
+    staging->unmap();
+
+    VkImageSubresourceLayers imageSubresource = {};
+    imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageSubresource.baseArrayLayer = 0;
+    imageSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    imageSubresource.mipLevel = 0;
+
+    if (auto cmd = transferCmd.lock()) {
+      VkBufferImageCopy copy{};
+      copy.imageOffset = {};
+      copy.imageExtent = image->extent;
+      copy.imageSubresource = imageSubresource;
+      cmd->copyBufferToImage(
+          staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
+    }
+    return staging;
+  }
+
+  void recordImageBlit(
+      std::shared_ptr<vka::Image> source,
+      std::shared_ptr<vka::Image> destination) {
+    if (auto cmd = transferCmd.lock()) {
+      VkImageBlit blit{};
+      blit.srcSubresource.aspectMask =
+          static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
+      blit.srcSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+      blit.dstSubresource.aspectMask =
+          static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
+      blit.dstSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
+      blit.srcSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+      cmd->blitImage(source, destination, {blit}, VK_FILTER_LINEAR);
+    }
   }
 
   AppState() {
@@ -648,8 +709,40 @@ struct AppState {
 
     createSwapchain();
 
-    constexpr auto atlasWidth = 512;
-    constexpr auto atlasHeight = 512;
+    auto rgb8unorm_props =
+        device->getFormatProperties(VK_FORMAT_R8G8B8A8_UNORM);
+    auto rgb32sfloat_props =
+        device->getFormatProperties(VK_FORMAT_R32G32B32_SFLOAT);
+
+    MultiLogger::get()->info("rgb8 unorm in optimal tiling:");
+    MultiLogger::get()->info(
+        "blit destination support: {}",
+        (rgb8unorm_props.optimalTilingFeatures &
+         VK_FORMAT_FEATURE_BLIT_DST_BIT) == VK_FORMAT_FEATURE_BLIT_DST_BIT);
+
+    MultiLogger::get()->info(
+        "sampled image support: {}",
+        (rgb8unorm_props.optimalTilingFeatures &
+         VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) ==
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
+
+    MultiLogger::get()->info(
+        "linear-sampled image support: {}",
+        (rgb8unorm_props.optimalTilingFeatures &
+         VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ==
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
+
+    MultiLogger::get()->info("rgb32 sfloat in optimal tiling:");
+    MultiLogger::get()->info(
+        "transfer destination support: {}",
+        (rgb32sfloat_props.optimalTilingFeatures &
+         VK_FORMAT_FEATURE_TRANSFER_DST_BIT) ==
+            VK_FORMAT_FEATURE_TRANSFER_DST_BIT);
+    MultiLogger::get()->info(
+        "blit source support: {}",
+        (rgb32sfloat_props.optimalTilingFeatures &
+         VK_FORMAT_FEATURE_BLIT_SRC_BIT) == VK_FORMAT_FEATURE_BLIT_SRC_BIT);
+
     constexpr auto fontPixelHeight = 60;
 
     auto convertToInt32Bitmap = [](msdfgen::Bitmap<msdfgen::FloatRGB>* bitmap) {
@@ -675,27 +768,12 @@ struct AppState {
     };
 
     textData.testFont =
-        std::make_unique<Text::Font>("content/fonts/Anke/Anke.ttf");
-    auto msdfArray = textData.testFont->getMSDFArray(32, 32);
-    // for (size_t i{}; i < msdfArray.bitmaps.size(); ++i) {
-    //   auto& bitmap = msdfArray.bitmaps[i];
-    //   auto testRender = msdfgen::Bitmap<float>(64, 64);
-    //   msdfgen::renderSDF(testRender, *bitmap, 1.5);
-    //   auto intBitmap = convertFloatToInt32Bitmap(&testRender);
-    //   auto outputFilename = "testMSDFOutput" + std::to_string(i) + ".buffer";
-    //   auto writeResult =
-    //       vka::writeBinaryFile<uint8_t>(outputFilename, {intBitmap});
-    //   if (writeResult != IOError::Success) {
-    //     MultiLogger::get()->error(
-    //         "IO error: {}", std::error_code(writeResult).message());
-    //   }
-    // }
+        std::make_unique<Text::Font<>>("content/fonts/Anke/Anke.ttf");
 
-    textData.testFont->setFontPixelHeight(fontPixelHeight);
-    textData.atlas =
-        textData.testFont->getTextureAtlas(atlasWidth, atlasHeight);
+    // textData.atlas =
+    //     textData.testFont->getTextureAtlas(atlasWidth, atlasHeight);
 
-    textData.vertexData = textData.atlas.getVertexData();
+    textData.vertexData = textData.testFont->getVertexData();
     textData.testText = std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
         std::string{"Test Text!"},
@@ -718,9 +796,22 @@ struct AppState {
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *textData.vertexBuffer, "TextVertexBuffer");
 
-    textData.fontImage = device->createImage2D(
-        {static_cast<uint32_t>(atlasWidth), static_cast<uint32_t>(atlasHeight)},
-        VK_FORMAT_R8_UNORM,
+    auto fontPixels = textData.testFont->getTextureData();
+    auto fontTextureSize = textData.testFont->getTextureSize();
+    auto textureLayers = textData.testFont->getTextureLayerCount();
+    auto intermediateFontImage = device->createImageArray2D(
+        {static_cast<uint32_t>(fontTextureSize),
+         static_cast<uint32_t>(fontTextureSize)},
+        static_cast<uint32_t>(textureLayers),
+        VK_FORMAT_R32G32B32_SFLOAT,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        vka::ImageAspect::Color,
+        true);
+    textData.fontImage = device->createImageArray2D(
+        {static_cast<uint32_t>(fontTextureSize),
+         static_cast<uint32_t>(fontTextureSize)},
+        static_cast<uint32_t>(textureLayers),
+        VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         vka::ImageAspect::Color,
         true);
@@ -768,11 +859,30 @@ struct AppState {
           {textData.vertexData.indices}, textData.indexBuffer, 0));
       stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
           {textData.vertexData.vertices}, textData.vertexBuffer, 0));
-      stagingBuffers.push_back(recordImageUpload<uint8_t>(
-          {textData.atlas.pixels},
-          textData.fontImage,
-          {0, 0},
-          {atlasWidth, atlasHeight}));
+      recordImageBarrier(
+        {}, 
+        {THSVS_ACCESS_TRANSFER_WRITE}, 
+        intermediateFontImage, 
+        THSVS_IMAGE_LAYOUT_OPTIMAL, 
+        true);
+      recordImageBarrier(
+        {}, 
+        {THSVS_ACCESS_TRANSFER_WRITE}, 
+        textData.fontImage, 
+        THSVS_IMAGE_LAYOUT_OPTIMAL, 
+        true);
+      stagingBuffers.push_back(recordImageArrayUpload<msdfgen::FloatRGB>({fontPixels}, intermediateFontImage));
+      recordImageBarrier(
+        {THSVS_ACCESS_TRANSFER_WRITE}, 
+        {THSVS_ACCESS_TRANSFER_READ}, 
+        intermediateFontImage, 
+        THSVS_IMAGE_LAYOUT_OPTIMAL);
+      recordImageBlit(intermediateFontImage, textData.fontImage);
+      recordImageBarrier(
+        {THSVS_ACCESS_TRANSFER_WRITE}, 
+        {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER}, 
+        textData.fontImage, 
+        THSVS_IMAGE_LAYOUT_OPTIMAL);
 
       cmd->end();
       device->queueSubmit({}, {cmd}, {}, transferFence.get());

@@ -12,12 +12,16 @@ Image::Image(
     bool dedicated,
     VkSampleCountFlagBits samples,
     VkImageType imageType,
-    uint32_t mipLevels,
     uint32_t arrayLayers,
+    uint32_t mipLevels,
     VmaMemoryUsage memoryUsage,
-    VkImageLayout initialLayout,
+    ThsvsImageLayout initialLayout,
     VkImageTiling tiling)
-    : allocator(allocator) {
+    : allocator(allocator), 
+      layout(initialLayout),
+      aspect(aspect),
+      extent(extent),
+      layerCount(arrayLayers) {
   VkImageCreateInfo imageCreateInfo{};
   imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imageCreateInfo.usage = usage;
@@ -25,7 +29,7 @@ Image::Image(
   imageCreateInfo.extent = extent;
   imageCreateInfo.mipLevels = mipLevels;
   imageCreateInfo.arrayLayers = arrayLayers;
-  imageCreateInfo.initialLayout = initialLayout;
+  imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imageCreateInfo.pQueueFamilyIndices = queueIndices.data();
   imageCreateInfo.queueFamilyIndexCount =
       static_cast<uint32_t>(queueIndices.size());

@@ -47,7 +47,7 @@ list(APPEND vkaEngineSources
   
 list(APPEND vkaEngineIncludes
   "${includeDir}/version.hpp"
-  # "${includeDir}/Config.hpp"
+  "${includeDir}/thsvs_simpler_vulkan_synchronization.h"
   "${includeDir}/Text.hpp"
   "${includeDir}/Logger.hpp"
   "${includeDir}/IO.hpp"

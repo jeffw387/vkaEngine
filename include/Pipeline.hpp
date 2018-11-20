@@ -168,11 +168,8 @@ public:
       VkDevice device,
       VkPipelineCache cache,
       const VkGraphicsPipelineCreateInfo& createInfo);
-  GraphicsPipeline(GraphicsPipeline&&);
-  GraphicsPipeline& operator=(GraphicsPipeline&&);
-  GraphicsPipeline(const GraphicsPipeline&) = delete;
-  GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
   ~GraphicsPipeline();
+  void cmdExecuted() {}
 
   operator VkPipeline() { return pipelineHandle; }
 
@@ -187,11 +184,8 @@ public:
       VkDevice device,
       VkPipelineCache cache,
       const VkComputePipelineCreateInfo& createInfo);
-  ComputePipeline(ComputePipeline&&);
-  ComputePipeline& operator=(ComputePipeline&&);
-  ComputePipeline(const ComputePipeline&) = delete;
-  ComputePipeline& operator=(const ComputePipeline&) = delete;
   ~ComputePipeline();
+  void cmdExecuted() {}
 
   operator VkPipeline() { return pipelineHandle; }
 

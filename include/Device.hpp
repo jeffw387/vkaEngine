@@ -103,13 +103,27 @@ public:
       VkBufferUsageFlags,
       VmaMemoryUsage,
       bool dedicated = false);
+  VkFormatProperties getFormatProperties(VkFormat);
+  VkImageFormatProperties getImageFormatProperties(
+      VkFormat,
+      VkImageType,
+      VkImageTiling,
+      VkImageUsageFlags,
+      VkImageCreateFlags);
   std::shared_ptr<Image> createImage2D(
       VkExtent2D,
       VkFormat,
       VkImageUsageFlags,
       ImageAspect,
-      bool = false);
+      bool dedicated = false);
   std::shared_ptr<ImageView> createImageView2D(VkImage, VkFormat, ImageAspect);
+  std::shared_ptr<Image> createImageArray2D(
+      VkExtent2D,
+      uint32_t arrayLayers,
+      VkFormat,
+      VkImageUsageFlags,
+      ImageAspect,
+      bool dedicated = false);
   std::unique_ptr<Swapchain> createSwapchain(
       VkSwapchainKHR = VK_NULL_HANDLE,
       VkFormat = VK_FORMAT_B8G8R8A8_UNORM);

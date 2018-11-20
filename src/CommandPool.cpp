@@ -86,16 +86,10 @@ void CommandBuffer::cmdPending() { state = Pending; }
 
 void CommandBuffer::cmdExecuted() {
   state = transient ? Invalid : Initial;
-  graphicsPipelines.clear();
-  computePipelines.clear();
-  pipelineLayouts.clear();
-  descriptorSets.clear();
-  buffers.clear();
-  images.clear();
-  imageViews.clear();
-  renderPasses.clear();
-  framebuffers.clear();
-  commandBuffers.clear();
+  for (auto& resource : dependentResources) {
+    std::visit([](auto& resourceVariant) { resourceVariant->cmdExecuted(); });
+  }
+  dependentResources.clear();
   activeRenderPass.reset();
   boundComputePipeline.reset();
   boundGraphicsPipeline.reset();
@@ -141,7 +135,7 @@ void CommandBuffer::bindGraphicsPipeline(
   vkCmdBindPipeline(
       commandBufferHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
   boundGraphicsPipeline = pipeline;
-  graphicsPipelines.push_back(std::move(pipeline));
+  dependentResources.emplace_back(std::move(pipeline));
 }
 
 void CommandBuffer::bindComputePipeline(
@@ -150,7 +144,7 @@ void CommandBuffer::bindComputePipeline(
   vkCmdBindPipeline(
       commandBufferHandle, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
   boundComputePipeline = pipeline;
-  computePipelines.push_back(std::move(pipeline));
+  dependentResources.emplace_back(std::move(pipeline));
 }
 
 void CommandBuffer::setViewport(
@@ -208,8 +202,10 @@ void CommandBuffer::bindGraphicsDescriptorSets(
       vkSets.data(),
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
-  pipelineLayouts.push_back(std::move(layout));
-  descriptorSets.insert(descriptorSets.cend(), sets.begin(), sets.end());
+  dependentResources.emplace_back(std::move(layout));
+  for (auto& set : sets) {
+    dependentResources.emplace_back(set);
+  }
 }
 
 void CommandBuffer::bindComputeDescriptorSets(
@@ -233,8 +229,10 @@ void CommandBuffer::bindComputeDescriptorSets(
       vkSets.data(),
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
-  pipelineLayouts.push_back(std::move(layout));
-  descriptorSets.insert(descriptorSets.cend(), sets.begin(), sets.end());
+  dependentResources.emplace_back(std::move(layout));
+  for (auto& set : sets) {
+    dependentResources.emplace_back(set);
+  }
 }
 
 void CommandBuffer::bindIndexBuffer(
@@ -245,7 +243,7 @@ void CommandBuffer::bindIndexBuffer(
   checkRenderPassActive();
   checkGraphicsPipelineBound();
   vkCmdBindIndexBuffer(commandBufferHandle, *buffer, offset, indexType);
-  buffers.push_back(std::move(buffer));
+  dependentResources.emplace_back(std::move(buffer));
 }
 
 void CommandBuffer::bindVertexBuffers(
@@ -259,7 +257,7 @@ void CommandBuffer::bindVertexBuffers(
   vkBuffers.reserve(buffers.size());
   for (auto& buffer : buffers) {
     vkBuffers.push_back(*buffer);
-    this->buffers.push_back(std::move(buffer));
+    dependentResources.emplace_back(std::move(buffer));
   }
   vkCmdBindVertexBuffers(
       commandBufferHandle,
@@ -313,8 +311,8 @@ void CommandBuffer::copyBuffer(
       *dstBuffer,
       static_cast<uint32_t>(regions.size()),
       regions.data());
-  buffers.push_back(std::move(srcBuffer));
-  buffers.push_back(std::move(dstBuffer));
+  dependentResources.emplace_back(std::move(srcBuffer));
+  dependentResources.emplace_back(std::move(dstBuffer));
 }
 
 void CommandBuffer::copyImage(
@@ -331,28 +329,26 @@ void CommandBuffer::copyImage(
       dstImageLayout,
       static_cast<uint32_t>(regions.size()),
       regions.data());
-  images.push_back(std::move(srcImage));
-  images.push_back(std::move(dstImage));
+  dependentResources.emplace_back(std::move(srcImage));
+  dependentResources.emplace_back(std::move(dstImage));
 }
 
 void CommandBuffer::blitImage(
     std::shared_ptr<Image> srcImage,
-    VkImageLayout srcImageLayout,
     std::shared_ptr<Image> dstImage,
-    VkImageLayout dstImageLayout,
     const std::vector<VkImageBlit>& regions,
     VkFilter filter) {
   vkCmdBlitImage(
       commandBufferHandle,
       *srcImage,
-      srcImageLayout,
+      srcImage->layout,
       *dstImage,
-      dstImageLayout,
+      dstImage->layout,
       static_cast<uint32_t>(regions.size()),
       regions.data(),
       filter);
-  images.push_back(std::move(srcImage));
-  images.push_back(std::move(dstImage));
+  dependentResources.emplace_back(std::move(srcImage));
+  dependentResources.emplace_back(std::move(dstImage));
 }
 
 void CommandBuffer::copyBufferToImage(
@@ -367,8 +363,8 @@ void CommandBuffer::copyBufferToImage(
       dstImageLayout,
       static_cast<uint32_t>(regions.size()),
       regions.data());
-  buffers.push_back(std::move(srcBuffer));
-  images.push_back(std::move(dstImage));
+  dependentResources.emplace_back(std::move(srcBuffer));
+  dependentResources.emplace_back(std::move(dstImage));
 }
 
 void CommandBuffer::copyImageToBuffer(
@@ -383,8 +379,8 @@ void CommandBuffer::copyImageToBuffer(
       *dstBuffer,
       static_cast<uint32_t>(regions.size()),
       regions.data());
-  images.push_back(std::move(srcImage));
-  buffers.push_back(std::move(dstBuffer));
+  dependentResources.emplace_back(std::move(srcImage));
+  dependentResources.emplace_back(std::move(dstBuffer));
 }
 
 void CommandBuffer::pipelineBarrier(
@@ -416,7 +412,7 @@ void CommandBuffer::pushConstants(
   checkRecording();
   vkCmdPushConstants(
       commandBufferHandle, *layout, stageFlags, offset, size, pValues);
-  pipelineLayouts.push_back(std::move(layout));
+  dependentResources.emplace_back(std::move(layout));
 }
 
 void CommandBuffer::beginRenderPass(
@@ -436,10 +432,11 @@ void CommandBuffer::beginRenderPass(
   beginInfo.pClearValues = clearValues.data();
   vkCmdBeginRenderPass(commandBufferHandle, &beginInfo, contents);
   activeRenderPass = renderPass;
-  renderPasses.push_back(std::move(renderPass));
-  imageViews.insert(
-      imageViews.cend(), framebuffer->views.begin(), framebuffer->views.end());
-  framebuffers.push_back(std::move(framebuffer));
+  dependentResources.emplace_back(std::move(renderPass));
+  for (auto& view : framebuffer->views) {
+    dependentResources.emplace_back(view);
+  }
+  dependentResources.emplace_back(std::move(framebuffer));
 }
 
 void CommandBuffer::nextSubpass(VkSubpassContents contents) {
@@ -474,7 +471,7 @@ void CommandBuffer::executeCommands(
   vkCmds.reserve(commandBuffers.size());
   for (auto& cmd : commandBuffers) {
     vkCmds.push_back(*cmd);
-    this->commandBuffers.push_back(std::move(cmd));
+    dependentResources.emplace_back(std::move(cmd));
   }
   vkCmdExecuteCommands(
       commandBufferHandle, static_cast<uint32_t>(vkCmds.size()), vkCmds.data());

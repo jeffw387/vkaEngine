@@ -16,6 +16,7 @@ public:
       VkExtent2D);
   ~Framebuffer();
   operator VkFramebuffer() const noexcept;
+  void cmdExecuted() {}
 
 private:
   VkDevice device = {};

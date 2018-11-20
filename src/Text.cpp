@@ -4,96 +4,83 @@
 
 namespace Text {
 using namespace ranges;
-template <>
-Font::BasicFont(std::string fontPath) {
-  MultiLogger::get()->info("Loading font file {} into memory.", fontPath);
-  if (auto loadResult = vka::loadBinaryFile({fontPath})) {
-    fontBytes = std::move(loadResult.value());
-    stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
-  }
-}
 
 template <>
-void Font::setFontPixelHeight(uint32_t height) {
-  font_size = height;
-}
-
-template <>
-float Font::getScaleFactor() {
-  return stbtt_ScaleForPixelHeight(&fontInfo, font_size);
-}
-
-template <>
-float Font::getAdvance(int glyphIndex) {
+float Font<>::getAdvance(int glyphIndex, int fontPixelHeight) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
-  return getScaleFactor() * static_cast<float>(adv);
+  return scaleFactor * fontPixelHeight * static_cast<float>(adv);
 }
 
 template <>
-float Font::getKerning(int glyphIndex1, int glyphIndex2) {
-  return getScaleFactor() * static_cast<float>(stbtt_GetGlyphKernAdvance(
-                                &fontInfo, glyphIndex1, glyphIndex2));
+float Font<>::getKerning(
+    int glyphIndex1,
+    int glyphIndex2,
+    int fontPixelHeight) {
+  return scaleFactor * fontPixelHeight *
+         static_cast<float>(
+             stbtt_GetGlyphKernAdvance(&fontInfo, glyphIndex1, glyphIndex2));
 }
 
 template <>
-int Font::getGlyphIndex(int charIndex) {
+int Font<>::getGlyphIndex(int charIndex) {
   return stbtt_FindGlyphIndex(&fontInfo, charIndex);
 }
 
-// template <>
-// Atlas Font::getTextureAtlas(int atlasWidth, int atlasHeight) {
-//   Atlas atlas{};
-//   atlas.pixels.resize(atlasWidth * atlasHeight);
-//   atlas.width = atlasWidth;
-//   atlas.height = atlasHeight;
-
-//   stbtt_pack_context packContext{};
-//   auto packBeginResult = stbtt_PackBegin(
-//       &packContext,
-//       atlas.pixels.data(),
-//       atlasWidth,
-//       atlasHeight,
-//       0,
-//       1,
-//       nullptr);
-//   std::vector<std::vector<stbtt_packedchar>> atlasDatas;
-
-//   auto charRanges = charSet();
-
-//   for (auto charRange : charRanges) {
-//     std::vector<stbtt_packedchar> atlasData;
-//     atlasData.resize(charRange.charCount);
-//     auto packResult = stbtt_PackFontRange(
-//         &packContext,
-//         fontBytes.data(),
-//         0,
-//         font_size,
-//         charRange.firstChar,
-//         static_cast<int>(charRange.charCount),
-//         atlasData.data());
-//     atlasDatas.push_back(std::move(atlasData));
-//   }
-//   stbtt_PackEnd(&packContext);
-//   auto glyphIndicesView =
-//       charRanges | ranges::view::transform([](auto charRange) {
-//         return ranges::view::closed_indices(
-//             static_cast<size_t>(charRange.firstChar),
-//             charRange.firstChar + charRange.charCount);
-//       }) |
-//       ranges::view::join | ranges::view::transform([this](auto charIndex) {
-//         return getGlyphIndex(charIndex);
-//       });
-//   auto atlasDataView = atlasDatas | ranges::view::join;
-//   RANGES_FOR(auto pair, ranges::view::zip(glyphIndicesView, atlasDataView)) {
-//     atlas.data[std::get<0>(pair)] = std::get<1>(pair);
-//   }
-//   return atlas;
-// }
+template <>
+VertexData Font<>::getVertexData() {
+  namespace view = ranges::view;
+  namespace action = ranges::action;
+  VertexData result{};
+  size_t indexOffset{};
+  size_t vertexOffset{};
+  for (const auto& [glyphIndex, bitmap] : glyphMap) {
+    action::push_back(
+        result.indices,
+        std::vector<Index>{
+            static_cast<uint16_t>(vertexOffset + 0),
+            static_cast<uint16_t>(vertexOffset + 1),
+            static_cast<uint16_t>(vertexOffset + 2),
+            static_cast<uint16_t>(vertexOffset + 2),
+            static_cast<uint16_t>(vertexOffset + 3),
+            static_cast<uint16_t>(vertexOffset + 0),
+        });
+    auto l = bitmap->left;
+    auto t = bitmap->top;
+    auto r = bitmap->right;
+    auto b = bitmap->bottom;
+    action::push_back(
+        result.vertices,
+        std::vector<Vertex>{{{l, t}, {0, 0}},
+                            {{l, b}, {0, 1}},
+                            {{r, b}, {1, 1}},
+                            {{r, t}, {1, 0}}});
+    result.offsets[glyphIndex] = indexOffset;
+    indexOffset += IndicesPerQuad;
+    vertexOffset += VerticesPerQuad;
+  }
+  return result;
+}
 
 template <>
-std::vector<stbtt_vertex> Font::getGlyphShape(int glyphIndex) {
+std::vector<msdfgen::FloatRGB> Font<>::getTextureData() {
+  namespace view = ranges::view;
+  namespace action = ranges::action;
+  auto pixelRanges =
+      glyphMap | view::values | view::transform([](auto& bitmapPtr) {
+        auto& bmp = bitmapPtr->bitmap;
+        return gsl::span<msdfgen::FloatRGB>(
+            bmp.data(), bmp.width() * bmp.height());
+      });
+  auto pixelsView = pixelRanges | view::join;
+  std::vector<msdfgen::FloatRGB> result;
+  action::push_back(result, pixelsView);
+  return result;
+}
+
+template <>
+std::vector<stbtt_vertex> Font<>::getGlyphShape(int glyphIndex) {
   stbtt_vertex* vertArray{};
   auto vertCount = stbtt_GetGlyphShape(&fontInfo, glyphIndex, &vertArray);
   std::vector<stbtt_vertex> result;
@@ -182,11 +169,8 @@ auto calcTranslation =
     };
 
 template <>
-std::unique_ptr<MSDFGlyph> Font::getMSDFGlyph(
-    int glyphIndex,
-    int bitmapWidth,
-    int bitmapHeight,
-    int framePadding) {
+std::unique_ptr<MSDFGlyph>
+Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
   auto shape = makeShape(getGlyphShape(glyphIndex));
   if (!shape.validate()) {
     MultiLogger::get()->error(
@@ -200,46 +184,54 @@ std::unique_ptr<MSDFGlyph> Font::getMSDFGlyph(
   double right{};
   double top{};
   shape.bounds(left, bottom, right, top);
-  auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapWidth, bitmapHeight);
-  auto vscale =
-      stbtt_ScaleForPixelHeight(&fontInfo, bitmapHeight - (framePadding * 2));
-  msdfgen::Vector2 scale{vscale, vscale};
+  auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
+  msdfgen::Vector2 scale{scaleFactor, scaleFactor};
   msdfgen::Vector2 translate{
-      calcTranslation(left, right, 0, bitmapWidth / vscale),
-      calcTranslation(bottom, top, 0, bitmapHeight / vscale)};
-  auto range = 2 / vscale;
+      calcTranslation(left, right, 0, bitmapSize / scaleFactor),
+      calcTranslation(bottom, top, 0, bitmapSize / scaleFactor)};
+  auto range = 2 / scaleFactor;
   msdfgen::generateMSDF(output, shape, range, scale, translate);
 
-  msdfgen::simulate8bit(output);
+  // TODO: is this needed? Maybe a better way to store output?
+  // msdfgen::simulate8bit(output);
 
-  auto left_trans = static_cast<float>(left + translate.x);
-  auto top_trans = static_cast<float>(-(top + translate.y));
-  auto right_trans = static_cast<float>(right + translate.x);
-  auto bottom_trans = static_cast<float>(-(bottom + translate.y));
-  return std::make_unique<MSDFGlyph>(MSDFGlyph{this,
-                                               std::move(output),
-                                               vscale,
-                                               left_trans,
-                                               top_trans,
-                                               right_trans,
-                                               bottom_trans});
+  auto left_trans = static_cast<float>(left + translate.x) * scaleFactor;
+  auto top_trans = static_cast<float>(-(top + translate.y)) * scaleFactor;
+  auto right_trans = static_cast<float>(right + translate.x) * scaleFactor;
+  auto bottom_trans = static_cast<float>(-(bottom + translate.y)) * scaleFactor;
+  return std::make_unique<MSDFGlyph>(MSDFGlyph{
+      std::move(output), left_trans, top_trans, right_trans, bottom_trans});
 }
 
 template <>
-MSDFArray Font::getMSDFArray(int width, int height, int framePadding) {
+MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize, float scaleFactor) {
   auto charRanges = charSet();
-  auto glyphIndexView =
+  auto charIndexView =
       charRanges | ranges::view::transform([&](auto charRange) {
         return ranges::view::closed_indices(
             charRange.firstChar, charRange.firstChar + charRange.charCount - 1);
       }) |
       ranges::view::join;
-  MSDFArray result{};
-  RANGES_FOR(auto glyphIndex, glyphIndexView) {
-    result.glyphs[glyphIndex] =
-        getMSDFGlyph(glyphIndex, width, height, framePadding);
+  MSDFGlyphMap result{};
+  RANGES_FOR(auto charIndex, charIndexView) {
+    auto glyphIndex = getGlyphIndex(charIndex);
+    result[glyphIndex] = getMSDFGlyph(glyphIndex, bitmapSize, scaleFactor);
   }
   return result;
+}
+
+template <>
+Font<>::Font(std::string fontPath, int msdfSize, int padding)
+    : msdfSize(msdfSize) {
+  MultiLogger::get()->info("Loading font file {} into memory.", fontPath);
+  if (auto loadResult = vka::loadBinaryFile({fontPath})) {
+    fontBytes = std::move(loadResult.value());
+    stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
+  }
+  auto scaledGlyphHeight = msdfSize - (padding * 2);
+  scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, scaledGlyphHeight);
+  glyphMap = getGlyphMap(msdfSize, scaleFactor);
+  scaleFactor /= msdfSize;
 }
 
 stbtt_aligned_quad Atlas::getQuad(int glyphIndex) {

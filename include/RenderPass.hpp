@@ -65,12 +65,9 @@ private:
 class RenderPass {
 public:
   RenderPass(VkDevice device, const VkRenderPassCreateInfo& createInfo);
-  RenderPass(RenderPass&&);
-  RenderPass& operator=(RenderPass&&);
-  RenderPass(const RenderPass&) = delete;
-  RenderPass& operator=(const RenderPass&) = delete;
   ~RenderPass();
-
+  void cmdExecuted() {};
+  
   operator VkRenderPass() { return renderPassHandle; }
 
 private:

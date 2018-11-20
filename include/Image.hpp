@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 #include <vector>
+#include "thsvs_simpler_vulkan_synchronization.h"
 
 namespace vka {
 
@@ -22,20 +23,26 @@ public:
       bool dedicated,
       VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
       VkImageType imageType = VK_IMAGE_TYPE_2D,
-      uint32_t mipLevels = 1,
       uint32_t arrayLayers = 1,
+      uint32_t mipLevels = 1,
       VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY,
-      VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      ThsvsImageLayout initialLayout = THSVS_IMAGE_LAYOUT_OPTIMAL,
       VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
   Image(VkImage);
   ~Image();
   operator VkImage() const noexcept;
   operator VmaAllocation() const noexcept;
-
-  VkImageLayout layout = {};
+  void cmdExecuted() {}
 
 private:
   VmaAllocator allocator = nullptr;
+public:
+  ThsvsImageLayout layout = {};
+  ImageAspect aspect = {};
+  VkExtent3D extent = {};
+  uint32_t layerCount = 1;
+
+private:
   VkImage image = VK_NULL_HANDLE;
   VmaAllocation allocation = nullptr;
 };
@@ -50,6 +57,7 @@ public:
       VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D);
   ~ImageView();
   operator VkImageView() const noexcept;
+  void cmdExecuted() {}
 
 private:
   VkDevice device;

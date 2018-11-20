@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <variant>
 #include "Pipeline.hpp"
 #include "PipelineLayout.hpp"
 #include "DescriptorPool.hpp"
@@ -19,8 +20,6 @@ namespace vka {
 
 class Device;
 class CommandPool;
-// TODO: have command buffer track all resources referenced until execution is
-// verified
 class CommandBuffer {
   friend class CommandPool;
   friend class Device;
@@ -104,9 +103,7 @@ public:
       const std::vector<VkImageCopy>& regions);
   void blitImage(
       std::shared_ptr<Image> srcImage,
-      VkImageLayout srcImageLayout,
       std::shared_ptr<Image> dstImage,
-      VkImageLayout dstImageLayout,
       const std::vector<VkImageBlit>& regions,
       VkFilter filter);
   void copyBufferToImage(
@@ -150,16 +147,19 @@ private:
   bool transient = {};
   State state = {};
 
-  std::vector<std::shared_ptr<GraphicsPipeline>> graphicsPipelines;
-  std::vector<std::shared_ptr<ComputePipeline>> computePipelines;
-  std::vector<std::shared_ptr<PipelineLayout>> pipelineLayouts;
-  std::vector<std::shared_ptr<DescriptorSet>> descriptorSets;
-  std::vector<std::shared_ptr<Image>> images;
-  std::vector<std::shared_ptr<ImageView>> imageViews;
-  std::vector<std::shared_ptr<Buffer>> buffers;
-  std::vector<std::shared_ptr<RenderPass>> renderPasses;
-  std::vector<std::shared_ptr<Framebuffer>> framebuffers;
-  std::vector<std::shared_ptr<CommandBuffer>> commandBuffers;
+  using ResourceVariant = std::variant<
+    GraphicsPipeline,
+    ComputePipeline,
+    PipelineLayout,
+    DescriptorSet,
+    Image,
+    ImageView,
+    Buffer,
+    RenderPass,
+    Framebuffer,
+    CommandBuffer>;
+
+  std::vector<ResourceVariant> dependentResources;
 
   std::shared_ptr<RenderPass> activeRenderPass;
   std::shared_ptr<ComputePipeline> boundComputePipeline;

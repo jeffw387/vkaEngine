@@ -24,6 +24,7 @@ public:
   void unmap();
   void flush();
   void invalidate();
+  void cmdExecuted() {}
 
 private:
   VmaAllocator allocator;

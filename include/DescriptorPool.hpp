@@ -95,6 +95,7 @@ public:
     auto& descriptor = binding.at(ref.arrayIndex);
     return &(std::get<T>(descriptor));
   }
+  void cmdExecuted() {}
 
 private:
   VkDescriptorSet set;

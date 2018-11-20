@@ -54,48 +54,41 @@ private:
   std::vector<stbtt_aligned_quad> getQuads();
 };
 
-struct MSDFGlyph;
-
-struct MSDFArray {
-  std::map<int, std::unique_ptr<MSDFGlyph>> glyphs;
-  VertexData getVertexData();
-};
-
-template <typename T = BasicCharacters>
-class BasicFont {
-public:
-  BasicFont(std::string fontPath);
-  int getGlyphIndex(int charIndex);
-  // void setFontPixelHeight(uint32_t height);
-  float getAdvance(int glyphIndex, uint32_t fontPixelHeight);
-  float getKerning(int glyphIndex1, int glyphIndex2, uint32_t fontPixelHeight);
-  auto getFontBytes() { return fontBytes; }
-  // float getScaleFactor();
-
-  // Atlas getTextureAtlas(int width, int height);
-
-private:
-  std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
-  std::unique_ptr<MSDFGlyph> getMSDFGlyph(
-      int glyphIndex,
-      int bitmapWidth,
-      int bitmapHeight,
-      int framePadding);
-  MSDFArray getMSDFArray(int width, int height, int framePadding = 4);
-  std::vector<uint8_t> fontBytes;
-  stbtt_fontinfo fontInfo;
-  T charSet;
-  MSDFArray glyphArray;
-};
-using Font = BasicFont<>;
-
 struct MSDFGlyph {
-  Font* font;
   msdfgen::Bitmap<msdfgen::FloatRGB> bitmap;
-  float scale;
   float left;
   float top;
   float right;
   float bottom;
+};
+
+using MSDFGlyphMap = std::map<int, std::unique_ptr<MSDFGlyph>>;
+
+template <typename T = BasicCharacters>
+class Font {
+public:
+  Font(std::string fontPath, int msdfSize = 32, int padding = 2);
+  int getGlyphIndex(int charIndex);
+  float getAdvance(int glyphIndex, int fontPixelHeight);
+  float getKerning(int glyphIndex1, int glyphIndex2, int fontPixelHeight);
+  auto getFontBytes() { return fontBytes; }
+  VertexData getVertexData();
+  std::vector<msdfgen::FloatRGB> getTextureData();
+  int getTextureSize() { return msdfSize; }
+  int getTextureLayerCount() { return glyphMap.size(); }
+
+private:
+  std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
+  std::unique_ptr<MSDFGlyph>
+  getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor);
+  MSDFGlyphMap getGlyphMap(int bitmapSize, float scaleFactor);
+
+  // multiply scaleFactor by desired font height in pixels
+  int msdfSize;
+  float scaleFactor;
+  std::vector<uint8_t> fontBytes;
+  stbtt_fontinfo fontInfo;
+  T charSet;
+  MSDFGlyphMap glyphMap;
 };
 }  // namespace Text
