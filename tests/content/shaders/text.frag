@@ -19,10 +19,12 @@ float median(float r, float g, float b) {
 
 void main()
 {
-  vec3 s = texture(sTexture, vec3(In.UV, pc.glyphIndex)).rgb;
-  float signedDistance = median(s.r, s.g, s.b) - 0.5;
-  float signedDistanceInPixels = signedDistance * length(pc.clipSpaceScale);
-  float opacity = clamp(signedDistanceInPixels + 0.5, 0.0, 1.0);
+  vec3 msdfSample = texture(sTexture, vec3(In.UV, pc.glyphIndex)).rgb;
+  float signedDistance = median(msdfSample.r, msdfSample.g, msdfSample.b);
+  // float signedDistanceInPixels = signedDistance * length(pc.clipSpaceScale);
+  // float opacity = clamp(signedDistanceInPixels + 0.5, 0.0, 1.0);
+  float w = fwidth(signedDistance);
+  float opacity = smoothstep(0.5 - w, 0.5 + w, signedDistance);
 
   outColor = vec4(pc.fontColor.rgb, opacity) ;
 }
