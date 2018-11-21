@@ -451,8 +451,9 @@ struct AppState {
       auto& currentString = currentText->str;
       glm::vec2 pen = currentText->screenPosition;
       for (int i{}; i < currentString.size(); ++i) {
-        int currentGlyph = currentFont->getGlyphIndex(currentString[i]);
-        pushData.fragment.glyphIndex = currentGlyph;
+        auto currentCharCode = currentString[i];
+        int currentGlyph = currentFont->getGlyphIndex(currentCharCode);
+        pushData.fragment.glyphIndex = currentFont->getArrayIndex(currentGlyph);
         int nextGlyph{-1};
         float kerning{};
         if ((i + 1) < currentString.size()) {

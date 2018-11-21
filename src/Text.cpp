@@ -40,6 +40,11 @@ int Font<>::getGlyphIndex(int charIndex) {
 }
 
 template <>
+uint32_t Font<>::getArrayIndex(int glyphIndex) {
+  return glyphMap[glyphIndex]->arrayIndex;
+}
+
+template <>
 VertexData Font<>::getVertexData() {
   namespace view = ranges::view;
   namespace action = ranges::action;
@@ -203,9 +208,6 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
   auto range = 2 / scaleFactor;
   msdfgen::generateMSDF(output, shape, range, scale, translate);
 
-  // TODO: is this needed? Maybe a better way to store output?
-  // msdfgen::simulate8bit(output);
-
   auto left_trans = static_cast<float>(left + translate.x) * scaleFactor;
   auto top_trans = static_cast<float>(-(top + translate.y)) * scaleFactor;
   auto right_trans = static_cast<float>(right + translate.x) * scaleFactor;
@@ -228,6 +230,7 @@ MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize, float scaleFactor) {
     auto glyphIndex = getGlyphIndex(charIndex);
     result[glyphIndex] = getMSDFGlyph(glyphIndex, bitmapSize, scaleFactor);
   }
+
   return result;
 }
 
@@ -242,62 +245,10 @@ Font<>::Font(std::string fontPath, int msdfSize, int padding)
   originalPixelHeight = msdfSize - (padding * 2);
   auto scaleFactor = vectorToRenderRatio(originalPixelHeight);
   glyphMap = getGlyphMap(msdfSize, scaleFactor);
-}
-
-stbtt_aligned_quad Atlas::getQuad(int glyphIndex) {
-  stbtt_aligned_quad quad{};
-  float xAdvance{};
-  float yAdvance{};
-  stbtt_GetPackedQuad(
-      &data[glyphIndex], width, height, 0, &xAdvance, &yAdvance, &quad, 0);
-  return quad;
-}
-
-std::vector<stbtt_aligned_quad> Atlas::getQuads() {
-  std::vector<stbtt_aligned_quad> result;
-  ranges::action::push_back(
-      result, ranges::view::transform(data, [this](auto pair) {
-        return getQuad(pair.first);
-      }));
-  return result;
-}
-
-VertexData Atlas::getVertexData() {
-  VertexData result{};
-  size_t indexOffset{};
-  size_t vertexOffset{};
-  auto quads = getQuads();
-  auto zipView = ranges::view::zip(ranges::view::keys(data), quads);
-  RANGES_FOR(auto zipTuple, zipView) {
-    auto& quad = std::get<1>(zipTuple);
-    auto left = quad.x0;
-    auto top = quad.y0;
-    auto right = quad.x1;
-    auto bottom = quad.y1;
-    auto leftuv = quad.s0;
-    auto topuv = quad.t0;
-    auto rightuv = quad.s1;
-    auto bottomuv = quad.t1;
-
-    ranges::action::push_back(
-        result.indices,
-        {vertexOffset + 0,
-         vertexOffset + 1,
-         vertexOffset + 2,
-         vertexOffset + 2,
-         vertexOffset + 3,
-         vertexOffset + 0});
-    ranges::action::push_back(
-        result.vertices,
-        std::vector<Vertex>{{{left, top}, {leftuv, topuv}},
-                            {{left, bottom}, {leftuv, bottomuv}},
-                            {{right, bottom}, {rightuv, bottomuv}},
-                            {{right, top}, {rightuv, topuv}}});
-    result.offsets[std::get<0>(zipTuple)] = indexOffset;
-
-    indexOffset += IndicesPerQuad;
-    vertexOffset += VerticesPerQuad;
+  uint32_t arrayIndex{};
+  for (const auto& [glyphIndex, bitmap] : glyphMap) {
+    bitmap->arrayIndex = arrayIndex;
+    ++arrayIndex;
   }
-  return result;
 }
 }  // namespace Text

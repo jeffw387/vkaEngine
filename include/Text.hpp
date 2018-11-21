@@ -41,25 +41,13 @@ struct VertexData {
   std::map<uint8_t /*GlyphIndex*/, size_t /*IndexOffset*/> offsets;
 };
 
-struct Atlas {
-  std::vector<uint8_t> pixels;
-  int width = {};
-  int height = {};
-  std::map<int /*GlyphIndex*/, stbtt_packedchar /*GlyphAtlasData*/> data;
-
-  VertexData getVertexData();
-
-private:
-  stbtt_aligned_quad getQuad(int glyphIndex);
-  std::vector<stbtt_aligned_quad> getQuads();
-};
-
 struct MSDFGlyph {
   msdfgen::Bitmap<msdfgen::FloatRGB> bitmap;
   float left;
   float top;
   float right;
   float bottom;
+  uint32_t arrayIndex;
 };
 
 using MSDFGlyphMap = std::map<int, std::unique_ptr<MSDFGlyph>>;
@@ -69,6 +57,7 @@ class Font {
 public:
   Font(std::string fontPath, int msdfSize = 32, int padding = 2);
   int getGlyphIndex(int charIndex);
+  uint32_t getArrayIndex(int glyphIndex);
   float getAdvance(int glyphIndex, int fontPixelHeight);
   float getKerning(int glyphIndex1, int glyphIndex2, int fontPixelHeight);
   float msdfToRenderRatio(int fontPixelHeight);
