@@ -43,10 +43,18 @@ struct VertexData {
 
 struct MSDFGlyph {
   msdfgen::Bitmap<msdfgen::FloatRGB> bitmap;
+  struct Pos {
+    float left;
+    float top;
+    float right;
+    float bottom;
+  } pos;
+  struct UV {
   float left;
   float top;
   float right;
   float bottom;
+  } uv;
   uint32_t arrayIndex;
 };
 

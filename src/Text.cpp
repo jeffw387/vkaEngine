@@ -62,16 +62,14 @@ VertexData Font<>::getVertexData() {
             static_cast<uint16_t>(vertexOffset + 3),
             static_cast<uint16_t>(vertexOffset + 0),
         });
-    auto l = bitmap->left;
-    auto t = bitmap->top;
-    auto r = bitmap->right;
-    auto b = bitmap->bottom;
+    auto pos = bitmap->pos;
+    auto uv = bitmap->uv;
     action::push_back(
         result.vertices,
-        std::vector<Vertex>{{{l, t}, {0, 0}},
-                            {{l, b}, {0, 1}},
-                            {{r, b}, {1, 1}},
-                            {{r, t}, {1, 0}}});
+        std::vector<Vertex>{{{pos.left, pos.top}, {uv.left, uv.top}},
+                            {{pos.left, pos.bottom}, {uv.left, uv.bottom}},
+                            {{pos.right, pos.bottom}, {uv.right, uv.bottom}},
+                            {{pos.right, pos.top}, {uv.right, uv.top}}});
     result.offsets[glyphIndex] = indexOffset;
     indexOffset += IndicesPerQuad;
     vertexOffset += VerticesPerQuad;
@@ -212,8 +210,13 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
   auto top_trans = static_cast<float>(-(top + translate.y)) * scaleFactor;
   auto right_trans = static_cast<float>(right + translate.x) * scaleFactor;
   auto bottom_trans = static_cast<float>(-(bottom + translate.y)) * scaleFactor;
-  return std::make_unique<MSDFGlyph>(MSDFGlyph{
-      std::move(output), left_trans, top_trans, right_trans, bottom_trans});
+  return std::make_unique<MSDFGlyph>(
+      MSDFGlyph{std::move(output),
+                {left_trans, top_trans, right_trans, bottom_trans},
+                {left_trans / bitmapSize,
+                 top_trans / bitmapSize,
+                 right_trans / bitmapSize,
+                 bottom_trans / bitmapSize}});
 }
 
 template <>
