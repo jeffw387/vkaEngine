@@ -93,60 +93,52 @@ struct AppState {
     std::unique_ptr<vka::Fence> frameAcquired;
     std::unique_ptr<vka::Fence> bufferExecuted;
     std::unique_ptr<vka::Semaphore> renderComplete;
-    uint32_t swapImageIndex;
+    uint32_t swapImageIndex = 0;
     std::shared_ptr<vka::Framebuffer> framebuffer;
     std::unique_ptr<vka::CommandPool> commandPool;
     std::weak_ptr<vka::CommandBuffer> cmd;
     entt::DefaultRegistry ecs;
     BufferedState() {}
-    BufferedState(vka::Device* device, const std::vector<std::unique_ptr<vka::DescriptorSetLayout>> layouts) {
-      MultiLogger::get()->info("creating command pool");
-      commandPool = device->createCommandPool();
-      cmd = commandPool->allocateCommandBuffer();
-
-      materialUniform =
-          vka::vulkan_vector<Material, vka::StorageBufferDescriptor>(
-              device,
-              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU);
+    BufferedState(
+        vka::Device* device,
+        const std::vector<std::unique_ptr<vka::DescriptorSetLayout>> layouts)
+        : descriptorPool(device->createDescriptorPool(
+              {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
+               {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
+               {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
+              5)),
+          descriptorSets({
+              descriptorPool->allocateDescriptorSet(layouts[0].get()),
+              descriptorPool->allocateDescriptorSet(layouts[1].get()),
+              descriptorPool->allocateDescriptorSet(layouts[2].get()),
+              descriptorPool->allocateDescriptorSet(layouts[3].get()),
+              descriptorPool->allocateDescriptorSet(layouts[4].get()),
+          }),
+          materialUniform({device,
+                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                           VMA_MEMORY_USAGE_CPU_TO_GPU}),
+          dynamicLightsUniform({device,
+                                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                VMA_MEMORY_USAGE_CPU_TO_GPU}),
+          lightDataUniform({device,
+                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                            VMA_MEMORY_USAGE_CPU_TO_GPU}),
+          cameraUniform({device,
+                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                         VMA_MEMORY_USAGE_CPU_TO_GPU}),
+          instanceUniform({device,
+                           VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                           VMA_MEMORY_USAGE_CPU_TO_GPU}),
+          frameAcquired(device->createFence(false)),
+          bufferExecuted(device->createFence(true)),
+          renderComplete(device->createSemaphore()),
+          commandPool(device->createCommandPool()),
+          cmd(commandPool->allocateCommandBuffer()) {
       materialUniform.reserve(1);
-
-      dynamicLightsUniform =
-          vka::vulkan_vector<Light, vka::StorageBufferDescriptor>(
-              device,
-              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU);
       dynamicLightsUniform.reserve(1);
-
-      lightDataUniform = vka::vulkan_vector<LightData>(
-          device,
-          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
       lightDataUniform.reserve(1);
-
-      cameraUniform = vka::vulkan_vector<Camera>(
-          device,
-          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
       cameraUniform.reserve(1);
-
-      instanceUniform =
-          vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>(
-              device,
-              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU);
       instanceUniform.reserve(1);
-
-      MultiLogger::get()->info("creating descriptor pool");
-      descriptorPool = device->createDescriptorPool(
-          {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
-           {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
-           {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
-          5);
-      for (auto& setLayout : layouts) {
-        descriptorSets.push_back(
-            descriptorPool->allocateDescriptorSet(setLayout.get()));
-      }
 
       materialUniform.subscribe(
           descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
@@ -163,10 +155,6 @@ struct AppState {
       instanceUniform.subscribe(
           descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
               vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-
-      frameAcquired = device->createFence(false);
-      bufferExecuted = device->createFence(true);
-      renderComplete = device->createSemaphore();
     }
   };
   std::array<BufferedState, vka::BufferCount> bufState;
@@ -381,7 +369,11 @@ struct AppState {
       // cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
       uint32_t matIndex{};
       cmd->pushConstants(
-          p3DPipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
+          p3DPipeline.pipelineLayout,
+          VK_SHADER_STAGE_FRAGMENT_BIT,
+          0,
+          4,
+          &matIndex);
       cmd->bindIndexBuffer(
           terrainAsset.buffer,
           terrainAsset.models[0].indexByteOffset,
@@ -734,8 +726,6 @@ struct AppState {
     if (auto cmd = transfer.cmd.lock()) {
       cmd->begin();
 
-      
-
       cmd->end();
       device->queueSubmit({}, {cmd}, {}, transfer.fence.get());
     }
@@ -751,7 +741,6 @@ struct AppState {
         VK_OBJECT_TYPE_BUFFER, *terrainAsset.buffer, "TerrainVertexBuffer");
 
     for (auto& state : bufState) {
-      
     }
 
     vka::RenderPassCreateInfo renderPassCreateInfo;
