@@ -15,6 +15,7 @@ add_custom_command(
   "${CMAKE_CURRENT_SOURCE_DIR}/test-text.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/test-debug.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/test-transfer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/test-p3d-pipeline.hpp"
   )
 
 macro(process_shader fileNames inputDir outputDir)

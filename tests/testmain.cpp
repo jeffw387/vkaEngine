@@ -28,10 +28,9 @@
 #include "test-text.hpp"
 #include "test-debug.hpp"
 #include "test-transfer.hpp"
+#include "test-p3d-pipeline.hpp"
 
 namespace fs = std::experimental::filesystem;
-
-
 
 struct Material {
   glm::vec4 diffuse;
@@ -108,14 +107,8 @@ struct AppState {
   vka::Device* device;
   tinygltf::TinyGLTF modelLoader;
   Transfer transfer;
-  std::unique_ptr<vka::Swapchain> swapchain;
-  std::unique_ptr<vka::ShaderModule> vertexShader;
-  std::unique_ptr<vka::ShaderModule> fragmentShader;
   std::shared_ptr<vka::RenderPass> renderPass;
-  std::vector<std::unique_ptr<vka::DescriptorSetLayout>> descriptorSetLayouts;
-  std::shared_ptr<vka::PipelineLayout> pipelineLayout;
   std::unique_ptr<vka::PipelineCache> pipelineCache;
-  std::shared_ptr<vka::GraphicsPipeline> pipeline;
 
   TextPipeline textPipeline;
   Font testFont;
@@ -124,6 +117,8 @@ struct AppState {
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
+
+  std::unique_ptr<vka::Swapchain> swapchain;
   std::vector<VkImage> swapImages;
   std::vector<std::shared_ptr<vka::ImageView>> swapImageViews;
   std::shared_ptr<vka::Image> depthImage;
