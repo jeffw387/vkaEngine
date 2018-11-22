@@ -84,12 +84,19 @@ struct AppState {
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
     std::vector<std::shared_ptr<vka::DescriptorSet>> descriptorSets;
-    std::unique_ptr<vka::vulkan_vector<Material, vka::StorageBufferDescriptor>> materialUniform;
+    vka::StorageBufferDescriptor materialDescriptor;
+    vka::StorageBufferDescriptor dynamicLightDescriptor;
+    vka::BufferDescriptor lightDataDescriptor;
+    vka::BufferDescriptor cameraDescriptor;
+    vka::DynamicBufferDescriptor instanceDescriptor;
+    std::unique_ptr<vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>
+        materialUniform;
     std::unique_ptr<vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>
         dynamicLightsUniform;
     std::unique_ptr<vka::vulkan_vector<LightData>> lightDataUniform;
     std::unique_ptr<vka::vulkan_vector<Camera>> cameraUniform;
-    std::unique_ptr<vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>> instanceUniform;
+    std::unique_ptr<vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>
+        instanceUniform;
     std::unique_ptr<vka::Fence> frameAcquired;
     std::unique_ptr<vka::Fence> bufferExecuted;
     std::unique_ptr<vka::Semaphore> renderComplete;
@@ -114,43 +121,47 @@ struct AppState {
               descriptorPool->allocateDescriptorSet(layouts[3].get()),
               descriptorPool->allocateDescriptorSet(layouts[4].get()),
           }),
+          materialDescriptor(
+              descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
+                  {{}, 0, 0})),
+          dynamicLightDescriptor(
+              descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
+                  {{}, 0, 0})),
+          lightDataDescriptor(
+              descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
+                  {{}, 0, 0})),
+          cameraDescriptor(
+              descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
+                  {{}, 0, 0})),
+          instanceDescriptor(
+              descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
+                  {{}, 0, 0})),
           materialUniform(std::make_unique({device,
-                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                           VMA_MEMORY_USAGE_CPU_TO_GPU})),
-          dynamicLightsUniform(std::make_unique({device,
+                                            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                            VMA_MEMORY_USAGE_CPU_TO_GPU,
+                                            {materialDescriptor}})),
+          dynamicLightsUniform(
+              std::make_unique({device,
                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                VMA_MEMORY_USAGE_CPU_TO_GPU})),
+                                VMA_MEMORY_USAGE_CPU_TO_GPU,
+                                {dynamicLightDescriptor}})),
           lightDataUniform(std::make_unique({device,
-                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                            VMA_MEMORY_USAGE_CPU_TO_GPU})),
+                                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                             VMA_MEMORY_USAGE_CPU_TO_GPU,
+                                             {lightDataDescriptor}})),
           cameraUniform(std::make_unique({device,
-                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                         VMA_MEMORY_USAGE_CPU_TO_GPU})),
+                                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                          VMA_MEMORY_USAGE_CPU_TO_GPU,
+                                          {cameraDescriptor}})),
           instanceUniform(std::make_unique({device,
-                           VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                           VMA_MEMORY_USAGE_CPU_TO_GPU})),
+                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                            VMA_MEMORY_USAGE_CPU_TO_GPU,
+                                            {instanceDescriptor}})),
           frameAcquired(device->createFence(false)),
           bufferExecuted(device->createFence(true)),
           renderComplete(device->createSemaphore()),
           commandPool(device->createCommandPool()),
-          cmd(commandPool->allocateCommandBuffer()) {
-
-      materialUniform->subscribe(
-          descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      dynamicLightsUniform->subscribe(
-          descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      lightDataUniform->subscribe(
-          descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      cameraUniform->subscribe(
-          descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      instanceUniform->subscribe(
-          descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-    }
+          cmd(commandPool->allocateCommandBuffer()) {}
   };
   std::array<BufferedState, vka::BufferCount> bufState;
 
@@ -270,28 +281,28 @@ struct AppState {
     MultiLogger::get()->info("Init Callback");
     auto& initial = bufState[initialIndex];
 
-    initial.materialUniform.push_back({glm::vec4(0.8f, 1.f, 0.8f, 1.f)});
-    initial.materialUniform.flushMemory(device);
+    initial.materialUniform->push_back({glm::vec4(0.8f, 1.f, 0.8f, 1.f)});
+    initial.materialUniform->flushMemory(device);
 
-    initial.dynamicLightsUniform.push_back(
+    initial.dynamicLightsUniform->push_back(
         {{0.8f, 0.8f, 0.8f, 25.f}, {0.f, 0.f, 2.f, 0.f}});
-    initial.dynamicLightsUniform.flushMemory(device);
+    initial.dynamicLightsUniform->flushMemory(device);
 
     LightData lightData;
     lightData.count = 1;
     lightData.ambient = glm::vec4(0.f, 0.f, 1.f, 10.0f);
-    initial.lightDataUniform.push_back(std::move(lightData));
-    initial.lightDataUniform.flushMemory(device);
+    initial.lightDataUniform->push_back(std::move(lightData));
+    initial.lightDataUniform->flushMemory(device);
 
     Camera camData{};
     camData.projection = mainCamera.getProjection();
     camData.view = mainCamera.getView();
-    initial.cameraUniform.push_back(std::move(camData));
-    initial.cameraUniform.flushMemory(device);
+    initial.cameraUniform->push_back(std::move(camData));
+    initial.cameraUniform->flushMemory(device);
 
-    initial.instanceUniform.push_back(
+    initial.instanceUniform->push_back(
         {glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f))});
-    initial.instanceUniform.flushMemory(device);
+    initial.instanceUniform->flushMemory(device);
   }
 
   void updateCallback(vka::Engine* engine) {
@@ -300,35 +311,35 @@ struct AppState {
     auto& last = bufState[lastUpdateIndex];
     auto& current = bufState[updateIndex];
 
-    auto matSize = last.materialUniform.size();
-    current.materialUniform.resize(matSize);
+    auto matSize = last.materialUniform->size();
+    current.materialUniform->resize(matSize);
     for (auto i = 0U; i < matSize; ++i) {
-      current.materialUniform[i] = last.materialUniform[i];
+      (*current.materialUniform)[i] = (*last.materialUniform)[i];
     }
-    current.materialUniform.flushMemory(device);
+    current.materialUniform->flushMemory(device);
 
-    auto dynamicLightSize = last.dynamicLightsUniform.size();
-    current.dynamicLightsUniform.resize(dynamicLightSize);
+    auto dynamicLightSize = last.dynamicLightsUniform->size();
+    current.dynamicLightsUniform->resize(dynamicLightSize);
     for (auto i = 0U; i < dynamicLightSize; ++i) {
-      current.dynamicLightsUniform[i] = last.dynamicLightsUniform[i];
+      (*current.dynamicLightsUniform)[i] = (*last.dynamicLightsUniform)[i];
     }
-    current.dynamicLightsUniform.flushMemory(device);
+    current.dynamicLightsUniform->flushMemory(device);
 
-    current.lightDataUniform.resize(1);
-    current.lightDataUniform[0] = last.lightDataUniform[0];
-    current.lightDataUniform.flushMemory(device);
+    current.lightDataUniform->resize(1);
+    (*current.lightDataUniform)[0] = (*last.lightDataUniform)[0];
+    current.lightDataUniform->flushMemory(device);
 
-    current.cameraUniform.resize(1);
-    current.cameraUniform[0].projection = mainCamera.getProjection();
-    current.cameraUniform[0].view = mainCamera.getView();
-    current.cameraUniform.flushMemory(device);
+    current.cameraUniform->resize(1);
+    (*current.cameraUniform)[0].projection = mainCamera.getProjection();
+    (*current.cameraUniform)[0].view = mainCamera.getView();
+    current.cameraUniform->flushMemory(device);
 
-    auto instanceSize = last.instanceUniform.size();
-    current.instanceUniform.resize(instanceSize);
+    auto instanceSize = last.instanceUniform->size();
+    current.instanceUniform->resize(instanceSize);
     for (auto i = 0U; i < instanceSize; ++i) {
-      current.instanceUniform[i] = last.instanceUniform[i];
+      (*current.instanceUniform)[i] = (*last.instanceUniform)[i];
     }
-    current.instanceUniform.flushMemory(device);
+    current.instanceUniform->flushMemory(device);
   }
 
   void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
