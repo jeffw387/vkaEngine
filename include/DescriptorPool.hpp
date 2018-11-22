@@ -16,10 +16,18 @@ struct DescriptorReference {
   uint32_t arrayIndex;
 };
 
+enum class BufferType {
+  Uniform,
+  DynamicUniform,
+  Storage,
+  // DynamicStorage
+};
+
 class BufferDescriptor {
 public:
   void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+  constexpr BufferType bufferType() { return BufferType::Uniform; }
 
 private:
   bool valid = false;
@@ -30,6 +38,7 @@ class StorageBufferDescriptor {
 public:
   void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+  constexpr BufferType bufferType() { return BufferType::Storage; }
 
 private:
   bool valid = false;
@@ -40,6 +49,7 @@ class DynamicBufferDescriptor {
 public:
   void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
+  constexpr BufferType bufferType() { return BufferType::DynamicUniform; }
 
 private:
   bool valid = false;

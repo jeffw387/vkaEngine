@@ -84,12 +84,12 @@ struct AppState {
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
     std::vector<std::shared_ptr<vka::DescriptorSet>> descriptorSets;
-    vka::vulkan_vector<Material, vka::StorageBufferDescriptor> materialUniform;
-    vka::vulkan_vector<Light, vka::StorageBufferDescriptor>
+    std::unique_ptr<vka::vulkan_vector<Material, vka::StorageBufferDescriptor>> materialUniform;
+    std::unique_ptr<vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>
         dynamicLightsUniform;
-    vka::vulkan_vector<LightData> lightDataUniform;
-    vka::vulkan_vector<Camera> cameraUniform;
-    vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor> instanceUniform;
+    std::unique_ptr<vka::vulkan_vector<LightData>> lightDataUniform;
+    std::unique_ptr<vka::vulkan_vector<Camera>> cameraUniform;
+    std::unique_ptr<vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>> instanceUniform;
     std::unique_ptr<vka::Fence> frameAcquired;
     std::unique_ptr<vka::Fence> bufferExecuted;
     std::unique_ptr<vka::Semaphore> renderComplete;
@@ -114,45 +114,40 @@ struct AppState {
               descriptorPool->allocateDescriptorSet(layouts[3].get()),
               descriptorPool->allocateDescriptorSet(layouts[4].get()),
           }),
-          materialUniform({device,
+          materialUniform(std::make_unique({device,
                            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                           VMA_MEMORY_USAGE_CPU_TO_GPU}),
-          dynamicLightsUniform({device,
+                           VMA_MEMORY_USAGE_CPU_TO_GPU})),
+          dynamicLightsUniform(std::make_unique({device,
                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                VMA_MEMORY_USAGE_CPU_TO_GPU}),
-          lightDataUniform({device,
+                                VMA_MEMORY_USAGE_CPU_TO_GPU})),
+          lightDataUniform(std::make_unique({device,
                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                            VMA_MEMORY_USAGE_CPU_TO_GPU}),
-          cameraUniform({device,
+                            VMA_MEMORY_USAGE_CPU_TO_GPU})),
+          cameraUniform(std::make_unique({device,
                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                         VMA_MEMORY_USAGE_CPU_TO_GPU}),
-          instanceUniform({device,
+                         VMA_MEMORY_USAGE_CPU_TO_GPU})),
+          instanceUniform(std::make_unique({device,
                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                           VMA_MEMORY_USAGE_CPU_TO_GPU}),
+                           VMA_MEMORY_USAGE_CPU_TO_GPU})),
           frameAcquired(device->createFence(false)),
           bufferExecuted(device->createFence(true)),
           renderComplete(device->createSemaphore()),
           commandPool(device->createCommandPool()),
           cmd(commandPool->allocateCommandBuffer()) {
-      materialUniform.reserve(1);
-      dynamicLightsUniform.reserve(1);
-      lightDataUniform.reserve(1);
-      cameraUniform.reserve(1);
-      instanceUniform.reserve(1);
 
-      materialUniform.subscribe(
+      materialUniform->subscribe(
           descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
               vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      dynamicLightsUniform.subscribe(
+      dynamicLightsUniform->subscribe(
           descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
               vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      lightDataUniform.subscribe(
+      lightDataUniform->subscribe(
           descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
               vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      cameraUniform.subscribe(
+      cameraUniform->subscribe(
           descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
               vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      instanceUniform.subscribe(
+      instanceUniform->subscribe(
           descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
               vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
     }

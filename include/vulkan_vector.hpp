@@ -10,14 +10,6 @@
 #include "DescriptorPool.hpp"
 
 namespace vka {
-
-enum class VectorType {
-  Uniform,
-  DynamicUniform,
-  Storage,
-  // DynamicStorage
-};
-
 // TODO: respect maximum capacity for uniform buffers
 template <typename T, typename subscriberT = BufferDescriptor, size_t N = 4U>
 class vulkan_vector {
@@ -189,12 +181,12 @@ public:
       Device* device,
       VkBufferUsageFlags buffer_usage,
       VmaMemoryUsage memory_usage,
-      VectorType vector_type = VectorType::Uniform)
+      std::vector<subscriber_type> initialSubscribers = {})
       : m_device(device),
         m_buffer_usage(buffer_usage),
         m_memory_usage(memory_usage),
-        vector_type(vector_type) {
-    if (vector_type == VectorType::DynamicUniform) {
+        m_subscribers(std::move(initialSubscribers)) {
+    if (subscriberT::bufferType() == BufferType::DynamicUniform) {
       auto minDynamicUboAlignment =
           device->getDeviceProperties().limits.minUniformBufferOffsetAlignment;
       if (sizeof(T) < minDynamicUboAlignment) {
@@ -207,6 +199,7 @@ public:
       m_alignment = sizeof(T);
     }
     reserve(N);
+    notify();
   }
 
   void subscribe(subscriber_type subscriber) {
@@ -284,6 +277,8 @@ public:
   }
 
   void reserve(size_t new_cap) {
+    // TODO: does disallowing 0 cause problems here?
+    // can't create a 0-sized vulkan buffer
     if (new_cap == 0) {
       return;
     }
@@ -311,7 +306,7 @@ public:
     }
     (*this)[newPos] = value;
     ++m_size;
-    if (vector_type != VectorType::Storage) {
+    if (subscriberT::bufferType() != BufferType::Storage) {
       notify();
     }
   }
@@ -322,13 +317,13 @@ public:
     }
     (*this)[newPos] = std::move(value);
     ++m_size;
-    if (vector_type != VectorType::Storage) {
+    if (subscriberT::bufferType() != BufferType::Storage) {
       notify();
     }
   }
   void pop_back() {
     (*this)[--m_size].~T();
-    if (vector_type != VectorType::Storage) {
+    if (subscriberT::bufferType() != BufferType::Storage) {
       notify();
     }
   }
@@ -367,6 +362,5 @@ private:
   VkBufferUsageFlags m_buffer_usage = 0;
   VmaMemoryUsage m_memory_usage = VmaMemoryUsage(0);
   std::vector<subscriber_type> m_subscribers;
-  VectorType vector_type;
 };
 }  // namespace vka
