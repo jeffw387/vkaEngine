@@ -17,14 +17,16 @@ float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
 }
 
-void main()
-{
+void main() {
   vec3 msdfSample = texture(sTexture, vec3(In.UV, pc.glyphIndex)).rgb;
-  float signedDistance = median(msdfSample.r, msdfSample.g, msdfSample.b);
-  // float signedDistanceInPixels = signedDistance * length(pc.clipSpaceScale);
+  float signedDistance = median(msdfSample.r, msdfSample.g, msdfSample.b) - 0.5;
+  float signedDistanceInPixels = clamp(0.5 + (signedDistance * length(pc.clipSpaceScale)), 0, 1);
   // float opacity = clamp(signedDistanceInPixels + 0.5, 0.0, 1.0);
-  float w = fwidth(signedDistance);
-  float opacity = smoothstep(0.5 - w, 0.5 + w, signedDistance);
+  // float w = fwidth(signedDistance);
+  float opacity = smoothstep(0.5, 1, signedDistanceInPixels);
+  // if (opacity < .4) {
+  //   opacity = 0;
+  // }
 
-  outColor = vec4(pc.fontColor.rgb, opacity) ;
+  outColor = vec4(pc.fontColor.rgb * opacity, opacity);
 }
