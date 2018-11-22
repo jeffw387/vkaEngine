@@ -253,9 +253,8 @@ MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize, float scaleFactor) {
 }
 
 template <>
-Font<>::Font(std::string fontPath, int msdfSize, int padding)
+Font<>::Font(fs::path fontPath, int msdfSize, int padding)
     : msdfSize(msdfSize) {
-  MultiLogger::get()->info("Loading font file {} into memory.", fontPath);
   if (auto loadResult = vka::loadBinaryFile({fontPath})) {
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);

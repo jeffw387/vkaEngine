@@ -10,8 +10,8 @@ struct Transfer {
   std::unique_ptr<vka::Fence> fence;
 
   Transfer() {}
-  Transfer(vka::Device* device) :
-  pool(device->createCommandPool(true, false)),
-  cmd(pool->allocateCommandBuffer()),
-  fence(device->createFence(false)) {}
+  Transfer(vka::Device* device)
+      : pool(device->createCommandPool(true, false)),
+        cmd(pool->allocateCommandBuffer()),
+        fence(device->createFence(false)) {}
 };

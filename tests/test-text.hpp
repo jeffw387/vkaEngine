@@ -49,13 +49,12 @@ struct TextPushData {
     glm::vec4 fontColor;       // per text object - frag
     glm::vec2 clipSpaceScale;  // per frame       - vert/frag
     // TODO: send glyph index as third part of uv coords?
-    glm::uint32 glyphIndex;    // per draw        - frag
+    glm::uint32 glyphIndex;  // per draw        - frag
     glm::float32 padding;
   } fragment;
 };
 
 struct TextPipeline {
-  
   std::unique_ptr<vka::ShaderModule> vertexShader;
   std::unique_ptr<vka::ShaderModule> fragmentShader;
   std::unique_ptr<vka::Sampler> sampler;
@@ -65,26 +64,33 @@ struct TextPipeline {
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
 
   TextPipeline() {}
-  TextPipeline(vka::Device* device, vka::RenderPass* renderPass, vka::PipelineCache* pipelineCache) :
-  vertexShader(device->createShaderModule("content/shaders/text.vert.spv")),
-  fragmentShader(device->createShaderModule("content/shaders/text.frag.spv")),
-  sampler(device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR)),
-  setLayout(device->createSetLayout({{0,
-                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                  1,
-                                  VK_SHADER_STAGE_FRAGMENT_BIT,
-                                  *sampler}})),
-  descriptorPool(device->createDescriptorPool(
-        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1)),
-  pipelineLayout(device->createPipelineLayout(
-        {{VK_SHADER_STAGE_VERTEX_BIT,
-          offsetof(TextPushData, vertex),
-          sizeof(TextPushData::TextVertexPushData)},
-         {VK_SHADER_STAGE_FRAGMENT_BIT,
-          offsetof(TextPushData, fragment),
-          sizeof(TextPushData::TextFragmentPushData)}},
-        {*setLayout})) {
-      vka::GraphicsPipelineCreateInfo textPipelineInfo{
+  TextPipeline(
+      vka::Device* device,
+      vka::RenderPass* renderPass,
+      vka::PipelineCache* pipelineCache)
+      : vertexShader(
+            device->createShaderModule("content/shaders/text.vert.spv")),
+        fragmentShader(
+            device->createShaderModule("content/shaders/text.frag.spv")),
+        sampler(device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR)),
+        setLayout(
+            device->createSetLayout({{0,
+                                      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                      1,
+                                      VK_SHADER_STAGE_FRAGMENT_BIT,
+                                      *sampler}})),
+        descriptorPool(device->createDescriptorPool(
+            {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}},
+            1)),
+        pipelineLayout(device->createPipelineLayout(
+            {{VK_SHADER_STAGE_VERTEX_BIT,
+              offsetof(TextPushData, vertex),
+              sizeof(TextPushData::TextVertexPushData)},
+             {VK_SHADER_STAGE_FRAGMENT_BIT,
+              offsetof(TextPushData, fragment),
+              sizeof(TextPushData::TextFragmentPushData)}},
+            {*setLayout})) {
+    vka::GraphicsPipelineCreateInfo textPipelineInfo{
         *pipelineLayout, *renderPass, 1};
     textPipelineInfo.addColorBlendAttachment(
         true,
@@ -99,19 +105,9 @@ struct TextPipeline {
     textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
     textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
     textPipelineInfo.addShaderStage(
-        VK_SHADER_STAGE_VERTEX_BIT,
-        {},
-        0,
-        nullptr,
-        *vertexShader,
-        "main");
+        VK_SHADER_STAGE_VERTEX_BIT, {}, 0, nullptr, *vertexShader, "main");
     textPipelineInfo.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        {},
-        0,
-        nullptr,
-        *fragmentShader,
-        "main");
+        VK_SHADER_STAGE_FRAGMENT_BIT, {}, 0, nullptr, *fragmentShader, "main");
     textPipelineInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
     textPipelineInfo.addVertexAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
     textPipelineInfo.addVertexBinding(
@@ -119,8 +115,7 @@ struct TextPipeline {
     textPipelineInfo.addViewportScissor({}, {});
     textPipelineInfo.setCullMode(VK_CULL_MODE_NONE);
 
-    pipeline =
-        device->createGraphicsPipeline(*pipelineCache, textPipelineInfo);
+    pipeline = device->createGraphicsPipeline(*pipelineCache, textPipelineInfo);
   }
 };
 
@@ -137,78 +132,72 @@ struct Font {
   std::shared_ptr<vka::DescriptorSet> descriptorSet;
 
   Font() {}
-  Font(fs::path fontPath, vka::Device* device, TextPipeline& pipeline) : 
-  font(std::make_unique<Text::Font<>>(fontPath)),
-  vertexData(font->getVertexData()),
-  indexBuffer(device->createBuffer(
-        vertexData->indices.size() * sizeof(Text::Index),
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        true)),
-  vertexBuffer(device->createBuffer(
-        vertexData->vertices.size() * sizeof(Text::Vertex),
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        true)),
-  textureSize(static_cast<uint32_t>(font->getTextureSize())),
-  layerCount(static_cast<uint32_t>(font->getTextureLayerCount())),
-  pixels(font->getTextureData()),
-  image(device->createImageArray2D(
-        {textureSize,
-         textureSize},
-        layerCount,
-        VK_FORMAT_R8G8B8A8_UINT,
-        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-        vka::ImageAspect::Color,
-        true)),
-  imageView(device->createImageView2D(
-        image,
-        image->format,
-        image->aspect)),
-  descriptorSet(pipeline.descriptorPool->allocateDescriptorSet(
-        pipeline.setLayout.get())) {
-    auto descriptor =
-      descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
+  Font(fs::path fontPath, vka::Device* device, TextPipeline& pipeline)
+      : font(std::make_unique<Text::Font<>>(fontPath)),
+        vertexData(font->getVertexData()),
+        indexBuffer(device->createBuffer(
+            vertexData->indices.size() * sizeof(Text::Index),
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            VMA_MEMORY_USAGE_GPU_ONLY,
+            true)),
+        vertexBuffer(device->createBuffer(
+            vertexData->vertices.size() * sizeof(Text::Vertex),
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VMA_MEMORY_USAGE_GPU_ONLY,
+            true)),
+        textureSize(static_cast<uint32_t>(font->getTextureSize())),
+        layerCount(static_cast<uint32_t>(font->getTextureLayerCount())),
+        pixels(font->getTextureData()),
+        image(device->createImageArray2D(
+            {textureSize, textureSize},
+            layerCount,
+            VK_FORMAT_R8G8B8A8_UINT,
+            VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+            vka::ImageAspect::Color,
+            true)),
+        imageView(
+            device->createImageView2D(image, image->format, image->aspect)),
+        descriptorSet(pipeline.descriptorPool->allocateDescriptorSet(
+            pipeline.setLayout.get())) {
+    auto descriptor = descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
         vka::DescriptorReference{});
-    (*descriptor)(
-      *imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    (*descriptor)(*imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     descriptorSet->validate(*device);
   }
 
   void recordUpload(vka::Device* device, Transfer& transfer) {
     size_t indexSize = vertexData->indices.size() * sizeof(Text::Index);
     auto indexStaging = device->createBuffer(
-      indexSize,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VMA_MEMORY_USAGE_CPU_ONLY,
-      true
-    );
+        indexSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        true);
     size_t vertexSize = vertexData->vertices.size() * sizeof(Text::Vertex);
     auto vertexStaging = device->createBuffer(
-      vertexSize,
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VMA_MEMORY_USAGE_CPU_ONLY,
-      true);
+        vertexSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        true);
     auto pixelSpan = gsl::span<uint8_t>{pixels};
     auto textureStaging = device->createBuffer(
-      pixelSpan.length_bytes(),
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      VMA_MEMORY_USAGE_CPU_ONLY,
-      true);
+        pixelSpan.length_bytes(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        true);
     if (auto cmd = transfer.cmd.lock()) {
-
-    cmd->recordBufferUpload<Text::Index>(
+      cmd->recordBufferUpload<Text::Index>(
           {vertexData->indices}, indexStaging, indexBuffer, 0);
-    cmd->recordBufferUpload<Text::Vertex>(
+      cmd->recordBufferUpload<Text::Vertex>(
           {vertexData->vertices}, vertexStaging, vertexBuffer, 0);
-    cmd->recordImageBarrier(
+      cmd->recordImageBarrier(
           {},
           {THSVS_ACCESS_TRANSFER_WRITE},
           image,
           THSVS_IMAGE_LAYOUT_OPTIMAL,
           true);
-    cmd->recordImageArrayUpload<uint8_t>(pixelSpan, textureStaging, image);
-    cmd->recordImageBarrier(
+      cmd->recordImageArrayUpload<uint8_t>(pixelSpan, textureStaging, image);
+      cmd->recordImageBarrier(
           {THSVS_ACCESS_TRANSFER_WRITE},
           {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
           image,

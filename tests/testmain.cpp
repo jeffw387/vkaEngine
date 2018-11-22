@@ -83,7 +83,11 @@ struct AppState {
 
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
-    std::vector<std::shared_ptr<vka::DescriptorSet>> descriptorSets;
+    std::shared_ptr<vka::DescriptorSet> materialSet;
+    std::shared_ptr<vka::DescriptorSet> dynamicLightSet;
+    std::shared_ptr<vka::DescriptorSet> lightDataSet;
+    std::shared_ptr<vka::DescriptorSet> cameraSet;
+    std::shared_ptr<vka::DescriptorSet> instanceSet;
     vka::StorageBufferDescriptor* materialDescriptor;
     vka::StorageBufferDescriptor* dynamicLightDescriptor;
     vka::BufferDescriptor* lightDataDescriptor;
@@ -114,59 +118,56 @@ struct AppState {
                {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
                {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
               5)),
-          descriptorSets({
-              descriptorPool->allocateDescriptorSet(layouts[0].get()),
-              descriptorPool->allocateDescriptorSet(layouts[1].get()),
-              descriptorPool->allocateDescriptorSet(layouts[2].get()),
-              descriptorPool->allocateDescriptorSet(layouts[3].get()),
-              descriptorPool->allocateDescriptorSet(layouts[4].get()),
-          }),
+          materialSet(descriptorPool->allocateDescriptorSet(layouts[0].get())),
+          dynamicLightSet(
+              descriptorPool->allocateDescriptorSet(layouts[1].get())),
+          lightDataSet(descriptorPool->allocateDescriptorSet(layouts[2].get())),
+          cameraSet(descriptorPool->allocateDescriptorSet(layouts[3].get())),
+          instanceSet(descriptorPool->allocateDescriptorSet(layouts[4].get())),
           materialDescriptor(
-              descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
+              materialSet->getDescriptor<vka::StorageBufferDescriptor>(
                   {{}, 0, 0})),
           dynamicLightDescriptor(
-              descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
+              dynamicLightSet->getDescriptor<vka::StorageBufferDescriptor>(
                   {{}, 0, 0})),
           lightDataDescriptor(
-              descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
-                  {{}, 0, 0})),
+              lightDataSet->getDescriptor<vka::BufferDescriptor>({{}, 0, 0})),
           cameraDescriptor(
-              descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
-                  {{}, 0, 0})),
+              cameraSet->getDescriptor<vka::BufferDescriptor>({{}, 0, 0})),
           instanceDescriptor(
-              descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
+              instanceSet->getDescriptor<vka::DynamicBufferDescriptor>(
                   {{}, 0, 0})),
           materialUniform(
               std::make_unique<
                   vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>(
                   device,
-                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                   VMA_MEMORY_USAGE_CPU_TO_GPU,
-                   std::vector{materialDescriptor})),
+                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                  VMA_MEMORY_USAGE_CPU_TO_GPU,
+                  std::vector{materialDescriptor})),
           dynamicLightsUniform(
               std::make_unique<
                   vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>(
                   device,
-                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                   VMA_MEMORY_USAGE_CPU_TO_GPU,
-                   std::vector{dynamicLightDescriptor})),
+                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                  VMA_MEMORY_USAGE_CPU_TO_GPU,
+                  std::vector{dynamicLightDescriptor})),
           lightDataUniform(std::make_unique<vka::vulkan_vector<LightData>>(
               device,
-               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-               VMA_MEMORY_USAGE_CPU_TO_GPU,
-               std::vector{lightDataDescriptor})),
+              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU,
+              std::vector{lightDataDescriptor})),
           cameraUniform(std::make_unique<vka::vulkan_vector<Camera>>(
               device,
-               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-               VMA_MEMORY_USAGE_CPU_TO_GPU,
-               std::vector{cameraDescriptor})),
+              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU,
+              std::vector{cameraDescriptor})),
           instanceUniform(
               std::make_unique<
                   vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>(
                   device,
-                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                   VMA_MEMORY_USAGE_CPU_TO_GPU,
-                   std::vector{instanceDescriptor})),
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  VMA_MEMORY_USAGE_CPU_TO_GPU,
+                  std::vector{instanceDescriptor})),
           frameAcquired(device->createFence(false)),
           bufferExecuted(device->createFence(true)),
           renderComplete(device->createSemaphore()),
@@ -320,11 +321,11 @@ struct AppState {
       cmd->bindGraphicsDescriptorSets(
           p3DPipeline.pipelineLayout,
           0,
-          {render.descriptorSets[0],
-           render.descriptorSets[1],
-           render.descriptorSets[2],
-           render.descriptorSets[3],
-           render.descriptorSets[4]},
+          {render.materialSet,
+           render.dynamicLightSet,
+           render.lightDataSet,
+           render.cameraSet,
+           render.instanceSet},
           {0});
       auto someModel = shapesAsset.models[0];
       cmd->bindIndexBuffer(
@@ -455,9 +456,11 @@ struct AppState {
     render.frameAcquired->reset();
     render.bufferExecuted->wait();
     render.bufferExecuted->reset();
-    for (auto& set : render.descriptorSets) {
-      set->validate(*device);
-    }
+    render.materialSet->validate(*device);
+    render.dynamicLightSet->validate(*device);
+    render.lightDataSet->validate(*device);
+    render.cameraSet->validate(*device);
+    render.instanceSet->validate(*device);
     render.commandPool->reset();
 
     auto swapExtent = swapchain->getSwapExtent();

@@ -17,6 +17,7 @@
 #include "Logger.hpp"
 
 namespace Text {
+namespace fs = std::experimental::filesystem;
 using Index = uint16_t;
 struct Vertex {
   glm::vec2 pos = {};
@@ -64,7 +65,7 @@ using MSDFGlyphMap = std::map<int, std::unique_ptr<MSDFGlyph>>;
 template <typename T = BasicCharacters>
 class Font {
 public:
-  Font(std::string fontPath, int msdfSize = 64, int padding = 2);
+  Font(fs::path fontPath, int msdfSize = 64, int padding = 2);
   int getGlyphIndex(int charIndex);
   uint32_t getArrayIndex(int glyphIndex);
   float getAdvance(int glyphIndex, int fontPixelHeight);
