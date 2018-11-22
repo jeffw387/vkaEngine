@@ -74,45 +74,44 @@ struct P3DPipeline {
          *descriptorSetLayouts[2],
          *descriptorSetLayouts[3],
          *descriptorSetLayouts[4]}) {
-    auto pipeline3DInfo =
-      vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);
-    pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
-    pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
-    pipeline3DInfo.addShaderStage(
-        VK_SHADER_STAGE_VERTEX_BIT, {}, 0, nullptr, *vertexShader, "main");
-    FragmentSpecData fragmentSpecData{1, 1};
-    pipeline3DInfo.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        {{0, 0, 4}, {1, 4, 4}},
-        sizeof(FragmentSpecData),
-        &fragmentSpecData,
-        *fragmentShader,
-        "main");
-    pipeline3DInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0);
-    pipeline3DInfo.addVertexAttribute(1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0);
-    pipeline3DInfo.addVertexBinding(
-        0, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX);
-    pipeline3DInfo.addVertexBinding(
-        1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX);
-    pipeline3DInfo.addViewportScissor(VkViewport{}, VkRect2D{});
-    pipeline3DInfo.addColorBlendAttachment(
-        false,
-        VkBlendFactor(0),
-        VkBlendFactor(0),
-        VkBlendOp(0),
-        VkBlendFactor(0),
-        VkBlendFactor(0),
-        VkBlendOp(0),
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    pipeline3DInfo.setDepthTestEnable(true);
-    pipeline3DInfo.setDepthWriteEnable(true);
-    pipeline3DInfo.setDepthCompareOp(VK_COMPARE_OP_LESS);
-    pipeline3DInfo.setDepthBounds(0.f, 1.f);
-    pipeline3DInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
-    pipeline3DInfo.setFrontFace(VK_FRONT_FACE_CLOCKWISE);
+      auto pipeline3DInfo =
+        vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);
+      pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
+      pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
+      pipeline3DInfo.addShaderStage(
+          VK_SHADER_STAGE_VERTEX_BIT, {}, 0, nullptr, *vertexShader, "main");
+      FragmentSpecData fragmentSpecData{1, 1};
+      pipeline3DInfo.addShaderStage(
+          VK_SHADER_STAGE_FRAGMENT_BIT,
+          {{0, 0, 4}, {1, 4, 4}},
+          sizeof(FragmentSpecData),
+          &fragmentSpecData,
+          *fragmentShader,
+          "main");
+      pipeline3DInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0);
+      pipeline3DInfo.addVertexAttribute(1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0);
+      pipeline3DInfo.addVertexBinding(
+          0, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX);
+      pipeline3DInfo.addVertexBinding(
+          1, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX);
+      pipeline3DInfo.addViewportScissor(VkViewport{}, VkRect2D{});
+      pipeline3DInfo.addColorBlendAttachment(
+          false,
+          VkBlendFactor(0),
+          VkBlendFactor(0),
+          VkBlendOp(0),
+          VkBlendFactor(0),
+          VkBlendFactor(0),
+          VkBlendOp(0),
+          VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+              VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+      pipeline3DInfo.setDepthTestEnable(true);
+      pipeline3DInfo.setDepthWriteEnable(true);
+      pipeline3DInfo.setDepthCompareOp(VK_COMPARE_OP_LESS);
+      pipeline3DInfo.setDepthBounds(0.f, 1.f);
+      pipeline3DInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
+      pipeline3DInfo.setFrontFace(VK_FRONT_FACE_CLOCKWISE);
 
-    pipeline = device->createGraphicsPipeline(*pipelineCache, pipeline3DInfo);
-
+      pipeline = device->createGraphicsPipeline(*pipelineCache, pipeline3DInfo);
     }
 };
