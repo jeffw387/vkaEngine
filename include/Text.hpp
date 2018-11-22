@@ -50,10 +50,10 @@ struct MSDFGlyph {
     float bottom;
   } pos;
   struct UV {
-  float left;
-  float top;
-  float right;
-  float bottom;
+    float left;
+    float top;
+    float right;
+    float bottom;
   } uv;
   uint32_t arrayIndex;
 };
@@ -63,7 +63,7 @@ using MSDFGlyphMap = std::map<int, std::unique_ptr<MSDFGlyph>>;
 template <typename T = BasicCharacters>
 class Font {
 public:
-  Font(std::string fontPath, int msdfSize = 32, int padding = 2);
+  Font(std::string fontPath, int msdfSize = 64, int padding = 2);
   int getGlyphIndex(int charIndex);
   uint32_t getArrayIndex(int glyphIndex);
   float getAdvance(int glyphIndex, int fontPixelHeight);
@@ -71,8 +71,8 @@ public:
   float msdfToRenderRatio(int fontPixelHeight);
   float vectorToRenderRatio(int fontPixelHeight);
   auto getFontBytes() { return fontBytes; }
-  VertexData getVertexData();
-  std::vector<msdfgen::FloatRGB> getTextureData();
+  std::unique_ptr<VertexData> getVertexData();
+  std::vector<uint8_t> getTextureData();
   int getTextureSize() { return msdfSize; }
   int getTextureLayerCount() { return glyphMap.size(); }
 

@@ -21,7 +21,7 @@ float Font<>::getAdvance(int glyphIndex, int fontPixelHeight) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
-  return vectorToRenderRatio(fontPixelHeight) * static_cast<float>(adv);
+  return vectorToRenderRatio(fontPixelHeight) * static_cast<float>(adv + lsb);
 }
 
 template <>
@@ -45,7 +45,7 @@ uint32_t Font<>::getArrayIndex(int glyphIndex) {
 }
 
 template <>
-VertexData Font<>::getVertexData() {
+std::unique_ptr<VertexData> Font<>::getVertexData() {
   namespace view = ranges::view;
   namespace action = ranges::action;
   VertexData result{};
@@ -74,11 +74,24 @@ VertexData Font<>::getVertexData() {
     indexOffset += IndicesPerQuad;
     vertexOffset += VerticesPerQuad;
   }
-  return result;
+  return std::make_unique<VertexData>(result);
 }
 
+auto F32ToU8 = [](msdfgen::FloatRGB F32Pixel) {
+  std::vector<uint8_t> result;
+  uint8_t r = msdfgen::clamp(int(F32Pixel.r * 0x100), 0xff);
+  uint8_t g = msdfgen::clamp(int(F32Pixel.g * 0x100), 0xff);
+  uint8_t b = msdfgen::clamp(int(F32Pixel.b * 0x100), 0xff);
+  uint8_t a = {};
+  result.push_back(r);
+  result.push_back(g);
+  result.push_back(b);
+  result.push_back(a);
+  return result;
+};
+
 template <>
-std::vector<msdfgen::FloatRGB> Font<>::getTextureData() {
+std::vector<uint8_t> Font<>::getTextureData() {
   namespace view = ranges::view;
   namespace action = ranges::action;
   auto pixelRanges =
@@ -88,8 +101,10 @@ std::vector<msdfgen::FloatRGB> Font<>::getTextureData() {
             bmp.data(), bmp.width() * bmp.height());
       });
   auto pixelsView = pixelRanges | view::join;
-  std::vector<msdfgen::FloatRGB> result;
-  action::push_back(result, pixelsView);
+  std::vector<uint8_t> result;
+  RANGES_FOR(auto pixel, pixelsView) {
+    action::push_back(result, F32ToU8(pixel));
+  }
   return result;
 }
 
