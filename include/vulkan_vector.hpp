@@ -17,6 +17,8 @@ enum class VectorType {
   Storage,
   // DynamicStorage
 };
+
+// TODO: respect maximum capacity for uniform buffers
 template <typename T, typename subscriberT = BufferDescriptor, size_t N = 4U>
 class vulkan_vector {
 public:
@@ -183,7 +185,6 @@ public:
       return (elementPtr - other.elementPtr) / alignment;
     }
   };
-  vulkan_vector() = default;
   vulkan_vector(
       Device* device,
       VkBufferUsageFlags buffer_usage,
@@ -205,6 +206,7 @@ public:
     } else {
       m_alignment = sizeof(T);
     }
+    reserve(N);
   }
 
   void subscribe(subscriber_type subscriber) {
@@ -282,15 +284,17 @@ public:
   }
 
   void reserve(size_t new_cap) {
-    auto actualNewCap = new_cap < N ? N : new_cap;
-    if (actualNewCap > m_capacity) {
+    if (new_cap == 0) {
+      return;
+    }
+    if (new_cap > m_capacity) {
       auto newBuffer = m_device->createBuffer(
-          actualNewCap * m_alignment, m_buffer_usage, m_memory_usage);
+          new_cap * m_alignment, m_buffer_usage, m_memory_usage);
       void* newStoragePtr = newBuffer->map();
       std::memcpy(newStoragePtr, m_storage, m_size * m_alignment);
       m_vulkan_buffer = std::move(newBuffer);
       m_storage = reinterpret_cast<T*>(newStoragePtr);
-      m_capacity = actualNewCap;
+      m_capacity = new_cap;
       notify();
     }
   }
