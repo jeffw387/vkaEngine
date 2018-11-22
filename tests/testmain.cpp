@@ -51,14 +51,6 @@ struct PolySize {
   }
 };
 
-enum class DescriptorSets {
-  Materials,
-  DynamicLights,
-  AmbientLight,
-  Camera,
-  Instance
-};
-
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
   PolySize defaultHeight = PolySize{900U};
