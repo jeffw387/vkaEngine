@@ -62,10 +62,63 @@ struct TextPipeline {
   std::shared_ptr<vka::PipelineLayout> pipelineLayout;
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
 
-  TextPipeline(vka::Device* device) :
-  sampler(device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR))
-  {
+  TextPipeline() {}
+  TextPipeline(vka::Device* device, vka::RenderPass* renderPass, vka::PipelineCache* pipelineCache) :
+  vertexShader(device->createShaderModule("content/shaders/text.vert.spv")),
+  fragmentShader(device->createShaderModule("content/shaders/text.frag.spv")),
+  sampler(device->createSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR)),
+  setLayout(device->createSetLayout({{0,
+                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                  1,
+                                  VK_SHADER_STAGE_FRAGMENT_BIT,
+                                  *sampler}})),
+  descriptorPool(device->createDescriptorPool(
+        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1)),
+  pipelineLayout(device->createPipelineLayout(
+        {{VK_SHADER_STAGE_VERTEX_BIT,
+          offsetof(TextPushData, vertex),
+          sizeof(TextPushData::TextVertexPushData)},
+         {VK_SHADER_STAGE_FRAGMENT_BIT,
+          offsetof(TextPushData, fragment),
+          sizeof(TextPushData::TextFragmentPushData)}},
+        {*setLayout})) {
+      vka::GraphicsPipelineCreateInfo textPipelineInfo{
+        *pipelineLayout, *renderPass, 1};
+    textPipelineInfo.addColorBlendAttachment(
+        true,
+        VK_BLEND_FACTOR_SRC_ALPHA,
+        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_OP_ADD,
+        VK_BLEND_FACTOR_ONE,
+        VK_BLEND_FACTOR_ZERO,
+        VK_BLEND_OP_ADD,
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
+    textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
+    textPipelineInfo.addShaderStage(
+        VK_SHADER_STAGE_VERTEX_BIT,
+        {},
+        0,
+        nullptr,
+        *vertexShader,
+        "main");
+    textPipelineInfo.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        {},
+        0,
+        nullptr,
+        *fragmentShader,
+        "main");
+    textPipelineInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
+    textPipelineInfo.addVertexAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
+    textPipelineInfo.addVertexBinding(
+        0, sizeof(Text::Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
+    textPipelineInfo.addViewportScissor({}, {});
+    textPipelineInfo.setCullMode(VK_CULL_MODE_NONE);
 
+    pipeline =
+        device->createGraphicsPipeline(*pipelineCache, textPipelineInfo);
   }
 };
 
@@ -85,12 +138,12 @@ struct Font {
   font(std::make_unique<Text::Font<>>(fontPath)),
   vertexData(font->getVertexData()),
   indexBuffer(device->createBuffer(
-        vertexData.indices.size() * sizeof(Text::Index),
+        vertexData->indices.size() * sizeof(Text::Index),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VMA_MEMORY_USAGE_GPU_ONLY,
         true)),
   vertexBuffer(device->createBuffer(
-        vertexData.vertices.size() * sizeof(Text::Vertex),
+        vertexData->vertices.size() * sizeof(Text::Vertex),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VMA_MEMORY_USAGE_GPU_ONLY,
         true)),
@@ -111,12 +164,31 @@ struct Font {
   descriptorSet(pipeline.descriptorPool->allocateDescriptorSet(
         pipeline.setLayout.get())) {
     auto descriptor =
-      pipeline.descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
+      descriptorSet->getDescriptor<vka::ImageSamplerDescriptor>(
         vka::DescriptorReference{});
     (*descriptor)(
       *imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    pipeline.descriptorSet->validate(*device);
+    descriptorSet->validate(*device);
   }
 
-  void recordUpload()
+  std::vector<std::shared_ptr<vka::Buffer>> recordUpload() {
+    std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
+    stagingBuffers.push_back(recordBufferUpload<Text::Index>(
+          {testFont.vertexData->indices}, testFont.indexBuffer, 0));
+      stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
+          {testFont.vertexData->vertices}, testFont.vertexBuffer, 0));
+      recordImageBarrier(
+          {},
+          {THSVS_ACCESS_TRANSFER_WRITE},
+          textPipeline.image,
+          THSVS_IMAGE_LAYOUT_OPTIMAL,
+          true);
+      stagingBuffers.push_back(
+          recordImageArrayUpload<uint8_t>({fontPixelsU8}, textPipeline.fontImage));
+      recordImageBarrier(
+          {THSVS_ACCESS_TRANSFER_WRITE},
+          {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
+          textPipeline.fontImage,
+          THSVS_IMAGE_LAYOUT_OPTIMAL);
+  }
 };

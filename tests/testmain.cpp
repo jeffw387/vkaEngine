@@ -32,33 +32,6 @@
 
 namespace fs = std::experimental::filesystem;
 
-struct Material {
-  glm::vec4 diffuse;
-};
-
-struct Light {
-  glm::vec4 color;
-  glm::vec4 positionViewSpace;
-};
-
-struct LightData {
-  glm::vec4 ambient;
-  uint32_t count;
-};
-
-struct Camera {
-  glm::mat4 view;
-  glm::mat4 projection;
-};
-
-struct Instance {
-  glm::mat4 model;
-};
-
-// 0: prior update (data already uploaded to gpu)
-// 1: latest update (upload data to gpu, interpolate between prior and latest)
-// 2: updating
-
 namespace Components {
 
 struct Mesh {
@@ -69,15 +42,6 @@ struct Material {
 };
 struct Physics {};
 }  // namespace Components
-
-struct FragmentSpecData {
-  uint32_t materialCount;
-  uint32_t lightCount;
-};
-
-struct FragmentPushConstants {
-  uint32_t materialIndex;
-};
 
 struct PolySize {
   const size_t size;
@@ -114,6 +78,7 @@ struct AppState {
   Font testFont;
   std::unique_ptr<TextObject> testText;
 
+  P3DPipeline p3DPipeline;
 
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
@@ -141,6 +106,76 @@ struct AppState {
     std::unique_ptr<vka::CommandPool> commandPool;
     std::weak_ptr<vka::CommandBuffer> cmd;
     entt::DefaultRegistry ecs;
+    BufferedState() {}
+    BufferedState(vka::Device* device, const std::vector<std::unique_ptr<vka::DescriptorSetLayout>> layouts) {
+      MultiLogger::get()->info("creating command pool");
+      commandPool = device->createCommandPool();
+      cmd = commandPool->allocateCommandBuffer();
+
+      materialUniform =
+          vka::vulkan_vector<Material, vka::StorageBufferDescriptor>(
+              device,
+              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU);
+      materialUniform.reserve(1);
+
+      dynamicLightsUniform =
+          vka::vulkan_vector<Light, vka::StorageBufferDescriptor>(
+              device,
+              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU);
+      dynamicLightsUniform.reserve(1);
+
+      lightDataUniform = vka::vulkan_vector<LightData>(
+          device,
+          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      lightDataUniform.reserve(1);
+
+      cameraUniform = vka::vulkan_vector<Camera>(
+          device,
+          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU);
+      cameraUniform.reserve(1);
+
+      instanceUniform =
+          vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>(
+              device,
+              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+              VMA_MEMORY_USAGE_CPU_TO_GPU);
+      instanceUniform.reserve(1);
+
+      MultiLogger::get()->info("creating descriptor pool");
+      descriptorPool = device->createDescriptorPool(
+          {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
+           {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
+           {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
+          5);
+      for (auto& setLayout : layouts) {
+        descriptorSets.push_back(
+            descriptorPool->allocateDescriptorSet(setLayout.get()));
+      }
+
+      materialUniform.subscribe(
+          descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
+      dynamicLightsUniform.subscribe(
+          descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
+      lightDataUniform.subscribe(
+          descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
+      cameraUniform.subscribe(
+          descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
+      instanceUniform.subscribe(
+          descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
+              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
+
+      frameAcquired = device->createFence(false);
+      bufferExecuted = device->createFence(true);
+      renderComplete = device->createSemaphore();
+    }
   };
   std::array<BufferedState, vka::BufferCount> bufState;
 
@@ -157,7 +192,7 @@ struct AppState {
     VkMemoryBarrier barrier{};
     thsvsGetVulkanMemoryBarrier(thBarrier, &src, &dst, &barrier);
 
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       cmd->pipelineBarrier(src, dst, 0, {barrier}, {}, {});
     }
   }
@@ -188,7 +223,7 @@ struct AppState {
     VkImageMemoryBarrier barrier{};
     thsvsGetVulkanImageMemoryBarrier(thBarrier, &src, &dst, &barrier);
 
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       cmd->pipelineBarrier(src, dst, 0, {}, {}, {barrier});
     }
   }
@@ -245,8 +280,8 @@ struct AppState {
     std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
     stagingBuffer->flush();
 
-    transferCommandPool->reset();
-    if (auto cmd = transferCmd.lock()) {
+    transfer.pool->reset();
+    if (auto cmd = transfer.cmd.lock()) {
       cmd->begin();
       cmd->copyBuffer(stagingBuffer, result.buffer, {{0U, 0U, bufferSize}});
       cmd->end();
@@ -332,11 +367,11 @@ struct AppState {
                                1};
 
     if (auto cmd = render.cmd.lock()) {
-      cmd->bindGraphicsPipeline(pipeline);
+      cmd->bindGraphicsPipeline(p3DPipeline.pipeline);
       cmd->setViewport(0, {viewport});
       cmd->setScissor(0, {{{0, 0}, {swapExtent.width, swapExtent.height}}});
       cmd->bindGraphicsDescriptorSets(
-          pipelineLayout,
+          p3DPipeline.pipelineLayout,
           0,
           {render.descriptorSets[0],
            render.descriptorSets[1],
@@ -354,7 +389,7 @@ struct AppState {
       // cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
       uint32_t matIndex{};
       cmd->pushConstants(
-          pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
+          p3DPipeline.pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4, &matIndex);
       cmd->bindIndexBuffer(
           terrainAsset.buffer,
           terrainAsset.models[0].indexByteOffset,
@@ -382,9 +417,9 @@ struct AppState {
     if (auto cmd = render.cmd.lock()) {
       cmd->bindGraphicsPipeline(textPipeline.pipeline);
       cmd->bindGraphicsDescriptorSets(
-          textPipeline.pipelineLayout, 0, {textPipeline.descriptorSet0}, {});
-      cmd->bindIndexBuffer(textPipeline.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-      cmd->bindVertexBuffers(0, {textPipeline.vertexBuffer}, {0});
+          textPipeline.pipelineLayout, 0, {testFont.descriptorSet}, {});
+      cmd->bindIndexBuffer(testFont.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+      cmd->bindVertexBuffers(0, {testFont.vertexBuffer}, {0});
       cmd->setViewport(0, {viewport});
       cmd->setScissor(0, {scissor});
       auto halfExtent =
@@ -393,7 +428,7 @@ struct AppState {
                                         1.f / swapExtent.height};
       pushData.fragment.clipSpaceScale = {1.f / swapExtent.width,
                                           1.f / swapExtent.height};
-      auto& currentText = textPipeline.testText;
+      auto& currentText = testText;
       pushData.fragment.fontColor = currentText->color;
       auto currentFont = currentText->font;
       pushData.vertex.textScale =
@@ -436,7 +471,7 @@ struct AppState {
         cmd->drawIndexed(
             Text::IndicesPerQuad,
             1,
-            textPipeline.vertexData.offsets[currentGlyph],
+            testFont.vertexData->offsets[currentGlyph],
             0,
             0);
         pen.x += advanceX + kerning;
@@ -558,7 +593,7 @@ struct AppState {
     std::memcpy(stagePtr, data.data(), data.size_bytes());
     staging->flush();
     VkBufferCopy bufferCopy{0, offset, data.size_bytes()};
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       cmd->copyBuffer(staging, buffer, {bufferCopy});
     }
     return staging;
@@ -586,7 +621,7 @@ struct AppState {
     imageSubresource.layerCount = 1;
     imageSubresource.mipLevel = 0;
 
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       VkBufferImageCopy copy{};
       copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
       copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
@@ -617,7 +652,7 @@ struct AppState {
     imageSubresource.layerCount = image->layerCount;
     imageSubresource.mipLevel = 0;
 
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       VkBufferImageCopy copy{};
       copy.imageOffset = {};
       copy.imageExtent = image->extent;
@@ -631,7 +666,7 @@ struct AppState {
   void recordImageBlit(
       std::shared_ptr<vka::Image> source,
       std::shared_ptr<vka::Image> destination) {
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       VkImageBlit blit{};
       blit.srcSubresource.aspectMask =
           static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
@@ -695,65 +730,26 @@ struct AppState {
 
     constexpr auto fontPixelHeight = 60;
 
-    textPipeline.testText = std::make_unique<TextObject>(
+    testText = std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
         std::string{"Test Text!"},
         60,
-        textPipeline.testFont.get());
+        testFont.font.get());
 
-    textPipeline.descriptorPool = device->createDescriptorPool(
-        {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}}, 1);
-    textPipeline.setLayout =
-        device->createSetLayout({{0,
-                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                  1,
-                                  VK_SHADER_STAGE_FRAGMENT_BIT,
-                                  *textPipeline.fontSampler}});
-
-    textPipeline.pipelineLayout = device->createPipelineLayout(
-        {{VK_SHADER_STAGE_VERTEX_BIT,
-          offsetof(TextPushData, vertex),
-          sizeof(TextPushData::TextVertexPushData)},
-         {VK_SHADER_STAGE_FRAGMENT_BIT,
-          offsetof(TextPushData, fragment),
-          sizeof(TextPushData::TextFragmentPushData)}},
-        {*textPipeline.setLayout0});
-
-    textPipeline.vertexShader =
-        device->createShaderModule("content/shaders/text.vert.spv");
-    textPipeline.fragmentShader =
-        device->createShaderModule("content/shaders/text.frag.spv");
-
-    transfer = Transfer{device.get()};
+    transfer = Transfer{device};
     std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
 
-    if (auto cmd = transferCmd.lock()) {
+    if (auto cmd = transfer.cmd.lock()) {
       cmd->begin();
 
-      stagingBuffers.push_back(recordBufferUpload<Text::Index>(
-          {textPipeline.vertexData.indices}, textPipeline.indexBuffer, 0));
-      stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
-          {textPipeline.vertexData.vertices}, textPipeline.vertexBuffer, 0));
-      recordImageBarrier(
-          {},
-          {THSVS_ACCESS_TRANSFER_WRITE},
-          textPipeline.fontImage,
-          THSVS_IMAGE_LAYOUT_OPTIMAL,
-          true);
-      stagingBuffers.push_back(
-          recordImageArrayUpload<uint8_t>({fontPixelsU8}, textPipeline.fontImage));
-      recordImageBarrier(
-          {THSVS_ACCESS_TRANSFER_WRITE},
-          {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
-          textPipeline.fontImage,
-          THSVS_IMAGE_LAYOUT_OPTIMAL);
+      
 
       cmd->end();
-      device->queueSubmit({}, {cmd}, {}, transferFence.get());
+      device->queueSubmit({}, {cmd}, {}, transfer.fence.get());
     }
-    transferFence->wait();
+    transfer.fence->wait();
     stagingBuffers.clear();
-    transferFence->reset();
+    transfer.fence->reset();
 
     shapesAsset = loadCollection("content/models/shapes.gltf");
     device->debugNameObject<VkBuffer>(
@@ -762,130 +758,9 @@ struct AppState {
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *terrainAsset.buffer, "TerrainVertexBuffer");
 
-    VkDescriptorSetLayoutBinding materialBinding = {
-        0,
-        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        1,
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        nullptr};
-    VkDescriptorSetLayoutBinding dynamicLightBinding = {
-        0,
-        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        1,
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        nullptr};
-    VkDescriptorSetLayoutBinding lightDataBinding = {
-        0,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        1,
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        nullptr};
-    VkDescriptorSetLayoutBinding cameraBinding = {
-        0,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        1,
-        VK_SHADER_STAGE_VERTEX_BIT,
-        nullptr};
-    VkDescriptorSetLayoutBinding instanceBinding = {
-        0,
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-        1,
-        VK_SHADER_STAGE_VERTEX_BIT,
-        nullptr};
-    MultiLogger::get()->info("creating set layout");
-    descriptorSetLayouts.push_back(device->createSetLayout({materialBinding}));
-    descriptorSetLayouts.push_back(
-        device->createSetLayout({dynamicLightBinding}));
-    descriptorSetLayouts.push_back(device->createSetLayout({lightDataBinding}));
-    descriptorSetLayouts.push_back(device->createSetLayout({cameraBinding}));
-    descriptorSetLayouts.push_back(device->createSetLayout({instanceBinding}));
-
     for (auto& state : bufState) {
-      MultiLogger::get()->info("creating command pool");
-      state.commandPool = device->createCommandPool();
-      state.cmd = state.commandPool->allocateCommandBuffer();
-
-      state.materialUniform =
-          vka::vulkan_vector<Material, vka::StorageBufferDescriptor>(
-              device,
-              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.materialUniform.reserve(1);
-
-      state.dynamicLightsUniform =
-          vka::vulkan_vector<Light, vka::StorageBufferDescriptor>(
-              device,
-              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.dynamicLightsUniform.reserve(1);
-
-      state.lightDataUniform = vka::vulkan_vector<LightData>(
-          device,
-          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.lightDataUniform.reserve(1);
-
-      state.cameraUniform = vka::vulkan_vector<Camera>(
-          device,
-          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-          VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.cameraUniform.reserve(1);
-
-      state.instanceUniform =
-          vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>(
-              device,
-              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU);
-      state.instanceUniform.reserve(1);
-
-      MultiLogger::get()->info("creating descriptor pool");
-      state.descriptorPool = device->createDescriptorPool(
-          {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
-           {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
-           {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
-          5);
-      for (auto& setLayout : descriptorSetLayouts) {
-        state.descriptorSets.push_back(
-            state.descriptorPool->allocateDescriptorSet(setLayout.get()));
-      }
-
-      state.materialUniform.subscribe(
-          state.descriptorSets[0]->getDescriptor<vka::StorageBufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      state.dynamicLightsUniform.subscribe(
-          state.descriptorSets[1]->getDescriptor<vka::StorageBufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      state.lightDataUniform.subscribe(
-          state.descriptorSets[2]->getDescriptor<vka::BufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      state.cameraUniform.subscribe(
-          state.descriptorSets[3]->getDescriptor<vka::BufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-      state.instanceUniform.subscribe(
-          state.descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
-              vka::DescriptorReference{VkDescriptorSet{}, 0, 0}));
-
-      state.frameAcquired = device->createFence(false);
-      state.bufferExecuted = device->createFence(true);
-      state.renderComplete = device->createSemaphore();
+      
     }
-
-    MultiLogger::get()->info("creating vertex shader");
-    vertexShader =
-        device->createShaderModule("content/shaders/shader.vert.spv");
-    MultiLogger::get()->info("creating fragment shader");
-    fragmentShader =
-        device->createShaderModule("content/shaders/shader.frag.spv");
-    MultiLogger::get()->info("creating swapchain");
-
-    MultiLogger::get()->info("creating pipeline layout");
-    pipelineLayout = device->createPipelineLayout(
-        {{VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}},
-        {*descriptorSetLayouts[0],
-         *descriptorSetLayouts[1],
-         *descriptorSetLayouts[2],
-         *descriptorSetLayouts[3],
-         *descriptorSetLayouts[4]});
 
     vka::RenderPassCreateInfo renderPassCreateInfo;
     auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
@@ -931,46 +806,6 @@ struct AppState {
 
     MultiLogger::get()->info("creating pipeline cache");
     pipelineCache = device->createPipelineCache();
-
-    vka::GraphicsPipelineCreateInfo textPipelineInfo{
-        *textPipeline.pipelineLayout, *renderPass, 1};
-    textPipelineInfo.addColorBlendAttachment(
-        true,
-        VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        VK_BLEND_OP_ADD,
-        VK_BLEND_FACTOR_ONE,
-        VK_BLEND_FACTOR_ZERO,
-        VK_BLEND_OP_ADD,
-        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
-    textPipelineInfo.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
-    textPipelineInfo.addShaderStage(
-        VK_SHADER_STAGE_VERTEX_BIT,
-        {},
-        0,
-        nullptr,
-        *textPipeline.vertexShader,
-        "main");
-    textPipelineInfo.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        {},
-        0,
-        nullptr,
-        *textPipeline.fragmentShader,
-        "main");
-    textPipelineInfo.addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
-    textPipelineInfo.addVertexAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT, 8);
-    textPipelineInfo.addVertexBinding(
-        0, sizeof(Text::Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
-    textPipelineInfo.addViewportScissor({}, {});
-    textPipelineInfo.setCullMode(VK_CULL_MODE_NONE);
-
-    textPipeline.pipeline =
-        device->createGraphicsPipeline(*pipelineCache, textPipelineInfo);
-
-    
 
     engine->run();
   }

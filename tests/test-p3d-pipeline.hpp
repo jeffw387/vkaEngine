@@ -11,6 +11,38 @@
 
 namespace fs = std::experimental::filesystem;
 
+struct Material {
+  glm::vec4 diffuse;
+};
+
+struct Light {
+  glm::vec4 color;
+  glm::vec4 positionViewSpace;
+};
+
+struct LightData {
+  glm::vec4 ambient;
+  uint32_t count;
+};
+
+struct Camera {
+  glm::mat4 view;
+  glm::mat4 projection;
+};
+
+struct Instance {
+  glm::mat4 model;
+};
+
+struct FragmentSpecData {
+  uint32_t materialCount;
+  uint32_t lightCount;
+};
+
+struct FragmentPushConstants {
+  uint32_t materialIndex;
+};
+
 struct P3DPipeline {
   std::unique_ptr<vka::ShaderModule> vertexShader;
   std::unique_ptr<vka::ShaderModule> fragmentShader;
@@ -26,9 +58,8 @@ struct P3DPipeline {
   P3DPipeline() {}
   P3DPipeline(
     vka::Device* device,
-    fs::path vertexShaderPath,
-    fs::path fragmentShaderPath),
-    vka::PipelineCache pipelineCache :
+    vka::RenderPass* renderPass,
+    vka::PipelineCache* pipelineCache) :
     vertexShader(device->createShaderModule("content/shaders/shader.vert.spv")),
     fragmentShader(device->createShaderModule("content/shaders/shader.frag.spv")),
     materialBinding({
@@ -37,7 +68,7 @@ struct P3DPipeline {
         1,
         VK_SHADER_STAGE_FRAGMENT_BIT,
         nullptr}),
-    dynamicLightsBinding({
+    dynamicLightBinding({
         0,
         VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         1,
@@ -62,18 +93,18 @@ struct P3DPipeline {
         VK_SHADER_STAGE_VERTEX_BIT,
         nullptr}),
     descriptorSetLayouts({
-      device->createSetLayout({materialBinding})
-      device->createSetLayout({dynamicLightsBinding})
-      device->createSetLayout({lightDataBinding})
-      device->createSetLayout({cameraBinding})
+      device->createSetLayout({materialBinding}),
+      device->createSetLayout({dynamicLightBinding}),
+      device->createSetLayout({lightDataBinding}),
+      device->createSetLayout({cameraBinding}),
       device->createSetLayout({instanceBinding})
     }),
-    pipelineLayout({{VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}},
+    pipelineLayout(device->createPipelineLayout({{VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4}},
         {*descriptorSetLayouts[0],
          *descriptorSetLayouts[1],
          *descriptorSetLayouts[2],
          *descriptorSetLayouts[3],
-         *descriptorSetLayouts[4]}) {
+         *descriptorSetLayouts[4]})) {
       auto pipeline3DInfo =
         vka::GraphicsPipelineCreateInfo(*pipelineLayout, *renderPass, 0);
       pipeline3DInfo.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);

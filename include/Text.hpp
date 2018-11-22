@@ -1,3 +1,4 @@
+#pragma once
 #include <stb_rect_pack.h>
 #include <stb_truetype.h>
 #include <memory>
