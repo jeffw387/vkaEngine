@@ -31,7 +31,8 @@
 #include "test-p3d-pipeline.hpp"
 
 namespace fs = std::experimental::filesystem;
-
+namespace view = ranges::view;
+namespace action = ranges::action;
 namespace Components {
 
 struct Mesh {
@@ -54,8 +55,7 @@ struct PolySize {
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
   PolySize defaultHeight = PolySize{900U};
-  VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
-  VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+  
   vka::OrthoCamera mainCamera;
   std::unique_ptr<vka::Engine> engine;
   vka::Instance* instance;
@@ -75,11 +75,33 @@ struct AppState {
   asset::Collection shapesAsset;
   asset::Collection terrainAsset;
 
-  std::unique_ptr<vka::Swapchain> swapchain;
-  std::vector<VkImage> swapImages;
-  std::vector<std::shared_ptr<vka::ImageView>> swapImageViews;
-  std::shared_ptr<vka::Image> depthImage;
-  std::shared_ptr<vka::ImageView> depthImageView;
+  struct Swap {
+    VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
+    VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+    std::unique_ptr<vka::Swapchain> swapchain;
+    std::vector<VkImage> swapImages;
+    std::vector<std::shared_ptr<vka::ImageView>> swapImageViews;
+    std::shared_ptr<vka::Image> depthImage;
+    std::shared_ptr<vka::ImageView> depthImageView;
+
+    Swap() {}
+    Swap(vka::Device* device) : 
+    swapchain(device->createSwapchain()),
+    swapImages(swapchain->getSwapImages()),
+    swapImageViews(swapImages | view::transform([=](auto image) { return std::make_shared<vka::ImageView>(
+          *device, swapImage, swapFormat, vka::ImageAspect::Color); }) | action::push_back(std::vector<std::shared_ptr<vka::ImageView>>{})),
+    depthImage(device->createImage2D(
+        swapchain->getSwapExtent(),
+        depthFormat,
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        vka::ImageAspect::Depth,
+        true)),
+    depthImageView() {
+    depthImage = ;
+    depthImageView = device->createImageView2D(
+        depthImage, depthFormat, vka::ImageAspect::Depth);
+    }
+  };
 
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
@@ -515,22 +537,7 @@ struct AppState {
   }
 
   void createSwapchain() {
-    swapImageViews.clear();
-    swapchain.reset();
-    swapchain = device->createSwapchain();
-    swapImages = swapchain->getSwapImages();
-    for (const auto& swapImage : swapImages) {
-      swapImageViews.push_back(std::make_shared<vka::ImageView>(
-          *device, swapImage, swapFormat, vka::ImageAspect::Color));
-    }
-    depthImage = device->createImage2D(
-        swapchain->getSwapExtent(),
-        depthFormat,
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        vka::ImageAspect::Depth,
-        true);
-    depthImageView = device->createImageView2D(
-        depthImage, depthFormat, vka::ImageAspect::Depth);
+    
   }
 
   AppState() {
