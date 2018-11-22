@@ -11,7 +11,11 @@ set_target_properties(testmain PROPERTIES
 add_custom_command(
   TARGET testmain
   POST_BUILD
-  COMMAND clang-format -i -style=file "${CMAKE_CURRENT_SOURCE_DIR}/testmain.cpp")
+  COMMAND clang-format -i -style=file "${CMAKE_CURRENT_SOURCE_DIR}/testmain.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/test-text.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/test-debug.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/test-transfer.hpp"
+  )
 
 macro(process_shader fileNames inputDir outputDir)
   foreach(fileName ${${fileNames}})
