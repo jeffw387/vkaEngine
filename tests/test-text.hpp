@@ -15,6 +15,7 @@
 #include "Pipeline.hpp"
 #include "Device.hpp"
 #include "CommandPool.hpp"
+#include "test-transfer.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -47,6 +48,7 @@ struct TextPushData {
   struct TextFragmentPushData {
     glm::vec4 fontColor;       // per text object - frag
     glm::vec2 clipSpaceScale;  // per frame       - vert/frag
+    // TODO: send glyph index as third part of uv coords?
     glm::uint32 glyphIndex;    // per draw        - frag
     glm::float32 padding;
   } fragment;
@@ -129,6 +131,7 @@ struct Font {
   std::shared_ptr<vka::Buffer> vertexBuffer;
   uint32_t textureSize = {};
   uint32_t layerCount = {};
+  std::vector<uint8_t> pixels;
   std::shared_ptr<vka::Image> image;
   std::shared_ptr<vka::ImageView> imageView;
   std::shared_ptr<vka::DescriptorSet> descriptorSet;
@@ -149,6 +152,7 @@ struct Font {
         true)),
   textureSize(static_cast<uint32_t>(font->getTextureSize())),
   layerCount(static_cast<uint32_t>(font->getTextureLayerCount())),
+  pixels(font->getTextureData()),
   image(device->createImageArray2D(
         {textureSize,
          textureSize},
@@ -171,24 +175,44 @@ struct Font {
     descriptorSet->validate(*device);
   }
 
-  std::vector<std::shared_ptr<vka::Buffer>> recordUpload() {
-    std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
-    stagingBuffers.push_back(recordBufferUpload<Text::Index>(
-          {testFont.vertexData->indices}, testFont.indexBuffer, 0));
-      stagingBuffers.push_back(recordBufferUpload<Text::Vertex>(
-          {testFont.vertexData->vertices}, testFont.vertexBuffer, 0));
-      recordImageBarrier(
+  void recordUpload(vka::Device* device, Transfer& transfer) {
+    size_t indexSize = vertexData->indices.size() * sizeof(Text::Index);
+    auto indexStaging = device->createBuffer(
+      indexSize,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VMA_MEMORY_USAGE_CPU_ONLY,
+      true
+    );
+    size_t vertexSize = vertexData->vertices.size() * sizeof(Text::Vertex);
+    auto vertexStaging = device->createBuffer(
+      vertexSize,
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VMA_MEMORY_USAGE_CPU_ONLY,
+      true);
+    auto pixelSpan = gsl::span<uint8_t>{pixels};
+    auto textureStaging = device->createBuffer(
+      pixelSpan.length_bytes(),
+      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VMA_MEMORY_USAGE_CPU_ONLY,
+      true);
+    if (auto cmd = transfer.cmd.lock()) {
+
+    cmd->recordBufferUpload<Text::Index>(
+          {vertexData->indices}, indexStaging, indexBuffer, 0);
+    cmd->recordBufferUpload<Text::Vertex>(
+          {vertexData->vertices}, vertexStaging, vertexBuffer, 0);
+    cmd->recordImageBarrier(
           {},
           {THSVS_ACCESS_TRANSFER_WRITE},
-          textPipeline.image,
+          image,
           THSVS_IMAGE_LAYOUT_OPTIMAL,
           true);
-      stagingBuffers.push_back(
-          recordImageArrayUpload<uint8_t>({fontPixelsU8}, textPipeline.fontImage));
-      recordImageBarrier(
+    cmd->recordImageArrayUpload<uint8_t>(pixelSpan, textureStaging, image);
+    cmd->recordImageBarrier(
           {THSVS_ACCESS_TRANSFER_WRITE},
           {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
-          textPipeline.fontImage,
+          image,
           THSVS_IMAGE_LAYOUT_OPTIMAL);
+    }
   }
 };

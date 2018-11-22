@@ -84,11 +84,11 @@ struct AppState {
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
     std::vector<std::shared_ptr<vka::DescriptorSet>> descriptorSets;
-    vka::StorageBufferDescriptor materialDescriptor;
-    vka::StorageBufferDescriptor dynamicLightDescriptor;
-    vka::BufferDescriptor lightDataDescriptor;
-    vka::BufferDescriptor cameraDescriptor;
-    vka::DynamicBufferDescriptor instanceDescriptor;
+    vka::StorageBufferDescriptor* materialDescriptor;
+    vka::StorageBufferDescriptor* dynamicLightDescriptor;
+    vka::BufferDescriptor* lightDataDescriptor;
+    vka::BufferDescriptor* cameraDescriptor;
+    vka::DynamicBufferDescriptor* instanceDescriptor;
     std::unique_ptr<vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>
         materialUniform;
     std::unique_ptr<vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>
@@ -136,27 +136,37 @@ struct AppState {
           instanceDescriptor(
               descriptorSets[4]->getDescriptor<vka::DynamicBufferDescriptor>(
                   {{}, 0, 0})),
-          materialUniform(std::make_unique({device,
-                                            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                            VMA_MEMORY_USAGE_CPU_TO_GPU,
-                                            {materialDescriptor}})),
+          materialUniform(
+              std::make_unique<
+                  vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>(
+                  device,
+                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                   VMA_MEMORY_USAGE_CPU_TO_GPU,
+                   std::vector{materialDescriptor})),
           dynamicLightsUniform(
-              std::make_unique({device,
-                                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                VMA_MEMORY_USAGE_CPU_TO_GPU,
-                                {dynamicLightDescriptor}})),
-          lightDataUniform(std::make_unique({device,
-                                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                             VMA_MEMORY_USAGE_CPU_TO_GPU,
-                                             {lightDataDescriptor}})),
-          cameraUniform(std::make_unique({device,
-                                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                          VMA_MEMORY_USAGE_CPU_TO_GPU,
-                                          {cameraDescriptor}})),
-          instanceUniform(std::make_unique({device,
-                                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                            VMA_MEMORY_USAGE_CPU_TO_GPU,
-                                            {instanceDescriptor}})),
+              std::make_unique<
+                  vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>(
+                  device,
+                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                   VMA_MEMORY_USAGE_CPU_TO_GPU,
+                   std::vector{dynamicLightDescriptor})),
+          lightDataUniform(std::make_unique<vka::vulkan_vector<LightData>>(
+              device,
+               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+               VMA_MEMORY_USAGE_CPU_TO_GPU,
+               std::vector{lightDataDescriptor})),
+          cameraUniform(std::make_unique<vka::vulkan_vector<Camera>>(
+              device,
+               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+               VMA_MEMORY_USAGE_CPU_TO_GPU,
+               std::vector{cameraDescriptor})),
+          instanceUniform(
+              std::make_unique<
+                  vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>(
+                  device,
+                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                   VMA_MEMORY_USAGE_CPU_TO_GPU,
+                   std::vector{instanceDescriptor})),
           frameAcquired(device->createFence(false)),
           bufferExecuted(device->createFence(true)),
           renderComplete(device->createSemaphore()),
@@ -164,55 +174,6 @@ struct AppState {
           cmd(commandPool->allocateCommandBuffer()) {}
   };
   std::array<BufferedState, vka::BufferCount> bufState;
-
-  void recordGlobalBarrier(
-      std::vector<ThsvsAccessType> previous,
-      std::vector<ThsvsAccessType> next) {
-    ThsvsGlobalBarrier thBarrier{};
-    thBarrier.prevAccessCount = static_cast<uint32_t>(previous.size());
-    thBarrier.pPrevAccesses = previous.data();
-    thBarrier.nextAccessCount = static_cast<uint32_t>(next.size());
-    thBarrier.pNextAccesses = next.data();
-    VkPipelineStageFlags src{};
-    VkPipelineStageFlags dst{};
-    VkMemoryBarrier barrier{};
-    thsvsGetVulkanMemoryBarrier(thBarrier, &src, &dst, &barrier);
-
-    if (auto cmd = transfer.cmd.lock()) {
-      cmd->pipelineBarrier(src, dst, 0, {barrier}, {}, {});
-    }
-  }
-
-  void recordImageBarrier(
-      std::vector<ThsvsAccessType> previous,
-      std::vector<ThsvsAccessType> next,
-      std::shared_ptr<vka::Image> image,
-      ThsvsImageLayout newLayout,
-      bool discardContents = false) {
-    ThsvsImageBarrier thBarrier{};
-    thBarrier.discardContents = VkBool32(discardContents);
-    thBarrier.prevAccessCount = static_cast<uint32_t>(previous.size());
-    thBarrier.pPrevAccesses = previous.data();
-    thBarrier.nextAccessCount = static_cast<uint32_t>(next.size());
-    thBarrier.pNextAccesses = next.data();
-    thBarrier.image = *image;
-    thBarrier.prevLayout = image->layout;
-    image->layout = newLayout;
-    thBarrier.nextLayout = newLayout;
-    thBarrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT,
-                                  0,
-                                  VK_REMAINING_MIP_LEVELS,
-                                  0,
-                                  VK_REMAINING_ARRAY_LAYERS};
-    VkPipelineStageFlags src{};
-    VkPipelineStageFlags dst{};
-    VkImageMemoryBarrier barrier{};
-    thsvsGetVulkanImageMemoryBarrier(thBarrier, &src, &dst, &barrier);
-
-    if (auto cmd = transfer.cmd.lock()) {
-      cmd->pipelineBarrier(src, dst, 0, {}, {}, {barrier});
-    }
-  }
 
   asset::Collection loadCollection(const std::string& assetPath) {
     tinygltf::Model gltfModel;
@@ -567,107 +528,6 @@ struct AppState {
         true);
     depthImageView = device->createImageView2D(
         depthImage, depthFormat, vka::ImageAspect::Depth);
-  }
-
-  template <typename T>
-  std::shared_ptr<vka::Buffer> recordBufferUpload(
-      gsl::span<T> data,
-      std::shared_ptr<vka::Buffer> buffer,
-      VkDeviceSize offset) {
-    auto staging = device->createBuffer(
-        data.size_bytes(),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        false);
-    void* stagePtr = staging->map();
-    std::memcpy(stagePtr, data.data(), data.size_bytes());
-    staging->flush();
-    VkBufferCopy bufferCopy{0, offset, data.size_bytes()};
-    if (auto cmd = transfer.cmd.lock()) {
-      cmd->copyBuffer(staging, buffer, {bufferCopy});
-    }
-    return staging;
-  }
-
-  template <typename T>
-  std::shared_ptr<vka::Buffer> recordImageUpload(
-      gsl::span<T> data,
-      std::shared_ptr<vka::Image> image,
-      VkOffset2D imageOffset,
-      VkExtent2D imageExtent) {
-    auto staging = device->createBuffer(
-        data.size_bytes(),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        false);
-    void* stagePtr = staging->map();
-    std::memcpy(stagePtr, data.data(), data.size_bytes());
-    staging->flush();
-    staging->unmap();
-
-    VkImageSubresourceLayers imageSubresource = {};
-    imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    imageSubresource.baseArrayLayer = 0;
-    imageSubresource.layerCount = 1;
-    imageSubresource.mipLevel = 0;
-
-    if (auto cmd = transfer.cmd.lock()) {
-      VkBufferImageCopy copy{};
-      copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
-      copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
-      copy.imageSubresource = imageSubresource;
-      cmd->copyBufferToImage(
-          staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
-    }
-    return staging;
-  }
-
-  template <typename T>
-  std::shared_ptr<vka::Buffer> recordImageArrayUpload(
-      gsl::span<T> data,
-      std::shared_ptr<vka::Image> image) {
-    auto staging = device->createBuffer(
-        data.size_bytes(),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        false);
-    void* stagePtr = staging->map();
-    std::memcpy(stagePtr, data.data(), data.size_bytes());
-    staging->flush();
-    staging->unmap();
-
-    VkImageSubresourceLayers imageSubresource = {};
-    imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    imageSubresource.baseArrayLayer = 0;
-    imageSubresource.layerCount = image->layerCount;
-    imageSubresource.mipLevel = 0;
-
-    if (auto cmd = transfer.cmd.lock()) {
-      VkBufferImageCopy copy{};
-      copy.imageOffset = {};
-      copy.imageExtent = image->extent;
-      copy.imageSubresource = imageSubresource;
-      cmd->copyBufferToImage(
-          staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
-    }
-    return staging;
-  }
-
-  void recordImageBlit(
-      std::shared_ptr<vka::Image> source,
-      std::shared_ptr<vka::Image> destination) {
-    if (auto cmd = transfer.cmd.lock()) {
-      VkImageBlit blit{};
-      blit.srcSubresource.aspectMask =
-          static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
-      blit.srcSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
-      blit.dstSubresource.aspectMask =
-          static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
-      blit.dstSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
-
-      blit.srcSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
-      cmd->blitImage(source, destination, {blit}, VK_FILTER_LINEAR);
-    }
   }
 
   AppState() {

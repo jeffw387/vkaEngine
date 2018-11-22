@@ -478,6 +478,49 @@ void CommandBuffer::executeCommands(
       commandBufferHandle, static_cast<uint32_t>(vkCmds.size()), vkCmds.data());
 }
 
+void CommandBuffer::recordGlobalBarrier(
+    std::vector<ThsvsAccessType> previous,
+    std::vector<ThsvsAccessType> next) {
+  ThsvsGlobalBarrier thBarrier{};
+  thBarrier.prevAccessCount = static_cast<uint32_t>(previous.size());
+  thBarrier.pPrevAccesses = previous.data();
+  thBarrier.nextAccessCount = static_cast<uint32_t>(next.size());
+  thBarrier.pNextAccesses = next.data();
+  VkPipelineStageFlags src{};
+  VkPipelineStageFlags dst{};
+  VkMemoryBarrier barrier{};
+  thsvsGetVulkanMemoryBarrier(thBarrier, &src, &dst, &barrier);
+  pipelineBarrier(src, dst, 0, {barrier}, {}, {});
+}
+
+void CommandBuffer::recordImageBarrier(
+    std::vector<ThsvsAccessType> previous,
+    std::vector<ThsvsAccessType> next,
+    std::shared_ptr<vka::Image> image,
+    ThsvsImageLayout newLayout,
+    bool discardContents) {
+  ThsvsImageBarrier thBarrier{};
+  thBarrier.discardContents = VkBool32(discardContents);
+  thBarrier.prevAccessCount = static_cast<uint32_t>(previous.size());
+  thBarrier.pPrevAccesses = previous.data();
+  thBarrier.nextAccessCount = static_cast<uint32_t>(next.size());
+  thBarrier.pNextAccesses = next.data();
+  thBarrier.image = *image;
+  thBarrier.prevLayout = image->layout;
+  image->layout = newLayout;
+  thBarrier.nextLayout = newLayout;
+  thBarrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT,
+                                0,
+                                VK_REMAINING_MIP_LEVELS,
+                                0,
+                                VK_REMAINING_ARRAY_LAYERS};
+  VkPipelineStageFlags src{};
+  VkPipelineStageFlags dst{};
+  VkImageMemoryBarrier barrier{};
+  thsvsGetVulkanImageMemoryBarrier(thBarrier, &src, &dst, &barrier);
+  pipelineBarrier(src, dst, 0, {}, {}, {barrier});
+}
+
 CommandPool::CommandPool(
     VkDevice device,
     uint32_t queueIndex,

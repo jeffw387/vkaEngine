@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <gsl-lite.hpp>
 #include "Pipeline.hpp"
 #include "PipelineLayout.hpp"
 #include "DescriptorPool.hpp"
@@ -15,6 +16,7 @@
 #include "Framebuffer.hpp"
 #include "Logger.hpp"
 #include "Fence.hpp"
+#include "thsvs_simpler_vulkan_synchronization.h"
 
 namespace vka {
 
@@ -139,6 +141,96 @@ public:
   void endRenderPass();
   void executeCommands(
       const std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers);
+
+  void recordGlobalBarrier(
+      std::vector<ThsvsAccessType> previous,
+      std::vector<ThsvsAccessType> next);
+
+  void recordImageBarrier(
+      std::vector<ThsvsAccessType> previous,
+      std::vector<ThsvsAccessType> next,
+      std::shared_ptr<vka::Image> image,
+      ThsvsImageLayout newLayout,
+      bool discardContents = false);
+
+  template <typename T>
+  void recordBufferUpload(
+      gsl::span<T> data,
+      std::shared_ptr<vka::Buffer> staging,
+      std::shared_ptr<vka::Buffer> buffer,
+      VkDeviceSize offset) {
+    void* stagePtr = staging->map();
+    std::memcpy(stagePtr, data.data(), data.size_bytes());
+    staging->flush();
+    VkBufferCopy bufferCopy{0, offset, data.size_bytes()};
+    copyBuffer(staging, buffer, {bufferCopy});
+  }
+
+  template <typename T>
+  void recordImageUpload(
+      gsl::span<T> data,
+      std::shared_ptr<vka::Buffer> staging,
+      std::shared_ptr<vka::Image> image,
+      VkOffset2D imageOffset,
+      VkExtent2D imageExtent) {
+    void* stagePtr = staging->map();
+    std::memcpy(stagePtr, data.data(), data.size_bytes());
+    staging->flush();
+    staging->unmap();
+
+    VkImageSubresourceLayers imageSubresource = {};
+    imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageSubresource.baseArrayLayer = 0;
+    imageSubresource.layerCount = 1;
+    imageSubresource.mipLevel = 0;
+
+    VkBufferImageCopy copy{};
+    copy.imageOffset = {imageOffset.x, imageOffset.y, 0};
+    copy.imageExtent = {imageExtent.width, imageExtent.height, 1};
+    copy.imageSubresource = imageSubresource;
+    copyBufferToImage(
+        staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
+  }
+
+  template <typename T>
+  void recordImageArrayUpload(
+      gsl::span<T> data,
+      std::shared_ptr<vka::Buffer> staging,
+      std::shared_ptr<vka::Image> image) {
+    void* stagePtr = staging->map();
+    std::memcpy(stagePtr, data.data(), data.size_bytes());
+    staging->flush();
+    staging->unmap();
+
+    VkImageSubresourceLayers imageSubresource = {};
+    imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageSubresource.baseArrayLayer = 0;
+    imageSubresource.layerCount = image->layerCount;
+    imageSubresource.mipLevel = 0;
+
+    VkBufferImageCopy copy{};
+    copy.imageOffset = {};
+    copy.imageExtent = image->extent;
+    copy.imageSubresource = imageSubresource;
+    copyBufferToImage(
+        staging, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {copy});
+  }
+
+  void recordImageBlit(
+      std::shared_ptr<vka::Image> source,
+      std::shared_ptr<vka::Image> destination) {
+    VkImageBlit blit{};
+    blit.srcSubresource.aspectMask =
+        static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
+    blit.srcSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    blit.dstSubresource.aspectMask =
+        static_cast<VkImageAspectFlags>(vka::ImageAspect::Color);
+    blit.dstSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
+    blit.srcSubresource.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    blitImage(source, destination, {blit}, VK_FILTER_LINEAR);
+  }
+
   State currentState() const noexcept;
 
 private:
