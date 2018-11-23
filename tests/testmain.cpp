@@ -53,235 +53,141 @@ struct PolySize {
 };
 
 struct Swap {
-    VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
-    VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
-    std::unique_ptr<vka::Swapchain> swapchain;
-    std::vector<VkImage> images;
-    std::vector<std::shared_ptr<vka::ImageView>> views;
-    std::shared_ptr<vka::Image> depthImage;
-    std::shared_ptr<vka::ImageView> depthView;
+  VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
+  VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+  std::unique_ptr<vka::Swapchain> swapchain;
+  std::vector<VkImage> images;
+  std::vector<std::shared_ptr<vka::ImageView>> views;
+  std::shared_ptr<vka::Image> depthImage;
+  std::shared_ptr<vka::ImageView> depthView;
 
-    Swap() {}
-    Swap(vka::Device* device)
-        : swapchain(device->createSwapchain()),
-          images(swapchain->getSwapImages()),
-          views([&]() {
-            std::vector<std::shared_ptr<vka::ImageView>> result;
-            for (auto& image : images) {
-              result.push_back(std::make_shared<vka::ImageView>(
-                  *device, image, swapFormat, vka::ImageAspect::Color));
-            }
-            return result;
-          }()),
-          depthImage(device->createImage2D(
-              swapchain->getSwapExtent(),
-              depthFormat,
-              VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-              vka::ImageAspect::Depth,
-              true)),
-          depthView(device->createImageView2D(
-              depthImage,
-              depthFormat,
-              vka::ImageAspect::Depth)) {}
-  };
+  Swap() {}
+  Swap(vka::Device* device)
+      : swapchain(device->createSwapchain()),
+        images(swapchain->getSwapImages()),
+        views([&]() {
+          std::vector<std::shared_ptr<vka::ImageView>> result;
+          for (auto& image : images) {
+            result.push_back(std::make_shared<vka::ImageView>(
+                *device, image, swapFormat, vka::ImageAspect::Color));
+          }
+          return result;
+        }()),
+        depthImage(device->createImage2D(
+            swapchain->getSwapExtent(),
+            depthFormat,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            vka::ImageAspect::Depth,
+            true)),
+        depthView(device->createImageView2D(
+            depthImage,
+            depthFormat,
+            vka::ImageAspect::Depth)) {}
+};
 
-  struct BufferedState {
-    std::unique_ptr<vka::DescriptorPool> descriptorPool;
-    std::shared_ptr<vka::DescriptorSet> materialSet;
-    std::shared_ptr<vka::DescriptorSet> dynamicLightSet;
-    std::shared_ptr<vka::DescriptorSet> lightDataSet;
-    std::shared_ptr<vka::DescriptorSet> cameraSet;
-    std::shared_ptr<vka::DescriptorSet> instanceSet;
-    vka::StorageBufferDescriptor* materialDescriptor;
-    vka::StorageBufferDescriptor* dynamicLightDescriptor;
-    vka::BufferDescriptor* lightDataDescriptor;
-    vka::BufferDescriptor* cameraDescriptor;
-    vka::DynamicBufferDescriptor* instanceDescriptor;
-    std::unique_ptr<vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>
-        materialUniform;
-    std::unique_ptr<vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>
-        dynamicLightsUniform;
-    std::unique_ptr<vka::vulkan_vector<LightData>> lightDataUniform;
-    std::unique_ptr<vka::vulkan_vector<Camera>> cameraUniform;
-    std::unique_ptr<vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>
-        instanceUniform;
-    std::unique_ptr<vka::Fence> frameAcquired;
-    std::unique_ptr<vka::Fence> bufferExecuted;
-    std::unique_ptr<vka::Semaphore> renderComplete;
-    uint32_t swapImageIndex = 0;
-    std::shared_ptr<vka::Framebuffer> framebuffer;
-    std::unique_ptr<vka::CommandPool> commandPool;
-    std::weak_ptr<vka::CommandBuffer> cmd;
-    entt::DefaultRegistry ecs;
-    BufferedState() {}
-    BufferedState(
-        vka::Device* device,
-        vka::DescriptorSetLayout* materialLayout,
-        vka::DescriptorSetLayout* dynamicLightLayout,
-        vka::DescriptorSetLayout* lightDataLayout,
-        vka::DescriptorSetLayout* cameraLayout,
-        vka::DescriptorSetLayout* instanceLayout
-        )
-        : descriptorPool(device->createDescriptorPool(
-              {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
-               {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
-               {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
-              5)),
-          materialSet(descriptorPool->allocateDescriptorSet(materialLayout)),
-          dynamicLightSet(
-              descriptorPool->allocateDescriptorSet(dynamicLightLayout)),
-          lightDataSet(descriptorPool->allocateDescriptorSet(lightDataLayout)),
-          cameraSet(descriptorPool->allocateDescriptorSet(cameraLayout)),
-          instanceSet(descriptorPool->allocateDescriptorSet(instanceLayout)),
-          materialDescriptor(
-              materialSet->getDescriptor<vka::StorageBufferDescriptor>(
-                  {{}, 0, 0})),
-          dynamicLightDescriptor(
-              dynamicLightSet->getDescriptor<vka::StorageBufferDescriptor>(
-                  {{}, 0, 0})),
-          lightDataDescriptor(
-              lightDataSet->getDescriptor<vka::BufferDescriptor>({{}, 0, 0})),
-          cameraDescriptor(
-              cameraSet->getDescriptor<vka::BufferDescriptor>({{}, 0, 0})),
-          instanceDescriptor(
-              instanceSet->getDescriptor<vka::DynamicBufferDescriptor>(
-                  {{}, 0, 0})),
-          materialUniform(
-              std::make_unique<
-                  vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>(
-                  device,
-                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                  VMA_MEMORY_USAGE_CPU_TO_GPU,
-                  std::vector{materialDescriptor})),
-          dynamicLightsUniform(
-              std::make_unique<
-                  vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>(
-                  device,
-                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                  VMA_MEMORY_USAGE_CPU_TO_GPU,
-                  std::vector{dynamicLightDescriptor})),
-          lightDataUniform(std::make_unique<vka::vulkan_vector<LightData>>(
-              device,
-              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU,
-              std::vector{lightDataDescriptor})),
-          cameraUniform(std::make_unique<vka::vulkan_vector<Camera>>(
-              device,
-              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-              VMA_MEMORY_USAGE_CPU_TO_GPU,
-              std::vector{cameraDescriptor})),
-          instanceUniform(
-              std::make_unique<
-                  vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>(
-                  device,
-                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                  VMA_MEMORY_USAGE_CPU_TO_GPU,
-                  std::vector{instanceDescriptor})),
-          frameAcquired(device->createFence(false)),
-          bufferExecuted(device->createFence(true)),
-          renderComplete(device->createSemaphore()),
-          commandPool(device->createCommandPool()),
-          cmd(commandPool->allocateCommandBuffer()) {}
-  };
+struct BufferedState {
+  std::unique_ptr<vka::DescriptorPool> descriptorPool;
+  std::shared_ptr<vka::DescriptorSet> materialSet;
+  std::shared_ptr<vka::DescriptorSet> dynamicLightSet;
+  std::shared_ptr<vka::DescriptorSet> lightDataSet;
+  std::shared_ptr<vka::DescriptorSet> cameraSet;
+  std::shared_ptr<vka::DescriptorSet> instanceSet;
+  vka::StorageBufferDescriptor* materialDescriptor;
+  vka::StorageBufferDescriptor* dynamicLightDescriptor;
+  vka::BufferDescriptor* lightDataDescriptor;
+  vka::BufferDescriptor* cameraDescriptor;
+  vka::DynamicBufferDescriptor* instanceDescriptor;
+  std::unique_ptr<vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>
+      materialUniform;
+  std::unique_ptr<vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>
+      dynamicLightsUniform;
+  std::unique_ptr<vka::vulkan_vector<LightData>> lightDataUniform;
+  std::unique_ptr<vka::vulkan_vector<Camera>> cameraUniform;
+  std::unique_ptr<vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>
+      instanceUniform;
+  std::unique_ptr<vka::Fence> frameAcquired;
+  std::unique_ptr<vka::Fence> bufferExecuted;
+  std::unique_ptr<vka::Semaphore> renderComplete;
+  uint32_t swapImageIndex = 0;
+  std::shared_ptr<vka::Framebuffer> framebuffer;
+  std::unique_ptr<vka::CommandPool> commandPool;
+  std::weak_ptr<vka::CommandBuffer> cmd;
+  entt::DefaultRegistry ecs;
+  BufferedState() {}
+  BufferedState(
+      vka::Device* device,
+      vka::DescriptorSetLayout* materialLayout,
+      vka::DescriptorSetLayout* dynamicLightLayout,
+      vka::DescriptorSetLayout* lightDataLayout,
+      vka::DescriptorSetLayout* cameraLayout,
+      vka::DescriptorSetLayout* instanceLayout)
+      : descriptorPool(device->createDescriptorPool(
+            {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
+             {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
+             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
+            5)),
+        materialSet(descriptorPool->allocateDescriptorSet(materialLayout)),
+        dynamicLightSet(
+            descriptorPool->allocateDescriptorSet(dynamicLightLayout)),
+        lightDataSet(descriptorPool->allocateDescriptorSet(lightDataLayout)),
+        cameraSet(descriptorPool->allocateDescriptorSet(cameraLayout)),
+        instanceSet(descriptorPool->allocateDescriptorSet(instanceLayout)),
+        materialDescriptor(
+            materialSet->getDescriptor<vka::StorageBufferDescriptor>(
+                {{}, 0, 0})),
+        dynamicLightDescriptor(
+            dynamicLightSet->getDescriptor<vka::StorageBufferDescriptor>(
+                {{}, 0, 0})),
+        lightDataDescriptor(
+            lightDataSet->getDescriptor<vka::BufferDescriptor>({{}, 0, 0})),
+        cameraDescriptor(
+            cameraSet->getDescriptor<vka::BufferDescriptor>({{}, 0, 0})),
+        instanceDescriptor(
+            instanceSet->getDescriptor<vka::DynamicBufferDescriptor>(
+                {{}, 0, 0})),
+        materialUniform(
+            std::make_unique<
+                vka::vulkan_vector<Material, vka::StorageBufferDescriptor>>(
+                device,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                VMA_MEMORY_USAGE_CPU_TO_GPU,
+                std::vector{materialDescriptor})),
+        dynamicLightsUniform(
+            std::make_unique<
+                vka::vulkan_vector<Light, vka::StorageBufferDescriptor>>(
+                device,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                VMA_MEMORY_USAGE_CPU_TO_GPU,
+                std::vector{dynamicLightDescriptor})),
+        lightDataUniform(std::make_unique<vka::vulkan_vector<LightData>>(
+            device,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU,
+            std::vector{lightDataDescriptor})),
+        cameraUniform(std::make_unique<vka::vulkan_vector<Camera>>(
+            device,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU,
+            std::vector{cameraDescriptor})),
+        instanceUniform(
+            std::make_unique<
+                vka::vulkan_vector<Instance, vka::DynamicBufferDescriptor>>(
+                device,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VMA_MEMORY_USAGE_CPU_TO_GPU,
+                std::vector{instanceDescriptor})),
+        frameAcquired(device->createFence(false)),
+        bufferExecuted(device->createFence(true)),
+        renderComplete(device->createSemaphore()),
+        commandPool(device->createCommandPool()),
+        cmd(commandPool->allocateCommandBuffer()) {}
+};
 
-  auto createRenderPass = [](vka::Device* device, VkFormat swapFormat, VkFormat depthFormat) {
-    vka::RenderPassCreateInfo renderPassCreateInfo;
-    auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
-        0,
-        swapFormat,
-        VK_SAMPLE_COUNT_1_BIT,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_STORE,
-        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-    auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
-        0,
-        depthFormat,
-        VK_SAMPLE_COUNT_1_BIT,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-    auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
-    subpass3D->addColorRef(
-        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    subpass3D->setDepthRef({depthAttachmentDesc,
-                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-    auto subpassText = renderPassCreateInfo.addGraphicsSubpass();
-    subpassText->addColorRef(
-        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    renderPassCreateInfo.addSubpassDependency(
-        subpass3D,
-        subpassText,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
-        VK_DEPENDENCY_BY_REGION_BIT);
-
-    return device->createRenderPass(renderPassCreateInfo);
-  };
-
-  auto createBufferedStates = [](vka::Device* device, P3DPipeline* pipeline) {
-    std::array<BufferedState, vka::BufferCount> result;
-    for (auto& state : result) {
-      state = BufferedState(
-        device, 
-        pipeline->materialLayout,
-        pipeline->dynamicLightLayout,
-        pipeline->lightDataLayout,
-        pipeline->cameraLayout,
-        pipeline->instanceLayout);
-    }
-    return result;
-  };
-
-struct AppState {
-  PolySize defaultWidth = PolySize{900U};
-  PolySize defaultHeight = PolySize{900U};
-
-  vka::OrthoCamera mainCamera;
-  vka::EngineCreateInfo engineCreateInfo;
-  std::unique_ptr<vka::Engine> engine;
-  vka::InstanceCreateInfo instanceCreateInfo;
-  vka::Instance* instance;
-  vka::SurfaceCreateInfo surfaceCreateInfo;
-  vka::Surface* surface;
-  vka::Device* device;
-  Transfer transfer;
-  
-
-  tinygltf::TinyGLTF modelLoader;
-  struct Assets{
-    asset::Collection shapes;
-    asset::Collection terrain;
-
-    Assets() :
-    shapes{loadCollection("content/models/shapes.gltf")},
-    terrain{loadCollection("content/models/terrain.gltf")} {}
-  };
-  std::unique_ptr<Assets> assets;
-
-  
-
-  std::unique_ptr<Swap> swap;
-  std::shared_ptr<vka::RenderPass> renderPass;
-  std::unique_ptr<vka::PipelineCache> pipelineCache;
-
-  TextPipeline textPipeline;
-  Font testFont;
-  std::unique_ptr<TextObject> testText;
-
-  P3DPipeline p3DPipeline;
-  
-  std::array<BufferedState, vka::BufferCount> bufState;
-
-  asset::Collection loadCollection(const std::string& assetPath) {
+struct Assets {
+  asset::Collection loadCollection(
+      vka::Device* device,
+      Transfer* transfer,
+      const std::string& assetPath) {
     tinygltf::Model gltfModel;
     std::string loadWarning;
     std::string loadError;
@@ -321,28 +227,121 @@ struct AppState {
         true);
     auto stagingBuffer = device->createBuffer(
         bufferSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VMA_MEMORY_USAGE_CPU_ONLY,
         false);
     device->debugNameObject<VkBuffer>(
         VK_OBJECT_TYPE_BUFFER, *stagingBuffer, "ModelVertexIndexStaging");
 
-    auto copyFence = device->createFence(false);
-
     void* stagePtr = stagingBuffer->map();
     std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
     stagingBuffer->flush();
 
-    transfer.pool->reset();
-    if (auto cmd = transfer.cmd.lock()) {
+    transfer->pool->reset();
+    if (auto cmd = transfer->cmd.lock()) {
       cmd->begin();
       cmd->copyBuffer(stagingBuffer, result.buffer, {{0U, 0U, bufferSize}});
       cmd->end();
-      device->queueSubmit({}, {cmd}, {}, copyFence.get());
+      device->queueSubmit({}, {cmd}, {}, transfer->fence.get());
     }
-    copyFence->wait();
+    transfer->fence->wait();
+    transfer->fence->reset();
     return result;
   }
+
+  tinygltf::TinyGLTF modelLoader;
+  asset::Collection shapes;
+  asset::Collection terrain;
+
+  Assets(vka::Device* device, Transfer* transfer)
+      : shapes{loadCollection(device, transfer, "content/models/shapes.gltf")},
+        terrain{
+            loadCollection(device, transfer, "content/models/terrain.gltf")} {}
+};
+
+auto createRenderPass = [](vka::Device* device,
+                           VkFormat swapFormat,
+                           VkFormat depthFormat) {
+  vka::RenderPassCreateInfo renderPassCreateInfo;
+  auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
+      0,
+      swapFormat,
+      VK_SAMPLE_COUNT_1_BIT,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+  auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
+      0,
+      depthFormat,
+      VK_SAMPLE_COUNT_1_BIT,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+  auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
+  subpass3D->addColorRef(
+      {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+  subpass3D->setDepthRef(
+      {depthAttachmentDesc, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+  auto subpassText = renderPassCreateInfo.addGraphicsSubpass();
+  subpassText->addColorRef(
+      {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+  renderPassCreateInfo.addSubpassDependency(
+      subpass3D,
+      subpassText,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+      VK_DEPENDENCY_BY_REGION_BIT);
+
+  return device->createRenderPass(renderPassCreateInfo);
+};
+
+auto createBufferedStates = [](vka::Device* device, P3DPipeline* pipeline) {
+  std::array<BufferedState, vka::BufferCount> result;
+  for (auto& state : result) {
+    state = BufferedState(
+        device,
+        pipeline->materialLayout.get(),
+        pipeline->dynamicLightLayout.get(),
+        pipeline->lightDataLayout.get(),
+        pipeline->cameraLayout.get(),
+        pipeline->instanceLayout.get());
+  }
+  return result;
+};
+
+struct AppState {
+  PolySize defaultWidth = PolySize{900U};
+  PolySize defaultHeight = PolySize{900U};
+
+  vka::OrthoCamera mainCamera;
+  vka::EngineCreateInfo engineCreateInfo;
+  std::unique_ptr<vka::Engine> engine;
+  vka::InstanceCreateInfo instanceCreateInfo;
+  vka::Instance* instance;
+  vka::SurfaceCreateInfo surfaceCreateInfo;
+  vka::Surface* surface;
+  vka::Device* device;
+  Transfer transfer;
+  std::unique_ptr<Assets> assets;
+  std::unique_ptr<Swap> swap;
+  std::shared_ptr<vka::RenderPass> renderPass;
+
+  std::unique_ptr<vka::PipelineCache> pipelineCache;
+  TextPipeline textPipeline;
+  Font testFont;
+  std::unique_ptr<TextObject> testText;
+  P3DPipeline p3DPipeline;
+
+  std::array<BufferedState, vka::BufferCount> bufState;
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
     MultiLogger::get()->info("Init Callback");
@@ -432,12 +431,14 @@ struct AppState {
            render.cameraSet,
            render.instanceSet},
           {0});
-      auto someModel = shapesAsset.models[0];
+      auto someModel = assets->shapes.models[0];
       cmd->bindIndexBuffer(
-          shapesAsset.buffer, someModel.indexByteOffset, VK_INDEX_TYPE_UINT16);
+          assets->shapes.buffer,
+          someModel.indexByteOffset,
+          VK_INDEX_TYPE_UINT16);
       cmd->bindVertexBuffers(
           0,
-          {shapesAsset.buffer, shapesAsset.buffer},
+          {assets->shapes.buffer, assets->shapes.buffer},
           {someModel.positionByteOffset, someModel.normalByteOffset});
       // cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
       uint32_t matIndex{};
@@ -448,15 +449,15 @@ struct AppState {
           4,
           &matIndex);
       cmd->bindIndexBuffer(
-          terrainAsset.buffer,
-          terrainAsset.models[0].indexByteOffset,
+          assets->terrain.buffer,
+          assets->terrain.models[0].indexByteOffset,
           VK_INDEX_TYPE_UINT16);
       cmd->bindVertexBuffers(
           0,
-          {terrainAsset.buffer, terrainAsset.buffer},
-          {terrainAsset.models[0].positionByteOffset,
-           terrainAsset.models[0].normalByteOffset});
-      cmd->drawIndexed(terrainAsset.models[0].indexCount, 1, 0, 0, 0);
+          {assets->terrain.buffer, assets->terrain.buffer},
+          {assets->terrain.models[0].positionByteOffset,
+           assets->terrain.models[0].normalByteOffset});
+      cmd->drawIndexed(assets->terrain.models[0].indexCount, 1, 0, 0, 0);
     }
   }
 
@@ -549,7 +550,7 @@ struct AppState {
         case VK_ERROR_OUT_OF_DATE_KHR:
         case VK_SUBOPTIMAL_KHR:
           device->waitIdle();
-          swap.reset()
+          swap.reset();
           swap = std::make_unique<Swap>(device);
           return;
         default:
@@ -611,7 +612,7 @@ struct AppState {
       case VK_ERROR_OUT_OF_DATE_KHR:
       case VK_SUBOPTIMAL_KHR:
         device->waitIdle();
-        swap.reset()
+        swap.reset();
         swap = std::make_unique<Swap>(device);
         return;
       default:
@@ -621,52 +622,59 @@ struct AppState {
     }
   }
 
-
-
-  AppState() :
-      defaultWidth{900U},
-      defaultHeight{900U},
-      mainCamera{},
-      engineCreateInfo{
-        [this](auto engine, auto initialIndex) {initCallback(engine, initialIndex);},
-        [this](auto engine) {updateCallback(engine);}
-        [this](auto engine) {renderCallback(engine);}
-      },
-      engine{std::make_unique<vka::Engine>(engineCreateInfo)},
-      instanceCreateInfo{
-        "testmain", 
-        {0, 0, 1}, 
-        std::vector{"VK_KHR_surface", "VK_EXT_debug_utils"},
-        std::vector{"VK_LAYER_LUNARG_standard_validation"}},
-      instance{engine->createInstance(instanceCreateInfo)},
-      surfaceCreateInfo{"testmain window", defaultWidth, defaultHeight},
-      surface{instance->createSurface(surfaceCreateInfo)},
-      device{instance->createDevice(
-        {"VK_KHR_swapchain"}, {}, [&](const vka::PhysicalDeviceData& data) {
-          for (const auto& [physicalDevice, props] : data.properties) {
-            if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-              return physicalDevice;
-            }
-          }
-          return data.physicalDevices.at(0);
-        })},
-      transfer{device},
-      assets{std::make_unique<Assets>()},
-      swap{std::make_unique<Swap>(device)},
-      renderPass{createRenderPass(device, swap->swapFormat, swap->depthFormat)},
-      pipelineCache{device->createPipelineCache()},
-      textPipeline{device, renderPass.get(), pipelineCache.get()},
-      testFont{"content/fonts/AeroviasBrasilNF.ttf", device, *textPipeline},
-      testText{std::make_unique<TextObject>(
-        glm::vec2(50.f, 50.f),
-        std::string{"Test Text!"},
-        60,
-        testFont.font.get())},
-      p3DPipeline{device, renderPass.get(), pipelineCache.get()},
-      bufState{createBufferedStates(device, &p3DPipeline)} {
+  AppState()
+      : defaultWidth{900U},
+        defaultHeight{900U},
+        mainCamera{},
+        engineCreateInfo{[this](auto engine, auto initialIndex) {
+                           initCallback(engine, initialIndex);
+                         },
+                         [this](auto engine) { updateCallback(engine); },
+                         [this](auto engine) { renderCallback(engine); }},
+        engine{std::make_unique<vka::Engine>(engineCreateInfo)},
+        instanceCreateInfo{"testmain",
+                           {0, 0, 1},
+                           std::vector{"VK_KHR_surface", "VK_EXT_debug_utils"},
+                           std::vector{"VK_LAYER_LUNARG_standard_validation"}},
+        instance{engine->createInstance(instanceCreateInfo)},
+        surfaceCreateInfo{defaultWidth, defaultHeight, "testmain window"},
+        surface{instance->createSurface(surfaceCreateInfo)},
+        device{instance->createDevice(
+            {"VK_KHR_swapchain"},
+            {},
+            [&](const vka::PhysicalDeviceData& data) {
+              for (const auto& [physicalDevice, props] : data.properties) {
+                if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+                  return physicalDevice;
+                }
+              }
+              return data.physicalDevices.at(0);
+            })},
+        transfer{device},
+        assets{std::make_unique<Assets>(device, &transfer)},
+        swap{std::make_unique<Swap>(device)},
+        renderPass{
+            createRenderPass(device, swap->swapFormat, swap->depthFormat)},
+        pipelineCache{device->createPipelineCache()},
+        textPipeline{device, renderPass.get(), pipelineCache.get()},
+        testFont{"content/fonts/AeroviasBrasilNF.ttf", device, textPipeline},
+        testText{std::make_unique<TextObject>(
+            glm::vec2(50.f, 50.f),
+            std::string{"Test Text!"},
+            60,
+            testFont.font.get())},
+        p3DPipeline{device, renderPass.get(), pipelineCache.get()},
+        bufState{createBufferedStates(device, &p3DPipeline)} {
     mainCamera.setDimensions(2, 2);
     mainCamera.setPosition({0.f, 0.f, 0.f});
     mainCamera.setNearFar(-10, 10);
+
+    testFont.recordUpload(device, transfer);
+    if (auto cmd = transfer.cmd.lock()) {
+      device->queueSubmit({}, {cmd}, {}, transfer.fence.get());
+    }
+    transfer.fence->wait();
+    transfer.fence->reset();
 
     engine->run();
   }
