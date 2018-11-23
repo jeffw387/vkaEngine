@@ -55,7 +55,7 @@ struct PolySize {
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
   PolySize defaultHeight = PolySize{900U};
-  
+
   vka::OrthoCamera mainCamera;
   std::unique_ptr<vka::Engine> engine;
   vka::Instance* instance;
@@ -79,29 +79,36 @@ struct AppState {
     VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
     VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
     std::unique_ptr<vka::Swapchain> swapchain;
-    std::vector<VkImage> swapImages;
-    std::vector<std::shared_ptr<vka::ImageView>> swapImageViews;
+    std::vector<VkImage> images;
+    std::vector<std::shared_ptr<vka::ImageView>> views;
     std::shared_ptr<vka::Image> depthImage;
-    std::shared_ptr<vka::ImageView> depthImageView;
+    std::shared_ptr<vka::ImageView> depthView;
 
     Swap() {}
-    Swap(vka::Device* device) : 
-    swapchain(device->createSwapchain()),
-    swapImages(swapchain->getSwapImages()),
-    swapImageViews(swapImages | view::transform([=](auto image) { return std::make_shared<vka::ImageView>(
-          *device, swapImage, swapFormat, vka::ImageAspect::Color); }) | action::push_back(std::vector<std::shared_ptr<vka::ImageView>>{})),
-    depthImage(device->createImage2D(
-        swapchain->getSwapExtent(),
-        depthFormat,
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        vka::ImageAspect::Depth,
-        true)),
-    depthImageView() {
-    depthImage = ;
-    depthImageView = device->createImageView2D(
-        depthImage, depthFormat, vka::ImageAspect::Depth);
-    }
+    Swap(vka::Device* device)
+        : swapchain(device->createSwapchain()),
+          images(swapchain->getSwapImages()),
+          views([&]() {
+            std::vector<std::shared_ptr<vka::ImageView>> result;
+            for (auto& image : images) {
+              result.push_back(std::make_shared<vka::ImageView>(
+                  *device, image, swapFormat, vka::ImageAspect::Color));
+            }
+            return result;
+          }()),
+          depthImage(device->createImage2D(
+              swapchain->getSwapExtent(),
+              depthFormat,
+              VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+              vka::ImageAspect::Depth,
+              true)),
+          depthView(device->createImageView2D(
+              depthImage,
+              depthFormat,
+              vka::ImageAspect::Depth)) {}
   };
+
+  std::unique_ptr<Swap> swap;
 
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
@@ -457,7 +464,7 @@ struct AppState {
     auto renderIndex = engine->currentRenderIndex();
     auto& render = bufState[renderIndex];
 
-    if (auto index = swapchain->acquireImage(*render.frameAcquired)) {
+    if (auto index = swap->swapchain->acquireImage(*render.frameAcquired)) {
       render.swapImageIndex = index.value();
     } else {
       switch (index.error()) {
@@ -485,13 +492,13 @@ struct AppState {
     render.instanceSet->validate(*device);
     render.commandPool->reset();
 
-    auto swapExtent = swapchain->getSwapExtent();
+    auto swapExtent = swap->swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
       return;
     }
     render.framebuffer = device->createFramebuffer(
         *renderPass,
-        {swapImageViews[render.swapImageIndex], depthImageView},
+        {swap->views[render.swapImageIndex], swap->depthView},
         swapExtent);
 
     if (auto cmd = render.cmd.lock()) {
@@ -519,7 +526,7 @@ struct AppState {
           {}, {cmd}, {*render.renderComplete}, render.bufferExecuted.get());
     }
     auto presentResult = device->presentImage(
-        *swapchain, render.swapImageIndex, *render.renderComplete);
+        *swap->swapchain, render.swapImageIndex, *render.renderComplete);
 
     switch (presentResult) {
       case VK_SUCCESS:
@@ -536,9 +543,7 @@ struct AppState {
     }
   }
 
-  void createSwapchain() {
-    
-  }
+  void createSwapchain() {}
 
   AppState() {
     mainCamera.setDimensions(2, 2);
@@ -622,7 +627,7 @@ struct AppState {
     vka::RenderPassCreateInfo renderPassCreateInfo;
     auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
         0,
-        swapFormat,
+        swap->swapFormat,
         VK_SAMPLE_COUNT_1_BIT,
         VK_ATTACHMENT_LOAD_OP_CLEAR,
         VK_ATTACHMENT_STORE_OP_STORE,
@@ -632,7 +637,7 @@ struct AppState {
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
         0,
-        depthFormat,
+        swap->depthFormat,
         VK_SAMPLE_COUNT_1_BIT,
         VK_ATTACHMENT_LOAD_OP_CLEAR,
         VK_ATTACHMENT_STORE_OP_DONT_CARE,
