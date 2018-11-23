@@ -166,6 +166,7 @@ struct Font {
     descriptorSet->validate(*device);
   }
 
+  // TODO: fix lifetimes of staging buffers, probably completely rework data upload
   void recordUpload(vka::Device* device, Transfer& transfer) {
     size_t indexSize = vertexData->indices.size() * sizeof(Text::Index);
     auto indexStaging = device->createBuffer(
