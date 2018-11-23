@@ -52,30 +52,7 @@ struct PolySize {
   }
 };
 
-struct AppState {
-  PolySize defaultWidth = PolySize{900U};
-  PolySize defaultHeight = PolySize{900U};
-
-  vka::OrthoCamera mainCamera;
-  std::unique_ptr<vka::Engine> engine;
-  vka::Instance* instance;
-  vka::Surface* surface;
-  vka::Device* device;
-  tinygltf::TinyGLTF modelLoader;
-  Transfer transfer;
-  std::shared_ptr<vka::RenderPass> renderPass;
-  std::unique_ptr<vka::PipelineCache> pipelineCache;
-
-  TextPipeline textPipeline;
-  Font testFont;
-  std::unique_ptr<TextObject> testText;
-
-  P3DPipeline p3DPipeline;
-
-  asset::Collection shapesAsset;
-  asset::Collection terrainAsset;
-
-  struct Swap {
+struct Swap {
     VkFormat swapFormat = VK_FORMAT_B8G8R8A8_UNORM;
     VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
     std::unique_ptr<vka::Swapchain> swapchain;
@@ -108,8 +85,6 @@ struct AppState {
               vka::ImageAspect::Depth)) {}
   };
 
-  std::unique_ptr<Swap> swap;
-
   struct BufferedState {
     std::unique_ptr<vka::DescriptorPool> descriptorPool;
     std::shared_ptr<vka::DescriptorSet> materialSet;
@@ -141,18 +116,23 @@ struct AppState {
     BufferedState() {}
     BufferedState(
         vka::Device* device,
-        const std::vector<std::unique_ptr<vka::DescriptorSetLayout>> layouts)
+        vka::DescriptorSetLayout* materialLayout,
+        vka::DescriptorSetLayout* dynamicLightLayout,
+        vka::DescriptorSetLayout* lightDataLayout,
+        vka::DescriptorSetLayout* cameraLayout,
+        vka::DescriptorSetLayout* instanceLayout
+        )
         : descriptorPool(device->createDescriptorPool(
               {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 7},
                {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 3},
                {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}},
               5)),
-          materialSet(descriptorPool->allocateDescriptorSet(layouts[0].get())),
+          materialSet(descriptorPool->allocateDescriptorSet(materialLayout)),
           dynamicLightSet(
-              descriptorPool->allocateDescriptorSet(layouts[1].get())),
-          lightDataSet(descriptorPool->allocateDescriptorSet(layouts[2].get())),
-          cameraSet(descriptorPool->allocateDescriptorSet(layouts[3].get())),
-          instanceSet(descriptorPool->allocateDescriptorSet(layouts[4].get())),
+              descriptorPool->allocateDescriptorSet(dynamicLightLayout)),
+          lightDataSet(descriptorPool->allocateDescriptorSet(lightDataLayout)),
+          cameraSet(descriptorPool->allocateDescriptorSet(cameraLayout)),
+          instanceSet(descriptorPool->allocateDescriptorSet(instanceLayout)),
           materialDescriptor(
               materialSet->getDescriptor<vka::StorageBufferDescriptor>(
                   {{}, 0, 0})),
@@ -203,6 +183,102 @@ struct AppState {
           commandPool(device->createCommandPool()),
           cmd(commandPool->allocateCommandBuffer()) {}
   };
+
+  auto createRenderPass = [](vka::Device* device, VkFormat swapFormat, VkFormat depthFormat) {
+    vka::RenderPassCreateInfo renderPassCreateInfo;
+    auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
+        0,
+        swapFormat,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_ATTACHMENT_LOAD_OP_CLEAR,
+        VK_ATTACHMENT_STORE_OP_STORE,
+        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
+        0,
+        depthFormat,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_ATTACHMENT_LOAD_OP_CLEAR,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+    auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
+    subpass3D->addColorRef(
+        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    subpass3D->setDepthRef({depthAttachmentDesc,
+                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+    auto subpassText = renderPassCreateInfo.addGraphicsSubpass();
+    subpassText->addColorRef(
+        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+    renderPassCreateInfo.addSubpassDependency(
+        subpass3D,
+        subpassText,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
+
+    return device->createRenderPass(renderPassCreateInfo);
+  };
+
+  auto createBufferedStates = [](vka::Device* device, P3DPipeline* pipeline) {
+    std::array<BufferedState, vka::BufferCount> result;
+    for (auto& state : result) {
+      state = BufferedState(
+        device, 
+        pipeline->materialLayout,
+        pipeline->dynamicLightLayout,
+        pipeline->lightDataLayout,
+        pipeline->cameraLayout,
+        pipeline->instanceLayout);
+    }
+    return result;
+  };
+
+struct AppState {
+  PolySize defaultWidth = PolySize{900U};
+  PolySize defaultHeight = PolySize{900U};
+
+  vka::OrthoCamera mainCamera;
+  vka::EngineCreateInfo engineCreateInfo;
+  std::unique_ptr<vka::Engine> engine;
+  vka::InstanceCreateInfo instanceCreateInfo;
+  vka::Instance* instance;
+  vka::SurfaceCreateInfo surfaceCreateInfo;
+  vka::Surface* surface;
+  vka::Device* device;
+  Transfer transfer;
+  
+
+  tinygltf::TinyGLTF modelLoader;
+  struct Assets{
+    asset::Collection shapes;
+    asset::Collection terrain;
+
+    Assets() :
+    shapes{loadCollection("content/models/shapes.gltf")},
+    terrain{loadCollection("content/models/terrain.gltf")} {}
+  };
+  std::unique_ptr<Assets> assets;
+
+  
+
+  std::unique_ptr<Swap> swap;
+  std::shared_ptr<vka::RenderPass> renderPass;
+  std::unique_ptr<vka::PipelineCache> pipelineCache;
+
+  TextPipeline textPipeline;
+  Font testFont;
+  std::unique_ptr<TextObject> testText;
+
+  P3DPipeline p3DPipeline;
+  
   std::array<BufferedState, vka::BufferCount> bufState;
 
   asset::Collection loadCollection(const std::string& assetPath) {
@@ -473,7 +549,8 @@ struct AppState {
         case VK_ERROR_OUT_OF_DATE_KHR:
         case VK_SUBOPTIMAL_KHR:
           device->waitIdle();
-          createSwapchain();
+          swap.reset()
+          swap = std::make_unique<Swap>(device);
           return;
         default:
           MultiLogger::get()->critical(
@@ -534,7 +611,8 @@ struct AppState {
       case VK_ERROR_OUT_OF_DATE_KHR:
       case VK_SUBOPTIMAL_KHR:
         device->waitIdle();
-        createSwapchain();
+        swap.reset()
+        swap = std::make_unique<Swap>(device);
         return;
       default:
         MultiLogger::get()->critical(
@@ -543,45 +621,27 @@ struct AppState {
     }
   }
 
-  void createSwapchain() {}
 
-  AppState() {
-    mainCamera.setDimensions(2, 2);
-    mainCamera.setPosition({0.f, 0.f, 0.f});
-    mainCamera.setNearFar(-10, 10);
 
-    vka::InstanceCreateInfo instanceCreateInfo{};
-    instanceCreateInfo.appName = "testmain";
-    instanceCreateInfo.appVersion = {0, 0, 1};
-    instanceCreateInfo.instanceExtensions.push_back("VK_KHR_surface");
-    instanceCreateInfo.instanceExtensions.push_back("VK_EXT_debug_utils");
-    instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_standard_validation");
-    // instanceCreateInfo.layers.push_back("VK_LAYER_LUNARG_api_dump");
-
-    vka::SurfaceCreateInfo surfaceCreateInfo{};
-    surfaceCreateInfo.windowTitle = "testmain window";
-    surfaceCreateInfo.width = defaultWidth;
-    surfaceCreateInfo.height = defaultHeight;
-
-    vka::EngineCreateInfo engineCreateInfo{};
-    engineCreateInfo.initCallback = [this](auto engine, auto initialIndex) {
-      initCallback(engine, initialIndex);
-    };
-    engineCreateInfo.updateCallback = [this](auto engine) {
-      updateCallback(engine);
-    };
-    engineCreateInfo.renderCallback = [this](auto engine) {
-      renderCallback(engine);
-    };
-    engine = std::make_unique<vka::Engine>(engineCreateInfo);
-
-    MultiLogger::get()->info("creating instance");
-    instance = engine->createInstance(instanceCreateInfo);
-    MultiLogger::get()->info("creating surface");
-    surface = instance->createSurface(surfaceCreateInfo);
-
-    MultiLogger::get()->info("creating device");
-    device = instance->createDevice(
+  AppState() :
+      defaultWidth{900U},
+      defaultHeight{900U},
+      mainCamera{},
+      engineCreateInfo{
+        [this](auto engine, auto initialIndex) {initCallback(engine, initialIndex);},
+        [this](auto engine) {updateCallback(engine);}
+        [this](auto engine) {renderCallback(engine);}
+      },
+      engine{std::make_unique<vka::Engine>(engineCreateInfo)},
+      instanceCreateInfo{
+        "testmain", 
+        {0, 0, 1}, 
+        std::vector{"VK_KHR_surface", "VK_EXT_debug_utils"},
+        std::vector{"VK_LAYER_LUNARG_standard_validation"}},
+      instance{engine->createInstance(instanceCreateInfo)},
+      surfaceCreateInfo{"testmain window", defaultWidth, defaultHeight},
+      surface{instance->createSurface(surfaceCreateInfo)},
+      device{instance->createDevice(
         {"VK_KHR_swapchain"}, {}, [&](const vka::PhysicalDeviceData& data) {
           for (const auto& [physicalDevice, props] : data.properties) {
             if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
@@ -589,85 +649,24 @@ struct AppState {
             }
           }
           return data.physicalDevices.at(0);
-        });
-
-    createSwapchain();
-
-    constexpr auto fontPixelHeight = 60;
-
-    testText = std::make_unique<TextObject>(
+        })},
+      transfer{device},
+      assets{std::make_unique<Assets>()},
+      swap{std::make_unique<Swap>(device)},
+      renderPass{createRenderPass(device, swap->swapFormat, swap->depthFormat)},
+      pipelineCache{device->createPipelineCache()},
+      textPipeline{device, renderPass.get(), pipelineCache.get()},
+      testFont{"content/fonts/AeroviasBrasilNF.ttf", device, *textPipeline},
+      testText{std::make_unique<TextObject>(
         glm::vec2(50.f, 50.f),
         std::string{"Test Text!"},
         60,
-        testFont.font.get());
-
-    transfer = Transfer{device};
-    std::vector<std::shared_ptr<vka::Buffer>> stagingBuffers;
-
-    if (auto cmd = transfer.cmd.lock()) {
-      cmd->begin();
-
-      cmd->end();
-      device->queueSubmit({}, {cmd}, {}, transfer.fence.get());
-    }
-    transfer.fence->wait();
-    stagingBuffers.clear();
-    transfer.fence->reset();
-
-    shapesAsset = loadCollection("content/models/shapes.gltf");
-    device->debugNameObject<VkBuffer>(
-        VK_OBJECT_TYPE_BUFFER, *shapesAsset.buffer, "ShapesVertexBuffer");
-    terrainAsset = loadCollection("content/models/terrain.gltf");
-    device->debugNameObject<VkBuffer>(
-        VK_OBJECT_TYPE_BUFFER, *terrainAsset.buffer, "TerrainVertexBuffer");
-
-    for (auto& state : bufState) {
-    }
-
-    vka::RenderPassCreateInfo renderPassCreateInfo;
-    auto colorAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
-        0,
-        swap->swapFormat,
-        VK_SAMPLE_COUNT_1_BIT,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_STORE,
-        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-    auto depthAttachmentDesc = renderPassCreateInfo.addAttachmentDescription(
-        0,
-        swap->depthFormat,
-        VK_SAMPLE_COUNT_1_BIT,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-    auto subpass3D = renderPassCreateInfo.addGraphicsSubpass();
-    subpass3D->addColorRef(
-        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    subpass3D->setDepthRef({depthAttachmentDesc,
-                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-    auto subpassText = renderPassCreateInfo.addGraphicsSubpass();
-    subpassText->addColorRef(
-        {colorAttachmentDesc, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
-    renderPassCreateInfo.addSubpassDependency(
-        subpass3D,
-        subpassText,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
-        VK_DEPENDENCY_BY_REGION_BIT);
-
-    MultiLogger::get()->info("creating render pass");
-    renderPass = device->createRenderPass(renderPassCreateInfo);
-
-    MultiLogger::get()->info("creating pipeline cache");
-    pipelineCache = device->createPipelineCache();
+        testFont.font.get())},
+      p3DPipeline{device, renderPass.get(), pipelineCache.get()},
+      bufState{createBufferedStates(device, &p3DPipeline)} {
+    mainCamera.setDimensions(2, 2);
+    mainCamera.setPosition({0.f, 0.f, 0.f});
+    mainCamera.setNearFar(-10, 10);
 
     engine->run();
   }
