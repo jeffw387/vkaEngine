@@ -218,7 +218,14 @@ public:
   }
 
   vulkan_vector(const vulkan_vector<T>&) = delete;
-  vulkan_vector<T>& operator=(const vulkan_vector<T>&) = delete;
+  vulkan_vector<T>& operator=(const vulkan_vector<T>& other) {
+    if (this != &other) {
+      resize(other.size());
+      std::memcpy(m_storage, other.m_storage, other.size() * other.m_alignment);
+      m_size = other.size();
+    }
+  }
+
   vulkan_vector(vulkan_vector<T>&& other) { *this = std::move(other); }
   vulkan_vector<T>& operator=(vulkan_vector<T>&& other) {
     if (this != &other) {
@@ -276,7 +283,7 @@ public:
     }
   }
 
-  void reserve(size_t new_cap) {
+  void reserve(size_t new_cap, bool preserve = false) {
     // TODO: does disallowing 0 cause problems here?
     // can't create a 0-sized vulkan buffer
     if (new_cap == 0) {
@@ -286,7 +293,9 @@ public:
       auto newBuffer = m_device->createBuffer(
           new_cap * m_alignment, m_buffer_usage, m_memory_usage);
       void* newStoragePtr = newBuffer->map();
-      std::memcpy(newStoragePtr, m_storage, m_size * m_alignment);
+      if (preserve) {
+        std::memcpy(newStoragePtr, m_storage, m_size * m_alignment);
+      }
       m_vulkan_buffer = std::move(newBuffer);
       m_storage = reinterpret_cast<T*>(newStoragePtr);
       m_capacity = new_cap;
