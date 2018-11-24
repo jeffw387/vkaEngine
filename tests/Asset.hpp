@@ -24,6 +24,7 @@ struct Model {
 };
 
 struct Collection {
+  std::vector<uint8_t> data;
   std::shared_ptr<vka::Buffer> buffer;
   std::map<uint64_t, Model> models;
 };

@@ -184,10 +184,7 @@ struct BufferedState {
 };
 
 struct Assets {
-  asset::Collection loadCollection(
-      vka::Device* device,
-      Transfer* transfer,
-      const std::string& assetPath) {
+  asset::Collection loadCollection(const std::string& assetPath) {
     tinygltf::Model gltfModel;
     std::string loadWarning;
     std::string loadError;
@@ -218,34 +215,8 @@ struct Assets {
       result.models[nodeIndex] = std::move(model);
       ++nodeIndex;
     }
-    auto bufferSize = gltfModel.buffers.at(0).data.size();
-    result.buffer = device->createBuffer(
-        bufferSize,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VMA_MEMORY_USAGE_GPU_ONLY,
-        true);
-    auto stagingBuffer = device->createBuffer(
-        bufferSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        false);
-    device->debugNameObject<VkBuffer>(
-        VK_OBJECT_TYPE_BUFFER, *stagingBuffer, "ModelVertexIndexStaging");
+    result.data = gltfModel.buffers.at(0).data;
 
-    void* stagePtr = stagingBuffer->map();
-    std::memcpy(stagePtr, gltfModel.buffers[0].data.data(), bufferSize);
-    stagingBuffer->flush();
-
-    transfer->pool->reset();
-    if (auto cmd = transfer->cmd.lock()) {
-      cmd->begin();
-      cmd->copyBuffer(stagingBuffer, result.buffer, {{0U, 0U, bufferSize}});
-      cmd->end();
-      device->queueSubmit({}, {cmd}, {}, transfer->fence.get());
-    }
-    transfer->fence->wait();
-    transfer->fence->reset();
     return result;
   }
 
@@ -254,9 +225,8 @@ struct Assets {
   asset::Collection terrain;
 
   Assets(vka::Device* device, Transfer* transfer)
-      : shapes{loadCollection(device, transfer, "content/models/shapes.gltf")},
-        terrain{
-            loadCollection(device, transfer, "content/models/terrain.gltf")} {}
+      : shapes{loadCollection("content/models/shapes.gltf")},
+        terrain{loadCollection("content/models/terrain.gltf")} {}
 };
 
 auto createRenderPass = [](vka::Device* device,
@@ -400,11 +370,7 @@ struct AppState {
     (*current.cameraUniform)[0].view = mainCamera.getView();
     current.cameraUniform->flushMemory(device);
 
-    auto instanceSize = last.instanceUniform->size();
-    current.instanceUniform->resize(instanceSize);
-    for (auto i = 0U; i < instanceSize; ++i) {
-      (*current.instanceUniform)[i] = (*last.instanceUniform)[i];
-    }
+    *current.instanceUniform = *last.instanceUniform;
     current.instanceUniform->flushMemory(device);
   }
 
@@ -622,6 +588,78 @@ struct AppState {
     }
   }
 
+  void uploadData(std::shared_ptr<vka::CommandBuffer> cmd, vka::Fence* fence) {
+    cmd->begin();
+    size_t indexSize =
+        testFont.vertexData->indices.size() * sizeof(Text::Index);
+    auto indexStaging = device->createBuffer(
+        indexSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        true);
+    size_t vertexSize =
+        testFont.vertexData->vertices.size() * sizeof(Text::Vertex);
+    auto vertexStaging = device->createBuffer(
+        vertexSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        true);
+    auto pixelSpan = gsl::span<uint8_t>{testFont.pixels};
+    auto textureStaging = device->createBuffer(
+        pixelSpan.length_bytes(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VMA_MEMORY_USAGE_CPU_ONLY,
+        true);
+    cmd->recordBufferUpload<Text::Index>(
+        {testFont.vertexData->indices}, indexStaging, testFont.indexBuffer, 0);
+    cmd->recordBufferUpload<Text::Vertex>(
+        {testFont.vertexData->vertices},
+        vertexStaging,
+        testFont.vertexBuffer,
+        0);
+    cmd->recordImageBarrier(
+        {},
+        {THSVS_ACCESS_TRANSFER_WRITE},
+        testFont.image,
+        THSVS_IMAGE_LAYOUT_OPTIMAL,
+        true);
+    cmd->recordImageArrayUpload<uint8_t>(
+        pixelSpan, textureStaging, testFont.image);
+    cmd->recordImageBarrier(
+        {THSVS_ACCESS_TRANSFER_WRITE},
+        {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
+        testFont.image,
+        THSVS_IMAGE_LAYOUT_OPTIMAL);
+
+    auto uploadCollection = [&](asset::Collection& collection) {
+      auto bufferSize = collection.data.size();
+      collection.buffer = device->createBuffer(
+          bufferSize,
+          VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+              VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+          VMA_MEMORY_USAGE_GPU_ONLY,
+          true);
+      auto stagingBuffer = device->createBuffer(
+          bufferSize,
+          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+          VMA_MEMORY_USAGE_CPU_ONLY,
+          false);
+
+      void* stagePtr = stagingBuffer->map();
+      std::memcpy(stagePtr, collection.data.data(), bufferSize);
+      stagingBuffer->flush();
+
+      cmd->copyBuffer(stagingBuffer, collection.buffer, {{0U, 0U, bufferSize}});
+      return stagingBuffer;
+    };
+    auto shapesStaging = uploadCollection(assets->shapes);
+    auto terrainStaging = uploadCollection(assets->terrain);
+    cmd->end();
+    device->queueSubmit({}, {cmd}, {}, fence);
+    fence->wait();
+    fence->reset();
+  }
+
   AppState()
       : defaultWidth{900U},
         defaultHeight{900U},
@@ -669,12 +707,9 @@ struct AppState {
     mainCamera.setPosition({0.f, 0.f, 0.f});
     mainCamera.setNearFar(-10, 10);
 
-    testFont.recordUpload(device, transfer);
     if (auto cmd = transfer.cmd.lock()) {
-      device->queueSubmit({}, {cmd}, {}, transfer.fence.get());
+      uploadData(cmd, transfer.fence.get());
     }
-    transfer.fence->wait();
-    transfer.fence->reset();
 
     engine->run();
   }
