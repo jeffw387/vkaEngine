@@ -370,7 +370,7 @@ struct AppState {
     (*current.cameraUniform)[0].view = mainCamera.getView();
     current.cameraUniform->flushMemory(device);
 
-    *current.instanceUniform = *last.instanceUniform;
+    current.instanceUniform->copy_from(*last.instanceUniform);
     current.instanceUniform->flushMemory(device);
   }
 

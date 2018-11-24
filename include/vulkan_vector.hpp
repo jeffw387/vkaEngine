@@ -222,13 +222,13 @@ public:
   }
 
   vulkan_vector(const vulkan_vector<T>&) = delete;
-  vulkan_vector<T>& operator=(const vulkan_vector<T>& other) {
-    if (this != &other) {
+  vulkan_vector<T>& operator=(const vulkan_vector<T>& other) = delete;
+
+  void copy_from(const vulkan_vector<T, subscriberT>& other) {
       resize(other.size());
       std::memcpy(m_storage, other.m_storage, other.size() * other.m_alignment);
       m_size = other.size();
     }
-  }
 
   vulkan_vector(vulkan_vector<T>&& other) { *this = std::move(other); }
   vulkan_vector<T>& operator=(vulkan_vector<T>&& other) {
