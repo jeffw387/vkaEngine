@@ -699,7 +699,7 @@ struct AppState {
         testText{std::make_unique<TextObject>(
             glm::vec2(50.f, 50.f),
             std::string{"Test Text!"},
-            60,
+            120,
             testFont.font.get())},
         p3DPipeline{device, renderPass.get(), pipelineCache.get()},
         bufState{createBufferedStates(device, &p3DPipeline)} {
