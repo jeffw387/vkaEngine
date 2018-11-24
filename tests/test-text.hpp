@@ -165,44 +165,4 @@ struct Font {
     (*descriptor)(*imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     descriptorSet->validate(*device);
   }
-
-  // TODO: fix lifetimes of staging buffers, probably completely rework data upload
-  void recordUpload(vka::Device* device, Transfer& transfer) {
-    size_t indexSize = vertexData->indices.size() * sizeof(Text::Index);
-    auto indexStaging = device->createBuffer(
-        indexSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        true);
-    size_t vertexSize = vertexData->vertices.size() * sizeof(Text::Vertex);
-    auto vertexStaging = device->createBuffer(
-        vertexSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        true);
-    auto pixelSpan = gsl::span<uint8_t>{pixels};
-    auto textureStaging = device->createBuffer(
-        pixelSpan.length_bytes(),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VMA_MEMORY_USAGE_CPU_ONLY,
-        true);
-    if (auto cmd = transfer.cmd.lock()) {
-      cmd->recordBufferUpload<Text::Index>(
-          {vertexData->indices}, indexStaging, indexBuffer, 0);
-      cmd->recordBufferUpload<Text::Vertex>(
-          {vertexData->vertices}, vertexStaging, vertexBuffer, 0);
-      cmd->recordImageBarrier(
-          {},
-          {THSVS_ACCESS_TRANSFER_WRITE},
-          image,
-          THSVS_IMAGE_LAYOUT_OPTIMAL,
-          true);
-      cmd->recordImageArrayUpload<uint8_t>(pixelSpan, textureStaging, image);
-      cmd->recordImageBarrier(
-          {THSVS_ACCESS_TRANSFER_WRITE},
-          {THSVS_ACCESS_FRAGMENT_SHADER_READ_SAMPLED_IMAGE_OR_UNIFORM_TEXEL_BUFFER},
-          image,
-          THSVS_IMAGE_LAYOUT_OPTIMAL);
-    }
-  }
 };
