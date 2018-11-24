@@ -189,11 +189,15 @@ public:
     if (subscriberT::bufferType() == BufferType::DynamicUniform) {
       auto minDynamicUboAlignment =
           device->getDeviceProperties().limits.minUniformBufferOffsetAlignment;
-      if (sizeof(T) < minDynamicUboAlignment) {
+      auto elementSize = sizeof(T);
+      if (elementSize < minDynamicUboAlignment) {
         m_alignment = minDynamicUboAlignment;
       } else {
         m_alignment = static_cast<VkDeviceSize>(
-            std::ceil(double(sizeof(T)) / double(minDynamicUboAlignment)));
+            std::ceil(
+                static_cast<double>(elementSize) /
+                static_cast<double>(minDynamicUboAlignment)) *
+            minDynamicUboAlignment);
       }
     } else {
       m_alignment = sizeof(T);
