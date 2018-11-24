@@ -208,23 +208,34 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
 
   msdfgen::edgeColoringSimple(shape, 3);
   shape.normalize();
-  double left{};
-  double bottom{};
-  double right{};
-  double top{};
-  shape.bounds(left, bottom, right, top);
+  Rect<double> shapeBounds{};
+  shape.bounds(
+    shapeBounds.left,
+    shapeBounds.bottom,
+    shapeBounds.right,
+    shapeBounds.top);
   auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
-  msdfgen::Vector2 scale{scaleFactor, scaleFactor};
-  msdfgen::Vector2 translate{
-      calcTranslation(left, right, 0, bitmapSize / scaleFactor),
-      calcTranslation(bottom, top, 0, bitmapSize / scaleFactor)};
-  auto range = 2 / scaleFactor;
-  msdfgen::generateMSDF(output, shape, range, scale, translate);
+  auto bitmapSizeShapeUnits = bitmapSize / scaleFactor;
+  msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
+  msdfgen::Vector2 translateShapeUnits{
+      calcTranslation(shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
+      calcTranslation(shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
+  auto rangeShapeUnits = 2 / scaleFactor;
+  msdfgen::generateMSDF(output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
 
-  auto left_trans = static_cast<float>(left + translate.x) * scaleFactor;
-  auto top_trans = static_cast<float>(-(top + translate.y)) * scaleFactor;
-  auto right_trans = static_cast<float>(right + translate.x) * scaleFactor;
-  auto bottom_trans = static_cast<float>(-(bottom + translate.y)) * scaleFactor;
+  Rect<float> scaledBounds{
+    static_cast<float>(shapeBounds.left * scaleFactor),
+    static_cast<float>(shapeBounds.bottom * scaleFactor),
+    static_cast<float>(shapeBounds.right * scaleFactor),
+    static_cast<float>(shapeBounds.top * scaleFactor)
+  };
+  msdfgen::Vector2 translateScaled = translateShapeUnits * scaleToOutput;
+  Rect<float> uv{
+    shapeBounds.left * scaleFactor + translateScaled.x,
+    shapeBounds.bottom * scaleFactor + translateScaled.y,
+    shapeBounds.right * scaleFactor - translateScaled.x,
+    shapeBounds.top * scaleFactor - translateScaled.y
+  };
   return std::make_unique<MSDFGlyph>(
       MSDFGlyph{std::move(output),
                 {left_trans, top_trans, right_trans, bottom_trans},

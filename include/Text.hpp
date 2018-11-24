@@ -43,20 +43,18 @@ struct VertexData {
   std::map<uint8_t /*GlyphIndex*/, size_t /*IndexOffset*/> offsets;
 };
 
+template<typename T>
+struct Rect {
+  T left;
+  T top;
+  T right;
+  T bottom;
+};
+
 struct MSDFGlyph {
   msdfgen::Bitmap<msdfgen::FloatRGB> bitmap;
-  struct Pos {
-    float left;
-    float top;
-    float right;
-    float bottom;
-  } pos;
-  struct UV {
-    float left;
-    float top;
-    float right;
-    float bottom;
-  } uv;
+  Rect<float> pos;
+  Rect<float> uv;
   uint32_t arrayIndex;
 };
 
