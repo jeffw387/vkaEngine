@@ -43,7 +43,7 @@ struct VertexData {
   std::map<uint8_t /*GlyphIndex*/, size_t /*IndexOffset*/> offsets;
 };
 
-template<typename T>
+template <typename T>
 struct Rect {
   T left;
   T top;

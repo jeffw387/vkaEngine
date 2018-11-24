@@ -21,7 +21,7 @@ float Font<>::getAdvance(int glyphIndex, int fontPixelHeight) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
-  return vectorToRenderRatio(fontPixelHeight) * static_cast<float>(adv + lsb);
+  return vectorToRenderRatio(fontPixelHeight) * static_cast<float>(adv);
 }
 
 template <>
@@ -187,7 +187,9 @@ auto makeShape = [](auto stbtt_shape) {
   return shape;
 };
 
-auto findCenter = [](double min, double max) { return (max - min) * 0.5; };
+auto findCenter = [](double min, double max) {
+  return ((max - min) * 0.5) + min;
+};
 
 // calculate translation to center shape in frame
 auto calcTranslation =
@@ -210,39 +212,40 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
   shape.normalize();
   Rect<double> shapeBounds{};
   shape.bounds(
-    shapeBounds.left,
-    shapeBounds.bottom,
-    shapeBounds.right,
-    shapeBounds.top);
+      shapeBounds.left, shapeBounds.bottom, shapeBounds.right, shapeBounds.top);
   auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
   auto bitmapSizeShapeUnits = bitmapSize / scaleFactor;
   msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
   msdfgen::Vector2 translateShapeUnits{
-      calcTranslation(shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
-      calcTranslation(shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
+      calcTranslation(
+          shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
+      calcTranslation(
+          shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
   auto rangeShapeUnits = 2 / scaleFactor;
-  msdfgen::generateMSDF(output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
+  msdfgen::generateMSDF(
+      output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
 
-  Rect<float> scaledBounds{
-    static_cast<float>(shapeBounds.left * scaleFactor),
-    static_cast<float>(shapeBounds.bottom * scaleFactor),
-    static_cast<float>(shapeBounds.right * scaleFactor),
-    static_cast<float>(shapeBounds.top * scaleFactor)
-  };
   msdfgen::Vector2 translateScaled = translateShapeUnits * scaleToOutput;
-  Rect<float> uv{
-    shapeBounds.left * scaleFactor + translateScaled.x,
-    shapeBounds.bottom * scaleFactor + translateScaled.y,
-    shapeBounds.right * scaleFactor - translateScaled.x,
-    shapeBounds.top * scaleFactor - translateScaled.y
-  };
+  Rect<float> scaledBounds{
+      static_cast<float>(shapeBounds.left * scaleFactor),
+      static_cast<float>(shapeBounds.top * scaleFactor),
+      static_cast<float>(shapeBounds.right * scaleFactor),
+      static_cast<float>(shapeBounds.bottom * scaleFactor)};
+  Rect<float> flippedYBounds = {scaledBounds.left,
+                                -scaledBounds.top,
+                                scaledBounds.right,
+                                -scaledBounds.bottom};
+  Rect<float> translatedBounds{
+      scaledBounds.left + static_cast<float>(translateScaled.x),
+      scaledBounds.top + static_cast<float>(translateScaled.y),
+      scaledBounds.right + static_cast<float>(translateScaled.x),
+      scaledBounds.bottom + static_cast<float>(translateScaled.y)};
+  Rect<float> uv{translatedBounds.left / bitmapSize,
+                 (bitmapSize - translatedBounds.top) / bitmapSize,
+                 translatedBounds.right / bitmapSize,
+                 (bitmapSize - translatedBounds.bottom) / bitmapSize};
   return std::make_unique<MSDFGlyph>(
-      MSDFGlyph{std::move(output),
-                {left_trans, top_trans, right_trans, bottom_trans},
-                {left_trans / bitmapSize,
-                 top_trans / bitmapSize,
-                 right_trans / bitmapSize,
-                 bottom_trans / bitmapSize}});
+      MSDFGlyph{std::move(output), std::move(flippedYBounds), std::move(uv)});
 }
 
 template <>
