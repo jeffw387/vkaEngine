@@ -6,12 +6,6 @@ namespace Text {
 using namespace ranges;
 
 template <>
-float Font<>::msdfToRenderRatio(int fontPixelHeight) {
-  return static_cast<float>(fontPixelHeight) /
-         static_cast<float>(originalPixelHeight);
-}
-
-template <>
 float Font<>::vectorToRenderRatio(int fontPixelHeight) {
   return stbtt_ScaleForPixelHeight(&fontInfo, fontPixelHeight);
 }
@@ -21,7 +15,7 @@ float Font<>::getAdvance(int glyphIndex, int fontPixelHeight) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
-  return vectorToRenderRatio(fontPixelHeight) * static_cast<float>(adv);
+  return static_cast<float>(adv);
 }
 
 template <>
@@ -29,9 +23,9 @@ float Font<>::getKerning(
     int glyphIndex1,
     int glyphIndex2,
     int fontPixelHeight) {
-  return vectorToRenderRatio(fontPixelHeight) *
-         static_cast<float>(
-             stbtt_GetGlyphKernAdvance(&fontInfo, glyphIndex1, glyphIndex2));
+  auto unscaledKern = static_cast<float>(
+      stbtt_GetGlyphKernAdvance(&fontInfo, glyphIndex1, glyphIndex2));
+  return unscaledKern;
 }
 
 template <>
@@ -225,25 +219,26 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
   msdfgen::generateMSDF(
       output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
 
-  msdfgen::Vector2 translateScaled = translateShapeUnits * scaleToOutput;
-  Rect<float> scaledBounds{
-      static_cast<float>(shapeBounds.left * scaleFactor),
-      static_cast<float>(shapeBounds.top * scaleFactor),
-      static_cast<float>(shapeBounds.right * scaleFactor),
-      static_cast<float>(shapeBounds.bottom * scaleFactor)};
-  Rect<float> flippedYBounds = {scaledBounds.left,
-                                -scaledBounds.top,
-                                scaledBounds.right,
-                                -scaledBounds.bottom};
+  // msdfgen::Vector2 translateScaled = translateShapeUnits * scaleToOutput;
+  // Rect<float> scaledBounds{
+  //     static_cast<float>(shapeBounds.left * scaleFactor),
+  //     static_cast<float>(shapeBounds.top * scaleFactor),
+  //     static_cast<float>(shapeBounds.right * scaleFactor),
+  //     static_cast<float>(shapeBounds.bottom * scaleFactor)};
+  Rect<float> flippedYBounds = {static_cast<float>(shapeBounds.left),
+                                static_cast<float>(-shapeBounds.top),
+                                static_cast<float>(shapeBounds.right),
+                                static_cast<float>(-shapeBounds.bottom)};
   Rect<float> translatedBounds{
-      scaledBounds.left + static_cast<float>(translateScaled.x),
-      scaledBounds.top + static_cast<float>(translateScaled.y),
-      scaledBounds.right + static_cast<float>(translateScaled.x),
-      scaledBounds.bottom + static_cast<float>(translateScaled.y)};
-  Rect<float> uv{translatedBounds.left / bitmapSize,
-                 (bitmapSize - translatedBounds.top) / bitmapSize,
-                 translatedBounds.right / bitmapSize,
-                 (bitmapSize - translatedBounds.bottom) / bitmapSize};
+      static_cast<float>(shapeBounds.left + translateShapeUnits.x),
+      static_cast<float>(shapeBounds.top + translateShapeUnits.y),
+      static_cast<float>(shapeBounds.right + translateShapeUnits.x),
+      static_cast<float>(shapeBounds.bottom + translateShapeUnits.y)};
+  Rect<float> uv{
+      translatedBounds.left / bitmapSizeShapeUnits,
+      (bitmapSizeShapeUnits - translatedBounds.top) / bitmapSizeShapeUnits,
+      translatedBounds.right / bitmapSizeShapeUnits,
+      (bitmapSizeShapeUnits - translatedBounds.bottom) / bitmapSizeShapeUnits};
   return std::make_unique<MSDFGlyph>(
       MSDFGlyph{std::move(output), std::move(flippedYBounds), std::move(uv)});
 }
@@ -273,7 +268,7 @@ Font<>::Font(fs::path fontPath, int msdfSize, int padding)
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
   }
-  originalPixelHeight = msdfSize - (padding * 2);
+  auto originalPixelHeight = msdfSize - (padding * 2);
   auto scaleFactor = vectorToRenderRatio(originalPixelHeight);
   glyphMap = getGlyphMap(msdfSize, scaleFactor);
   uint32_t arrayIndex{};

@@ -68,7 +68,6 @@ public:
   uint32_t getArrayIndex(int glyphIndex);
   float getAdvance(int glyphIndex, int fontPixelHeight);
   float getKerning(int glyphIndex1, int glyphIndex2, int fontPixelHeight);
-  float msdfToRenderRatio(int fontPixelHeight);
   float vectorToRenderRatio(int fontPixelHeight);
   auto getFontBytes() { return fontBytes; }
   std::unique_ptr<VertexData> getVertexData();
@@ -83,7 +82,6 @@ private:
   MSDFGlyphMap getGlyphMap(int bitmapSize, float scaleFactor);
 
   int msdfSize;
-  int originalPixelHeight;
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;

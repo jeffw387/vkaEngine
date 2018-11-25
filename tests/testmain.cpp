@@ -453,12 +453,13 @@ struct AppState {
       pushData.fragment.clipSpaceScale = {1.f / swapExtent.width,
                                           1.f / swapExtent.height};
       auto& currentText = testText;
-      pushData.fragment.fontColor = currentText->color;
       auto currentFont = currentText->font;
-      pushData.vertex.textScale =
-          currentFont->msdfToRenderRatio(currentText->pixelHeight);
-
+      auto currentScale =
+          currentFont->vectorToRenderRatio(currentText->pixelHeight);
       auto& currentString = currentText->str;
+      pushData.fragment.fontColor = currentText->color;
+      pushData.vertex.textScale = currentScale;
+
       glm::vec2 pen = currentText->screenPosition;
       for (int i{}; i < currentString.size(); ++i) {
         auto currentCharCode = currentString[i];
@@ -498,7 +499,8 @@ struct AppState {
             testFont.vertexData->offsets[currentGlyph],
             0,
             0);
-        pen.x += advanceX + kerning;
+        auto kernedAdvance = (advanceX + kerning) * currentScale;
+        pen.x += kernedAdvance;
       }
     }
   }
