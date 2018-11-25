@@ -309,6 +309,8 @@ struct AppState {
   TextPipeline textPipeline;
   Font testFont;
   std::unique_ptr<TextObject> testText;
+  vka::Clock::time_point lastRenderTime;
+  std::unique_ptr<TextObject> fps_text;
   P3DPipeline p3DPipeline;
 
   std::array<BufferedState, vka::BufferCount> bufState;
@@ -502,12 +504,20 @@ struct AppState {
         auto kernedAdvance = (advanceX + kerning) * currentScale;
         pen.x += kernedAdvance;
       }
+      renderText(fps_text);
     }
   }
 
   void renderCallback(vka::Engine* engine) {
     auto renderIndex = engine->currentRenderIndex();
     auto& render = bufState[renderIndex];
+
+    auto now = vka::Clock::now();
+    auto frameTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                         now - lastRenderTime)
+                         .count();
+    lastRenderTime = now;
+    fps_text->str = std::to_string(frameTime) + "ms";
 
     if (auto index = swap->swapchain->acquireImage(*render.frameAcquired)) {
       render.swapImageIndex = index.value();
@@ -704,6 +714,12 @@ struct AppState {
             glm::vec2(50.f, 50.f),
             std::string{"Test Text!"},
             120,
+            testFont.font.get())},
+        lastRenderTime{},
+        fps_text{std::make_unique<TextObject>(
+            glm::vec2(float(defaultWidth) - 100.f, 50.f),
+            std::string{"NaN"},
+            60,
             testFont.font.get())},
         p3DPipeline{device, renderPass.get(), pipelineCache.get()},
         bufState{createBufferedStates(device, &p3DPipeline)} {
