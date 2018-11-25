@@ -83,6 +83,13 @@ copy_content(
   "${CMAKE_CURRENT_BINARY_DIR}/content/fonts"
 )
 
+set(liberation LiberationSans-Regular.ttf)
+copy_content(
+  liberation
+  "${CMAKE_CURRENT_SOURCE_DIR}/content/fonts"
+  "${CMAKE_CURRENT_BINARY_DIR}/content/fonts"
+)
+
 set(anke Anke.ttf)
 copy_content(
   anke

@@ -695,7 +695,9 @@ struct AppState {
             createRenderPass(device, swap->swapFormat, swap->depthFormat)},
         pipelineCache{device->createPipelineCache()},
         textPipeline{device, renderPass.get(), pipelineCache.get()},
-        testFont{"content/fonts/AeroviasBrasilNF.ttf", device, textPipeline},
+        testFont{"content/fonts/LiberationSans-Regular.ttf",
+                 device,
+                 textPipeline},
         testText{std::make_unique<TextObject>(
             glm::vec2(50.f, 50.f),
             std::string{"Test Text!"},
