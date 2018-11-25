@@ -454,7 +454,7 @@ struct AppState {
                                         1.f / swapExtent.height};
       pushData.fragment.clipSpaceScale = {1.f / swapExtent.width,
                                           1.f / swapExtent.height};
-      auto& currentText = testText;
+      auto renderText = [&](auto& currentText) {
       auto currentFont = currentText->font;
       auto currentScale =
           currentFont->vectorToRenderRatio(currentText->pixelHeight);
@@ -504,6 +504,8 @@ struct AppState {
         auto kernedAdvance = (advanceX + kerning) * currentScale;
         pen.x += kernedAdvance;
       }
+      };
+      renderText(testText);
       renderText(fps_text);
     }
   }
