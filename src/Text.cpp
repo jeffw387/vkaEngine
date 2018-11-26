@@ -189,8 +189,8 @@ template <typename T>
 auto calcTranslation = [](T shapeMin, T shapeMax, T frameMin, T frameMax) {
   auto shapeCenter = findCenter<T>(shapeMin, shapeMax);
   auto frameCenter = findCenter<T>(frameMin, frameMax);
-      return frameCenter - shapeCenter;
-    };
+  return frameCenter - shapeCenter;
+};
 
 template <>
 std::unique_ptr<MSDFGlyph>
@@ -203,16 +203,24 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
 
   msdfgen::edgeColoringSimple(shape, 3);
   shape.normalize();
-  Rect<double> shapeBounds{};
-  shape.bounds(
-      shapeBounds.left, shapeBounds.bottom, shapeBounds.right, shapeBounds.top);
+  Rect<int> shapeBounds{};
+  // shape.bounds(
+  //     shapeBounds.left, shapeBounds.bottom, shapeBounds.right,
+  //     shapeBounds.top);
+  stbtt_GetGlyphBox(
+      &fontInfo,
+      glyphIndex,
+      &shapeBounds.left,
+      &shapeBounds.top,
+      &shapeBounds.right,
+      &shapeBounds.bottom);
   auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
   auto bitmapSizeShapeUnits = bitmapSize / scaleFactor;
   msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
   msdfgen::Vector2 translateShapeUnits{
-      calcTranslation(
+      calcTranslation<double>(
           shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
-      calcTranslation(
+      calcTranslation<double>(
           shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
   auto rangeShapeUnits = 2.f / scaleFactor;
   msdfgen::generateMSDF(
