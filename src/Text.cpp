@@ -181,15 +181,14 @@ auto makeShape = [](auto stbtt_shape) {
   return shape;
 };
 
-auto findCenter = [](double min, double max) {
-  return ((max - min) * 0.5) + min;
-};
+template <typename T>
+auto findCenter = [](T min, T max) { return ((max - min) * 0.5) + min; };
 
 // calculate translation to center shape in frame
-auto calcTranslation =
-    [](double shapeMin, double shapeMax, double frameMin, double frameMax) {
-      auto shapeCenter = findCenter(shapeMin, shapeMax);
-      auto frameCenter = findCenter(frameMin, frameMax);
+template <typename T>
+auto calcTranslation = [](T shapeMin, T shapeMax, T frameMin, T frameMax) {
+  auto shapeCenter = findCenter<T>(shapeMin, shapeMax);
+  auto frameCenter = findCenter<T>(frameMin, frameMax);
       return frameCenter - shapeCenter;
     };
 
@@ -234,11 +233,16 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
       static_cast<float>(shapeBounds.top + translateShapeUnits.y),
       static_cast<float>(shapeBounds.right + translateShapeUnits.x),
       static_cast<float>(shapeBounds.bottom + translateShapeUnits.y)};
+  auto paddingShapeUnits = padding / scaleFactor;
+  Rect<float> paddedBounds = {translatedBounds.left - paddingShapeUnits,
+                              translatedBounds.top - paddingShapeUnits,
+                              translatedBounds.right + paddingShapeUnits,
+                              translatedBounds.bottom + paddingShapeUnits};
   Rect<float> uv{
-      translatedBounds.left / bitmapSizeShapeUnits,
-      (bitmapSizeShapeUnits - translatedBounds.top) / bitmapSizeShapeUnits,
-      translatedBounds.right / bitmapSizeShapeUnits,
-      (bitmapSizeShapeUnits - translatedBounds.bottom) / bitmapSizeShapeUnits};
+      paddedBounds.left / bitmapSizeShapeUnits,
+      (bitmapSizeShapeUnits - paddedBounds.top) / bitmapSizeShapeUnits,
+      paddedBounds.right / bitmapSizeShapeUnits,
+      (bitmapSizeShapeUnits - paddedBounds.bottom) / bitmapSizeShapeUnits};
   return std::make_unique<MSDFGlyph>(
       MSDFGlyph{std::move(output), std::move(flippedYBounds), std::move(uv)});
 }
@@ -263,7 +267,7 @@ MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize, float scaleFactor) {
 
 template <>
 Font<>::Font(fs::path fontPath, int msdfSize, int padding)
-    : msdfSize(msdfSize) {
+    : msdfSize(msdfSize), padding(padding) {
   if (auto loadResult = vka::loadBinaryFile({fontPath})) {
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);

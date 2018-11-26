@@ -82,6 +82,7 @@ private:
   MSDFGlyphMap getGlyphMap(int bitmapSize, float scaleFactor);
 
   int msdfSize;
+  int padding;
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;
