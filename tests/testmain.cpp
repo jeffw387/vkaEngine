@@ -713,15 +713,15 @@ struct AppState {
                  device,
                  textPipeline},
         testText{std::make_unique<TextObject>(
-            glm::vec2(50.f, 50.f),
+            glm::vec2(50.f, 100.f),
             std::string{"Test Text!"},
-            120,
+            100,
             testFont.font.get())},
         lastRenderTime{},
         fps_text{std::make_unique<TextObject>(
             glm::vec2(float(defaultWidth) - 100.f, 50.f),
             std::string{"NaN"},
-            60,
+            30,
             testFont.font.get())},
         p3DPipeline{device, renderPass.get(), pipelineCache.get()},
         bufState{createBufferedStates(device, &p3DPipeline)} {
