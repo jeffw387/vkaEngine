@@ -455,55 +455,55 @@ struct AppState {
       pushData.fragment.clipSpaceScale = {2.f / swapExtent.width,
                                           2.f / swapExtent.height};
       auto renderText = [&](auto& currentText) {
-      auto currentFont = currentText->font;
-      auto currentScale =
-          currentFont->vectorToRenderRatio(currentText->pixelHeight);
-      auto& currentString = currentText->str;
-      pushData.fragment.fontColor = currentText->color;
-      pushData.vertex.textScale = currentScale;
+        auto currentFont = currentText->font;
+        auto currentScale =
+            currentFont->vectorToRenderRatio(currentText->pixelHeight);
+        auto& currentString = currentText->str;
+        pushData.fragment.fontColor = currentText->color;
+        pushData.vertex.textScale = currentScale;
 
-      glm::vec2 pen = currentText->screenPosition;
-      for (int i{}; i < currentString.size(); ++i) {
-        auto currentCharCode = currentString[i];
-        int currentGlyph = currentFont->getGlyphIndex(currentCharCode);
-        try {
-          pushData.fragment.glyphIndex =
-              currentFont->getArrayIndex(currentGlyph);
-        } catch (std::exception e) {
-          MultiLogger::get()->error(
-              "Exception thrown getting glyph array index: {}", e.what());
+        glm::vec2 pen = currentText->screenPosition;
+        for (int i{}; i < currentString.size(); ++i) {
+          auto currentCharCode = currentString[i];
+          int currentGlyph = currentFont->getGlyphIndex(currentCharCode);
+          try {
+            pushData.fragment.glyphIndex =
+                currentFont->getArrayIndex(currentGlyph);
+          } catch (std::exception e) {
+            MultiLogger::get()->error(
+                "Exception thrown getting glyph array index: {}", e.what());
+          }
+          int nextGlyph{-1};
+          float kerning{};
+          if ((i + 1) < currentString.size()) {
+            nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
+            kerning = currentFont->getKerning(
+                currentGlyph, nextGlyph, currentText->pixelHeight);
+          }
+          float advanceX =
+              currentFont->getAdvance(currentGlyph, currentText->pixelHeight);
+          pushData.vertex.screenPos = pen - halfExtent;
+          cmd->pushConstants(
+              textPipeline.pipelineLayout,
+              VK_SHADER_STAGE_VERTEX_BIT,
+              offsetof(TextPushData, vertex),
+              sizeof(pushData.vertex),
+              &pushData.vertex);
+          cmd->pushConstants(
+              textPipeline.pipelineLayout,
+              VK_SHADER_STAGE_FRAGMENT_BIT,
+              offsetof(TextPushData, fragment),
+              sizeof(pushData.fragment),
+              &pushData.fragment);
+          cmd->drawIndexed(
+              Text::IndicesPerQuad,
+              1,
+              testFont.vertexData->offsets[currentGlyph],
+              0,
+              0);
+          auto kernedAdvance = (advanceX + kerning) * currentScale;
+          pen.x += kernedAdvance;
         }
-        int nextGlyph{-1};
-        float kerning{};
-        if ((i + 1) < currentString.size()) {
-          nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
-          kerning = currentFont->getKerning(
-              currentGlyph, nextGlyph, currentText->pixelHeight);
-        }
-        float advanceX =
-            currentFont->getAdvance(currentGlyph, currentText->pixelHeight);
-        pushData.vertex.screenPos = pen - halfExtent;
-        cmd->pushConstants(
-            textPipeline.pipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT,
-            offsetof(TextPushData, vertex),
-            sizeof(pushData.vertex),
-            &pushData.vertex);
-        cmd->pushConstants(
-            textPipeline.pipelineLayout,
-            VK_SHADER_STAGE_FRAGMENT_BIT,
-            offsetof(TextPushData, fragment),
-            sizeof(pushData.fragment),
-            &pushData.fragment);
-        cmd->drawIndexed(
-            Text::IndicesPerQuad,
-            1,
-            testFont.vertexData->offsets[currentGlyph],
-            0,
-            0);
-        auto kernedAdvance = (advanceX + kerning) * currentScale;
-        pen.x += kernedAdvance;
-      }
       };
       renderText(testText);
       renderText(fps_text);

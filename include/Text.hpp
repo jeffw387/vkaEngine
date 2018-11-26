@@ -63,7 +63,7 @@ using MSDFGlyphMap = std::map<int, std::unique_ptr<MSDFGlyph>>;
 template <typename T = BasicCharacters>
 class Font {
 public:
-  Font(fs::path fontPath, int msdfSize = 64, int padding = 2);
+  Font(fs::path fontPath, int msdfSize = 32, int padding = 2);
   int getGlyphIndex(int charIndex);
   uint32_t getArrayIndex(int glyphIndex);
   float getAdvance(int glyphIndex, int fontPixelHeight);
