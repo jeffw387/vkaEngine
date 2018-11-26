@@ -215,7 +215,7 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
           shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
       calcTranslation(
           shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
-  auto rangeShapeUnits = 2 / scaleFactor;
+  auto rangeShapeUnits = 2.f / scaleFactor;
   msdfgen::generateMSDF(
       output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
 
