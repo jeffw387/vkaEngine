@@ -450,10 +450,10 @@ struct AppState {
       cmd->setScissor(0, {scissor});
       auto halfExtent =
           glm::vec2((float)swapExtent.width, (float)swapExtent.height) * 0.5f;
-      pushData.vertex.clipSpaceScale = {1.f / swapExtent.width,
-                                        1.f / swapExtent.height};
-      pushData.fragment.clipSpaceScale = {1.f / swapExtent.width,
-                                          1.f / swapExtent.height};
+      pushData.vertex.clipSpaceScale = {2.f / swapExtent.width,
+                                        2.f / swapExtent.height};
+      pushData.fragment.clipSpaceScale = {2.f / swapExtent.width,
+                                          2.f / swapExtent.height};
       auto renderText = [&](auto& currentText) {
       auto currentFont = currentText->font;
       auto currentScale =
