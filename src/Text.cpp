@@ -242,10 +242,10 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
       static_cast<float>(shapeBounds.top + translateShapeUnits.y),
       static_cast<float>(shapeBounds.right + translateShapeUnits.x),
       static_cast<float>(shapeBounds.bottom + translateShapeUnits.y)};
-  // Rect<float> paddedBounds = {translatedBounds.left - paddingShapeUnits,
-  //                             translatedBounds.top - paddingShapeUnits,
-  //                             translatedBounds.right + paddingShapeUnits,
-  //                             translatedBounds.bottom + paddingShapeUnits};
+  Rect<float> paddedBounds = {translatedBounds.left - paddingShapeUnits,
+                              translatedBounds.top - paddingShapeUnits,
+                              translatedBounds.right + paddingShapeUnits,
+                              translatedBounds.bottom + paddingShapeUnits};
   Rect<float> uv{
       translatedBounds.left / bitmapSizeShapeUnits,
       (bitmapSizeShapeUnits - translatedBounds.top) / bitmapSizeShapeUnits,
