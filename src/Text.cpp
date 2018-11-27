@@ -222,7 +222,7 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
           shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
       calcTranslation<double>(
           shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
-  auto rangeShapeUnits = 2.f / scaleFactor;
+  auto rangeShapeUnits = range / scaleFactor;
   msdfgen::generateMSDF(
       output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
 
@@ -232,6 +232,7 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
   //     static_cast<float>(shapeBounds.top * scaleFactor),
   //     static_cast<float>(shapeBounds.right * scaleFactor),
   //     static_cast<float>(shapeBounds.bottom * scaleFactor)};
+  auto paddingShapeUnits = padding / scaleFactor;
   Rect<float> flippedYBounds = {static_cast<float>(shapeBounds.left),
                                 static_cast<float>(-shapeBounds.top),
                                 static_cast<float>(shapeBounds.right),
@@ -241,16 +242,15 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
       static_cast<float>(shapeBounds.top + translateShapeUnits.y),
       static_cast<float>(shapeBounds.right + translateShapeUnits.x),
       static_cast<float>(shapeBounds.bottom + translateShapeUnits.y)};
-  auto paddingShapeUnits = padding / scaleFactor;
-  Rect<float> paddedBounds = {translatedBounds.left - paddingShapeUnits,
-                              translatedBounds.top - paddingShapeUnits,
-                              translatedBounds.right + paddingShapeUnits,
-                              translatedBounds.bottom + paddingShapeUnits};
+  // Rect<float> paddedBounds = {translatedBounds.left - paddingShapeUnits,
+  //                             translatedBounds.top - paddingShapeUnits,
+  //                             translatedBounds.right + paddingShapeUnits,
+  //                             translatedBounds.bottom + paddingShapeUnits};
   Rect<float> uv{
-      paddedBounds.left / bitmapSizeShapeUnits,
-      (bitmapSizeShapeUnits - paddedBounds.top) / bitmapSizeShapeUnits,
-      paddedBounds.right / bitmapSizeShapeUnits,
-      (bitmapSizeShapeUnits - paddedBounds.bottom) / bitmapSizeShapeUnits};
+      translatedBounds.left / bitmapSizeShapeUnits,
+      (bitmapSizeShapeUnits - translatedBounds.top) / bitmapSizeShapeUnits,
+      translatedBounds.right / bitmapSizeShapeUnits,
+      (bitmapSizeShapeUnits - translatedBounds.bottom) / bitmapSizeShapeUnits};
   return std::make_unique<MSDFGlyph>(
       MSDFGlyph{std::move(output), std::move(flippedYBounds), std::move(uv)});
 }
@@ -280,8 +280,8 @@ Font<>::Font(fs::path fontPath, int msdfSize, int padding)
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
   }
-  auto originalPixelHeight = msdfSize - (padding * 2);
-  auto scaleFactor = vectorToRenderRatio(originalPixelHeight);
+  originalPixelHeight = msdfSize - (padding * 2);
+  scaleFactor = vectorToRenderRatio(originalPixelHeight);
   glyphMap = getGlyphMap(msdfSize, scaleFactor);
   uint32_t arrayIndex{};
   for (const auto& [glyphIndex, bitmap] : glyphMap) {
