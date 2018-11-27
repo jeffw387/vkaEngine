@@ -452,12 +452,15 @@ struct AppState {
           glm::vec2((float)swapExtent.width, (float)swapExtent.height) * 0.5f;
       pushData.vertex.clipSpaceScale = {2.f / swapExtent.width,
                                         2.f / swapExtent.height};
-      pushData.fragment.clipSpaceScale = {2.f / swapExtent.width,
-                                          2.f / swapExtent.height};
       auto renderText = [&](auto& currentText) {
         auto currentFont = currentText->font;
         auto currentScale =
             currentFont->vectorToRenderRatio(currentText->pixelHeight);
+        auto msdfScale = static_cast<float>(currentText->pixelHeight) /
+                         currentFont->getOriginalPixelHeight();
+        auto scaledRange = 0.002f * (msdfScale * currentFont->getRange());
+        pushData.fragment.distanceFactor = scaledRange;
+        // currentFont->getScaleFactor() / currentFont->getRange();
         auto& currentString = currentText->str;
         pushData.fragment.fontColor = currentText->color;
         pushData.vertex.textScale = currentScale;

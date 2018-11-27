@@ -46,11 +46,11 @@ struct TextPushData {
     glm::vec3 padding;
   } vertex;
   struct TextFragmentPushData {
-    glm::vec4 fontColor;       // per text object - frag
-    glm::vec2 clipSpaceScale;  // per frame       - vert/frag
+    glm::vec4 fontColor;          // per text object - frag
+    glm::float32 distanceFactor;  // per frame       - vert/frag
     // TODO: send glyph index as third part of uv coords?
     glm::uint32 glyphIndex;  // per draw        - frag
-    glm::float32 padding;
+    glm::float32 padding[2];
   } fragment;
 };
 
