@@ -74,6 +74,9 @@ public:
   std::vector<uint8_t> getTextureData();
   int getTextureSize() { return msdfSize; }
   int getTextureLayerCount() { return glyphMap.size(); }
+  float getRange() { return range; }
+  int getOriginalPixelHeight() { return originalPixelHeight; }
+  float getScaleFactor() { return scaleFactor; }
 
 private:
   std::vector<stbtt_vertex> getGlyphShape(int glyphIndex);
@@ -82,7 +85,10 @@ private:
   MSDFGlyphMap getGlyphMap(int bitmapSize, float scaleFactor);
 
   int msdfSize;
+  int originalPixelHeight;
   int padding;
+  float scaleFactor;
+  const float range = 2.f;
   std::vector<uint8_t> fontBytes;
   stbtt_fontinfo fontInfo;
   T charSet;
