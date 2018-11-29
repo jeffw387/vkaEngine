@@ -45,10 +45,10 @@ struct VertexData {
 
 template <typename T>
 struct Rect {
-  T left;
-  T top;
-  T right;
-  T bottom;
+  T xmin;
+  T ymin;
+  T xmax;
+  T ymax;
 };
 
 struct MSDFGlyph {

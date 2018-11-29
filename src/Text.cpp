@@ -60,10 +60,10 @@ std::unique_ptr<VertexData> Font<>::getVertexData() {
     auto uv = bitmap->uv;
     action::push_back(
         result.vertices,
-        std::vector<Vertex>{{{pos.left, pos.top}, {uv.left, uv.top}},
-                            {{pos.left, pos.bottom}, {uv.left, uv.bottom}},
-                            {{pos.right, pos.bottom}, {uv.right, uv.bottom}},
-                            {{pos.right, pos.top}, {uv.right, uv.top}}});
+        std::vector<Vertex>{{{pos.xmin, pos.ymin}, {uv.xmin, uv.ymin}},
+                            {{pos.xmin, pos.ymax}, {uv.xmin, uv.ymax}},
+                            {{pos.xmax, pos.ymax}, {uv.xmax, uv.ymax}},
+                            {{pos.xmax, pos.ymin}, {uv.xmax, uv.ymin}}});
     result.offsets[glyphIndex] = indexOffset;
     indexOffset += IndicesPerQuad;
     vertexOffset += VerticesPerQuad;
@@ -203,26 +203,18 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
 
   msdfgen::edgeColoringSimple(shape, 3);
   shape.normalize();
-  Rect<int> shapeBounds{};
-  // shape.bounds(
-  //     shapeBounds.left, shapeBounds.bottom, shapeBounds.right,
-  //     shapeBounds.top);
-  stbtt_GetGlyphBox(
-      &fontInfo,
-      glyphIndex,
-      &shapeBounds.left,
-      &shapeBounds.top,
-      &shapeBounds.right,
-      &shapeBounds.bottom);
+  Rect<double> shapeBounds{};
+  shape.bounds(
+      shapeBounds.xmin, shapeBounds.ymin, shapeBounds.xmax, shapeBounds.ymax);
+
   auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
   auto bitmapSizeShapeUnits = bitmapSize / scaleFactor;
   msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
   msdfgen::Vector2 translateShapeUnits{
       calcTranslation<double>(
-          shapeBounds.left, shapeBounds.right, 0, bitmapSizeShapeUnits),
+          shapeBounds.xmin, shapeBounds.xmax, 0, bitmapSizeShapeUnits),
       calcTranslation<double>(
-          shapeBounds.bottom, shapeBounds.top, 0, bitmapSizeShapeUnits)};
-  auto rangeShapeUnits = range / scaleFactor;
+          shapeBounds.ymin, shapeBounds.ymax, 0, bitmapSizeShapeUnits)};
   msdfgen::generateMSDF(
       output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
 
