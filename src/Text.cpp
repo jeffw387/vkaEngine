@@ -212,8 +212,9 @@ auto getTransformedRenderBounds =
 auto getUV = [](Rect<float> transformedBounds, float size) {
   transformedBounds.xmin /= size;
   transformedBounds.xmax /= size;
-  transformedBounds.ymin /= size;
-  transformedBounds.ymax /= size;
+  transformedBounds.ymin = 1 - (transformedBounds.ymin / size);
+  transformedBounds.ymax = 1 - (transformedBounds.ymax / size);
+  std::swap(transformedBounds.ymin, transformedBounds.ymax);
   return transformedBounds;
 };
 
@@ -264,9 +265,8 @@ std::unique_ptr<MSDFGlyph> Font<>::getMSDFGlyph(
       {scaleFactor, scaleFactor},
       translateShapeUnits);
 
-  auto renderedGlyphBounds =
-      flipY(getGlyphRenderBounds(shapeBounds, scaleFactor));
-  auto paddedRenderedBounds = padRect(renderedGlyphBounds, padding);
+  auto renderedGlyphBounds = getGlyphRenderBounds(shapeBounds, scaleFactor);
+  auto paddedRenderedBounds = flipY(padRect(renderedGlyphBounds, padding));
 
   auto translateRenderUnits = translateShapeUnits * scaleFactor;
   auto transformedRenderBounds = getTransformedRenderBounds(
