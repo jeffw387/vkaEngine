@@ -505,7 +505,8 @@ struct AppState {
               testFont.vertexData->offsets[currentGlyph],
               0,
               0);
-          auto kernedAdvance = (advanceX + kerning) * currentScale;
+          auto kernedAdvance = (advanceX + kerning) * currentScale *
+                               currentFont->getScaleFactor();
           pen.x += kernedAdvance;
         }
       };
