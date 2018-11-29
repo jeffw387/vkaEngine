@@ -209,14 +209,20 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
 
   auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
   auto bitmapSizeShapeUnits = bitmapSize / scaleFactor;
-  msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
+  // msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
   msdfgen::Vector2 translateShapeUnits{
       calcTranslation<double>(
           shapeBounds.xmin, shapeBounds.xmax, 0, bitmapSizeShapeUnits),
       calcTranslation<double>(
           shapeBounds.ymin, shapeBounds.ymax, 0, bitmapSizeShapeUnits)};
+  auto rangeShapeUnits = pixelRange / scaleFactor;
   msdfgen::generateMSDF(
-      output, shape, rangeShapeUnits, scaleToOutput, translateShapeUnits);
+      output,
+      shape,
+      rangeShapeUnits,
+      {scaleFactor, scaleFactor},
+      translateShapeUnits);
+
 
   // msdfgen::Vector2 translateScaled = translateShapeUnits * scaleToOutput;
   // Rect<float> scaledBounds{
@@ -248,7 +254,7 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
 }
 
 template <>
-MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize, float scaleFactor) {
+MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize) {
   auto charRanges = charSet();
   auto charIndexView =
       charRanges | ranges::view::transform([&](auto charRange) {
@@ -259,22 +265,22 @@ MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize, float scaleFactor) {
   MSDFGlyphMap result{};
   RANGES_FOR(auto charIndex, charIndexView) {
     auto glyphIndex = getGlyphIndex(charIndex);
-    result[glyphIndex] = getMSDFGlyph(glyphIndex, bitmapSize, scaleFactor);
+    result[glyphIndex] = getMSDFGlyph(glyphIndex, bitmapSize);
   }
 
   return result;
 }
 
 template <>
-Font<>::Font(fs::path fontPath, int msdfSize, int padding)
-    : msdfSize(msdfSize), padding(padding) {
+Font<>::Font(fs::path fontPath, int bitmapSize, int padding)
+    : bitmapSize(bitmapSize), padding(padding) {
   if (auto loadResult = vka::loadBinaryFile({fontPath})) {
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
   }
-  originalPixelHeight = msdfSize - (padding * 2);
+  originalPixelHeight = bitmapSize - (padding * 2);
   scaleFactor = vectorToRenderRatio(originalPixelHeight);
-  glyphMap = getGlyphMap(msdfSize, scaleFactor);
+  glyphMap = getGlyphMap(bitmapSize);
   uint32_t arrayIndex{};
   for (const auto& [glyphIndex, bitmap] : glyphMap) {
     bitmap->arrayIndex = arrayIndex;

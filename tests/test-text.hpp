@@ -146,8 +146,8 @@ struct Font {
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VMA_MEMORY_USAGE_GPU_ONLY,
             true)),
-        textureSize(static_cast<uint32_t>(font->getTextureSize())),
-        layerCount(static_cast<uint32_t>(font->getTextureLayerCount())),
+        textureSize(static_cast<uint32_t>(font->getBitmapSize())),
+        layerCount(static_cast<uint32_t>(font->getLayerCount())),
         pixels(font->getTextureData()),
         image(device->createImageArray2D(
             {textureSize, textureSize},
