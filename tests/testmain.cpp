@@ -457,11 +457,10 @@ struct AppState {
       auto renderText = [&](auto& currentText) {
         auto currentFont = currentText->font;
         auto currentScale =
-            currentFont->vectorToRenderRatio(currentText->pixelHeight);
-        auto msdfScale = static_cast<float>(currentText->pixelHeight) /
-                         currentFont->getOriginalPixelHeight();
-        auto scaledRange = 0.002f * (msdfScale * currentFont->getRange());
-        pushData.fragment.distanceFactor = scaledRange;
+            static_cast<float>(currentText->pixelHeight) /
+            static_cast<float>(currentFont->getOriginalPixelHeight());
+        auto msdfScale = currentScale * currentFont->getPixelRange();
+        pushData.fragment.distanceFactor = msdfScale;
         // currentFont->getScaleFactor() / currentFont->getRange();
         auto& currentString = currentText->str;
         pushData.fragment.fontColor = currentText->color;

@@ -192,16 +192,57 @@ auto calcTranslation = [](T shapeMin, T shapeMax, T frameMin, T frameMax) {
   return frameCenter - shapeCenter;
 };
 
+auto getGlyphRenderBounds = [](Rect<double> shapeBounds, float scaleFactor) {
+  Rect<float> result = {static_cast<float>(shapeBounds.xmin * scaleFactor),
+                        static_cast<float>(shapeBounds.ymin * scaleFactor),
+                        static_cast<float>(shapeBounds.xmax * scaleFactor),
+                        static_cast<float>(shapeBounds.ymax * scaleFactor)};
+  return result;
+};
+
+auto getTransformedRenderBounds =
+    [](Rect<float> renderBounds, float xOffset, float yOffset) {
+      renderBounds.xmin += xOffset;
+      renderBounds.xmax += xOffset;
+      renderBounds.ymin += yOffset;
+      renderBounds.ymax += yOffset;
+      return renderBounds;
+    };
+
+auto getUV = [](Rect<float> transformedBounds, float size) {
+  transformedBounds.xmin /= size;
+  transformedBounds.xmax /= size;
+  transformedBounds.ymin /= size;
+  transformedBounds.ymax /= size;
+  return transformedBounds;
+};
+
+auto flipY = [](auto original) {
+  std::swap(original.ymin, original.ymax);
+  original.ymin = -original.ymin;
+  original.ymax = -original.ymax;
+  return original;
+};
+
+auto padRect = [](auto original, auto padding) {
+  original.xmin -= padding;
+  original.ymin -= padding;
+  original.xmax += padding;
+  original.ymax += padding;
+  return original;
+};
+
 template <>
-std::unique_ptr<MSDFGlyph>
-Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
+std::unique_ptr<MSDFGlyph> Font<>::getMSDFGlyph(
+    int glyphIndex,
+    int bitmapSize) {
   auto shape = makeShape(getGlyphShape(glyphIndex));
   if (!shape.validate()) {
     MultiLogger::get()->error(
         "Error: problem with shape from glyph index {}.", glyphIndex);
   }
 
-  msdfgen::edgeColoringSimple(shape, 3);
+  msdfgen::edgeColoringSimple(shape, 2.8);
   shape.normalize();
   Rect<double> shapeBounds{};
   shape.bounds(
@@ -223,34 +264,21 @@ Font<>::getMSDFGlyph(int glyphIndex, int bitmapSize, float scaleFactor) {
       {scaleFactor, scaleFactor},
       translateShapeUnits);
 
+  auto renderedGlyphBounds =
+      flipY(getGlyphRenderBounds(shapeBounds, scaleFactor));
+  auto paddedRenderedBounds = padRect(renderedGlyphBounds, padding);
 
-  // msdfgen::Vector2 translateScaled = translateShapeUnits * scaleToOutput;
-  // Rect<float> scaledBounds{
-  //     static_cast<float>(shapeBounds.left * scaleFactor),
-  //     static_cast<float>(shapeBounds.top * scaleFactor),
-  //     static_cast<float>(shapeBounds.right * scaleFactor),
-  //     static_cast<float>(shapeBounds.bottom * scaleFactor)};
-  auto paddingShapeUnits = padding / scaleFactor;
-  Rect<float> flippedYBounds = {static_cast<float>(shapeBounds.left),
-                                static_cast<float>(-shapeBounds.top),
-                                static_cast<float>(shapeBounds.right),
-                                static_cast<float>(-shapeBounds.bottom)};
-  Rect<float> translatedBounds{
-      static_cast<float>(shapeBounds.left + translateShapeUnits.x),
-      static_cast<float>(shapeBounds.top + translateShapeUnits.y),
-      static_cast<float>(shapeBounds.right + translateShapeUnits.x),
-      static_cast<float>(shapeBounds.bottom + translateShapeUnits.y)};
-  Rect<float> paddedBounds = {translatedBounds.left - paddingShapeUnits,
-                              translatedBounds.top - paddingShapeUnits,
-                              translatedBounds.right + paddingShapeUnits,
-                              translatedBounds.bottom + paddingShapeUnits};
-  Rect<float> uv{
-      translatedBounds.left / bitmapSizeShapeUnits,
-      (bitmapSizeShapeUnits - translatedBounds.top) / bitmapSizeShapeUnits,
-      translatedBounds.right / bitmapSizeShapeUnits,
-      (bitmapSizeShapeUnits - translatedBounds.bottom) / bitmapSizeShapeUnits};
-  return std::make_unique<MSDFGlyph>(
-      MSDFGlyph{std::move(output), std::move(flippedYBounds), std::move(uv)});
+  auto translateRenderUnits = translateShapeUnits * scaleFactor;
+  auto transformedRenderBounds = getTransformedRenderBounds(
+      renderedGlyphBounds,
+      static_cast<float>(translateRenderUnits.x),
+      static_cast<float>(translateRenderUnits.y));
+  auto paddedTransformedRenderBounds =
+      padRect(transformedRenderBounds, padding);
+  auto uv = getUV(paddedTransformedRenderBounds, bitmapSize);
+
+  return std::make_unique<MSDFGlyph>(MSDFGlyph{
+      std::move(output), std::move(paddedRenderedBounds), std::move(uv)});
 }
 
 template <>
