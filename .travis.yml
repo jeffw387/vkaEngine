@@ -3,3 +3,4 @@ before_script:
   - sudo apt install ninja-build
 script:
   - mkdir build && cd build && cmake -GNinja .. && ninja
+dist: xenial
