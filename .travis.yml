@@ -20,6 +20,7 @@ before_script:
   #- sudo add-apt-repository -y ppa:mdeguzis/libregeek
   - sudo apt-get update
   - sudo apt install ninja-build libvulkan-dev vulkan-utils xorg-dev libglu1-mesa-dev
+  - printenv
 script:
   - mkdir build && cd build && cmake -GNinja .. && ninja
 dist: xenial
