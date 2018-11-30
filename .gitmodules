@@ -27,7 +27,7 @@
 	url = https://github.com/ericniebler/range-v3.git
 [submodule "external/stb"]
 	path = external/stb
-	url = https://github.com/nothings/stb.git
+	url = https://github.com/jeffw387/stb.git
 [submodule "external/msdfgen"]
 	path = external/msdfgen
 	url = https://github.com/jeffw387/msdfgen.git
