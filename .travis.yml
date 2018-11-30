@@ -1,8 +1,9 @@
 language: cpp
 before_script:
   - sudo add-apt-repository -y ppa:ubuntu-desktop/gnome-3-26
+  - sudo add-apt-repository -y ppa:mdeguzis/libregeek
   - sudo apt-get update
-  - sudo apt install ninja-build
+  - sudo apt install ninja-build vulkan
 script:
   - mkdir build && cd build && cmake -GNinja .. && ninja
 dist: xenial
