@@ -2,4 +2,4 @@ language: cpp
 before_script:
   - sudo apt install ninja-build
 script:
-  - cmake -GNinja -S./ -B./build/ && cd build && ninja
+  - mkdir build && cd build && cmake -GNinja .. && ninja
