@@ -459,8 +459,9 @@ struct AppState {
         auto currentScale =
             static_cast<float>(currentText->pixelHeight) /
             static_cast<float>(currentFont->getOriginalPixelHeight());
-        constexpr auto AntiAliasFactor = 0.003f;
-        auto msdfScale = currentScale * AntiAliasFactor;
+        constexpr auto AntiAliasFactor = 0.002f;
+        constexpr auto AntiAliasOffset = 0.001f;
+        auto msdfScale = AntiAliasFactor * currentScale + AntiAliasOffset;
         pushData.fragment.distanceFactor = msdfScale;
         auto& currentString = currentText->str;
         pushData.fragment.fontColor = currentText->color;
@@ -733,7 +734,7 @@ struct AppState {
         fps_text{std::make_unique<TextObject>(
             glm::vec2(float(defaultWidth) - 100.f, 50.f),
             std::string{"NaN"},
-            30,
+            15,
             testFont.font.get())},
         test_value_text{std::make_unique<TextObject>(
             glm::vec2(float(defaultWidth) - 400.f, 100.f),
