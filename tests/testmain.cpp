@@ -459,9 +459,9 @@ struct AppState {
         auto currentScale =
             static_cast<float>(currentText->pixelHeight) /
             static_cast<float>(currentFont->getOriginalPixelHeight());
-        auto msdfScale = currentScale * currentFont->getPixelRange();
-        pushData.fragment.distanceFactor = testValue;
-        // currentFont->getScaleFactor() / currentFont->getRange();
+        constexpr auto AntiAliasFactor = 0.003f;
+        auto msdfScale = currentScale * AntiAliasFactor;
+        pushData.fragment.distanceFactor = msdfScale;
         auto& currentString = currentText->str;
         pushData.fragment.fontColor = currentText->color;
         pushData.vertex.textScale = currentScale;
