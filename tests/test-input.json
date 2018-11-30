@@ -1,0 +1,32 @@
+{
+  "actions": [
+    {
+      "name": "up",
+      "key": 0
+    },
+    {
+      "name": "down",
+      "key": 0
+    },
+    {
+      "name": "left",
+      "key": 0
+    },
+    {
+      "name": "right",
+      "key": 0
+    },
+    {
+      "name": "select",
+      "key": 0
+    },
+    {
+      "name": "back",
+      "key": 0
+    },
+    {
+      "name": "exit",
+      "key": 0
+    }
+  ]
+}
