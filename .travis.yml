@@ -1,5 +1,7 @@
 language: cpp
 before_script:
+  - sudo add-apt-repository ppa:pete-woods/kitware-ninja
+  - sudo apt-get update
   - sudo apt install ninja-build
 script:
   - mkdir build && cd build && cmake -GNinja .. && ninja
