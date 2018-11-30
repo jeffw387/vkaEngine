@@ -3,7 +3,7 @@ before_script:
   - sudo add-apt-repository -y ppa:ubuntu-desktop/gnome-3-26
   #- sudo add-apt-repository -y ppa:mdeguzis/libregeek
   - sudo apt-get update
-  - sudo apt install ninja-build libvulkan-dev
+  - sudo apt install ninja-build libvulkan-dev xorg-dev libglu1-mesa-dev
 script:
   - mkdir build && cd build && cmake -GNinja .. && ninja
 dist: xenial
