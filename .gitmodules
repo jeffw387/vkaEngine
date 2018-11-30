@@ -12,7 +12,7 @@
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 [submodule "external/spdlog"]
 	path = external/spdlog
-	url = https://github.com/gabime/spdlog.git
+	url = https://github.com/jeffw387/spdlog.git
 [submodule "external/outcome"]
 	path = external/outcome
 	url = https://github.com/ned14/outcome.git
