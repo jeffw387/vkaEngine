@@ -10,6 +10,7 @@
 
 #include "Clock.hpp"
 #include "Logger.hpp"
+#include "Input.hpp"
 
 namespace vka {
 static constexpr auto BufferCount = 3U;
@@ -56,6 +57,9 @@ public:
   int32_t previousUpdateIndex() const noexcept { return lastUpdatedIndex; }
   int32_t currentUpdateIndex() const noexcept { return updateIndex; }
   int32_t currentRenderIndex() const noexcept { return renderIndex; }
+  Input::Manager inputManager;
+  double mouseX;
+  double mouseY;
 
 private:
   void initInputCallbacks();
