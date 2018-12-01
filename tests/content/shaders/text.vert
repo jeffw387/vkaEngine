@@ -8,12 +8,6 @@ layout(push_constant) uniform uPushConstant{
   layout(offset=16) float textScale;
 } pc;
 
-// screenspace screenPos relative to center of screen, scale factor to switch to clip space
-// screenPos: 250, 250
-// screen size: 1000, 1000
-// scale: 1/1000, 1/1000
-// outVert = 0.25, 0.25, 0, 1
-
 out gl_PerVertex{
   vec4 gl_Position;
 };
