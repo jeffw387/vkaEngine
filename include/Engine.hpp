@@ -7,12 +7,12 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+
+#include "Clock.hpp"
 #include "Logger.hpp"
 
 namespace vka {
 static constexpr auto BufferCount = 3U;
-using Clock = std::chrono::high_resolution_clock;
-static constexpr Clock::duration OneSecond = std::chrono::seconds(1);
 
 class Engine;
 class Instance;
