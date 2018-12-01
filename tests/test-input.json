@@ -2,31 +2,38 @@
   "actions": [
     {
       "name": "up",
-      "key": 0
+      "keys": [265],
+      "mouseButtons": []
     },
     {
       "name": "down",
-      "key": 0
+      "keys": [264],
+      "mouseButtons": []
     },
     {
       "name": "left",
-      "key": 0
+      "keys": [263],
+      "mouseButtons": []
     },
     {
       "name": "right",
-      "key": 0
+      "keys": [262],
+      "mouseButtons": []
     },
     {
       "name": "select",
-      "key": 0
+      "keys": [],
+      "mouseButtons": [0]
     },
     {
       "name": "back",
-      "key": 0
+      "keys": [256],
+      "mouseButtons": []
     },
     {
       "name": "exit",
-      "key": 0
+      "keys": [256],
+      "mouseButtons": []
     }
   ]
 }
