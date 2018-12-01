@@ -25,7 +25,7 @@ macro(process_shader fileNames inputDir outputDir)
     add_custom_command(
       OUTPUT ${outputShader}
       VERBATIM
-      COMMAND glslangValidator -V ${inputShader} -o ${outputShader}
+      COMMAND ${SPIRV_DIR}/glslangValidator -V ${inputShader} -o ${outputShader}
       DEPENDS ${inputShader})
     add_custom_target("${fileName}"
       DEPENDS ${outputShader}

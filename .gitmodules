@@ -31,6 +31,6 @@
 [submodule "external/msdfgen"]
 	path = external/msdfgen
 	url = https://github.com/jeffw387/msdfgen.git
-[submodule "external/SPIRV-Tools"]
-	path = external/SPIRV-Tools
-	url = https://github.com/jeffw387/SPIRV-Tools.git
+[submodule "external/glslang"]
+	path = external/glslang
+	url = https://github.com/KhronosGroup/glslang.git

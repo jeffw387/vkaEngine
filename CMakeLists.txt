@@ -103,10 +103,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
   target_link_libraries(vkaEngine PUBLIC stdc++fs)
 endif()
 
-add_subdirectory(external/SPIRV-Tools)
-# target_link_libraries(vkaEngine PUBLIC spirv-val)
-add_dependencies(vkaEngine spirv-val)
-set(SPIRV_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/SPIRV-Tools/)
+add_subdirectory(external/glslang)
+add_dependencies(vkaEngine glslangValidator)
+set(SPIRV_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/glslang/StandAlone)
 
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE external/stb)
