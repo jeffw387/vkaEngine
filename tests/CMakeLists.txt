@@ -30,7 +30,7 @@ macro(process_shader fileNames inputDir outputDir)
     add_custom_target("${fileName}"
       DEPENDS ${outputShader}
       SOURCES ${inputShader})
-    add_dependencies(testmain "${fileName}")
+    add_dependencies("${fileName}" glslangValidator)
     add_custom_command(TARGET "${fileName}"
       PRE_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory "${outputDir}")
