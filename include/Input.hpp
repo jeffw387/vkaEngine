@@ -7,6 +7,12 @@
 
 namespace Input {
 
+struct Action {
+  std::string name;
+};
+
+inline bool operator==(Action a, Action b) { return a.name == b.name; }
+
 struct Signature {
   int code;
   int action;
@@ -50,6 +56,13 @@ template <>
 struct hash<Input::Signature> {
   size_t operator()(Input::Signature value) const {
     return SpookyHash::Hash64(&value, sizeof(Input::Signature), 0);
+  }
+};
+
+template <>
+struct hash<Input::Action> {
+  size_t operator()(Input::Action value) const {
+    return SpookyHash::Hash64(&value, sizeof(Input::Action), 0);
   }
 };
 }  // namespace std
