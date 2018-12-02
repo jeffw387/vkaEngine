@@ -44,7 +44,6 @@ public:
     
     template <typename PredicateType>
     std::optional<T> popFirstIf(PredicateType p) {
-        auto first = readFirst();
         std::optional<T> result;
         std::lock_guard<std::mutex> lock(storageMutex);
         if (auto first = readFirst()) {

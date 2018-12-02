@@ -21,7 +21,7 @@ static void
 keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
   enginePtr->inputManager.addInputToQueue(
-      Input::KeyEvent{key, action, Clock::now()});
+      Input::Event<Input::Key>{{key, action}, Clock::now()});
 }
 
 static void
@@ -35,7 +35,7 @@ static void
 mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
   auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
   enginePtr->inputManager.addInputToQueue(
-      Input::MouseEvent{button, action, Clock::now()});
+      Input::Event<Input::Mouse>{{button, action}, Clock::now()});
 }
 
 Engine::Engine(EngineCreateInfo engineCreateInfo)

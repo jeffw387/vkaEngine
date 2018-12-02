@@ -114,7 +114,7 @@ struct BufferedState {
   std::unique_ptr<vka::CommandPool> commandPool;
   std::weak_ptr<vka::CommandBuffer> cmd;
   entt::DefaultRegistry ecs;
-  std::unordered_map<Input::InputEvent, bool> inputState;
+  std::unordered_map<Input::Signature, bool> inputState;
   BufferedState() {}
   BufferedState(
       vka::Device* device,
@@ -318,7 +318,7 @@ struct AppState {
   P3DPipeline p3DPipeline;
 
   std::array<BufferedState, vka::BufferCount> bufState;
-  std::map<uint64_t, Input::InputEvent> inputBindings;
+  std::map<uint64_t, Input::Signature> inputBindings;
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
     MultiLogger::get()->info("Init Callback");
