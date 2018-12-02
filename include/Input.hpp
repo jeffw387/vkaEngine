@@ -24,7 +24,12 @@ public:
     inputQueue.pushLast(inputEvent);
   };
   auto getEventBefore(vka::Clock::time_point cutoff) {
-     return inputQueue.popFirstIf([](auto inputEvent){ return inputEvent.eventTime < cutoff;});
+     return inputQueue.popFirstIf(
+       [=](auto inputEvent){ 
+         return std::visit(
+           [=](const auto& inputVariant) { 
+             return inputVariant.eventTime < cutoff;
+             }, inputEvent);});
   }
 private:
   CircularQueue<InputEvent, 256> inputQueue;

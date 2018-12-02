@@ -24,6 +24,7 @@
 #include "Text.hpp"
 #define THSVS_SIMPLER_VULKAN_SYNCHRONIZATION_IMPLEMENTATION
 #include "thsvs_simpler_vulkan_synchronization.h"
+#include "Input.hpp"
 
 #include "test-text.hpp"
 #include "test-debug.hpp"
@@ -113,6 +114,7 @@ struct BufferedState {
   std::unique_ptr<vka::CommandPool> commandPool;
   std::weak_ptr<vka::CommandBuffer> cmd;
   entt::DefaultRegistry ecs;
+  std::unordered_map<Input::InputEvent, bool> inputState;
   BufferedState() {}
   BufferedState(
       vka::Device* device,
@@ -316,6 +318,7 @@ struct AppState {
   P3DPipeline p3DPipeline;
 
   std::array<BufferedState, vka::BufferCount> bufState;
+  std::map<uint64_t, Input::InputEvent> inputBindings;
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
     MultiLogger::get()->info("Init Callback");
@@ -350,6 +353,7 @@ struct AppState {
     auto lastUpdateIndex = engine->previousUpdateIndex();
     auto& last = bufState[lastUpdateIndex];
     auto& current = bufState[updateIndex];
+    auto updateTime = engine->updateTimePoint(updateIndex);
 
     auto matSize = last.materialUniform->size();
     current.materialUniform->resize(matSize);

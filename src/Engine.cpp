@@ -19,26 +19,23 @@ namespace vka {
 
 static void
 keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  auto enginePtr =
-    reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
   enginePtr->inputManager.addInputToQueue(
-    Input::KeyEvent{key, action, Clock::now()});
+      Input::KeyEvent{key, action, Clock::now()});
 }
 
 static void
 cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
-  auto enginePtr =
-    reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
   enginePtr->mouseX = xpos;
   enginePtr->mouseY = ypos;
 }
 
 static void
 mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-  auto enginePtr =
-    reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
   enginePtr->inputManager.addInputToQueue(
-    Input::MouseEvent{button, action, Clock::now()});
+      Input::MouseEvent{button, action, Clock::now()});
 }
 
 Engine::Engine(EngineCreateInfo engineCreateInfo)

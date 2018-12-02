@@ -57,6 +57,9 @@ public:
   int32_t previousUpdateIndex() const noexcept { return lastUpdatedIndex; }
   int32_t currentUpdateIndex() const noexcept { return updateIndex; }
   int32_t currentRenderIndex() const noexcept { return renderIndex; }
+  Clock::time_point updateTimePoint(int32_t index) {
+    return indexUpdateTime[index];
+  }
   Input::Manager inputManager;
   double mouseX;
   double mouseY;
