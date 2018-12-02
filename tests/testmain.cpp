@@ -25,6 +25,7 @@
 #define THSVS_SIMPLER_VULKAN_SYNCHRONIZATION_IMPLEMENTATION
 #include "thsvs_simpler_vulkan_synchronization.h"
 #include "Input.hpp"
+#include "overloaded.hpp"
 
 #include "test-text.hpp"
 #include "test-debug.hpp"
@@ -114,7 +115,7 @@ struct BufferedState {
   std::unique_ptr<vka::CommandPool> commandPool;
   std::weak_ptr<vka::CommandBuffer> cmd;
   entt::DefaultRegistry ecs;
-  std::unordered_map<Input::Signature, bool> inputState;
+  std::unordered_map<Input::Action, bool> inputState;
   BufferedState() {}
   BufferedState(
       vka::Device* device,
@@ -318,7 +319,10 @@ struct AppState {
   P3DPipeline p3DPipeline;
 
   std::array<BufferedState, vka::BufferCount> bufState;
-  std::map<uint64_t, Input::Signature> inputBindings;
+  std::unordered_multimap<Input::Action, Input::Signature> keyBindings;
+  std::unordered_map<Input::Signature, Input::Action> inverseKeyBindings;
+  std::unordered_multimap<Input::Action, Input::Signature> mouseBindings;
+  std::unordered_map<Input::Signature, Input::Action> inverseMouseBindings;
 
   void initCallback(vka::Engine* engine, int32_t initialIndex) {
     MultiLogger::get()->info("Init Callback");
@@ -355,6 +359,22 @@ struct AppState {
     auto& current = bufState[updateIndex];
     auto updateTime = engine->updateTimePoint(updateIndex);
 
+    auto handleInputEvent = [&](auto inputEvent) {
+      std::visit(
+          overloaded{[&](Input::Event<Input::Key> keyEvent) {
+                       current.inputState.at(inverseKeyBindings.at(
+                           keyEvent.signature)) = keyEvent.signature.action;
+                     },
+                     [&](Input::Event<Input::Mouse> mouseEvent) {
+                       current.inputState.at(inverseMouseBindings.at(
+                           mouseEvent.signature)) = mouseEvent.signature.action;
+                     }},
+          inputEvent);
+    };
+
+    while (auto inputEvent = engine->inputManager.getEventBefore(updateTime)) {
+      handleInputEvent(*inputEvent);
+    }
     auto matSize = last.materialUniform->size();
     current.materialUniform->resize(matSize);
     for (auto i = 0U; i < matSize; ++i) {
