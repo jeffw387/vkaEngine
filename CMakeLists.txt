@@ -138,12 +138,6 @@ message(FATAL_ERROR "glm target not found")
 endif()
 target_link_libraries(vkaEngine PUBLIC glm)
 
-add_subdirectory(external/gli)
-if(NOT TARGET gli)
-message(FATAL_ERROR "gli target not found")
-endif()
-target_link_libraries(vkaEngine PUBLIC gli)
-
 add_library(json_nlohmann INTERFACE)
 target_include_directories(
   json_nlohmann
