@@ -15,14 +15,6 @@ set(includeDir "${CMAKE_CURRENT_SOURCE_DIR}/include")
 configure_file("${includeDir}/version.hpp.in" 
   "${includeDir}/version.hpp" @ONLY)
 
-set(DebugBool "$<$<CONFIG:Debug>:true>")
-
-# configure_file("${includeDir}/Config.hpp.in" 
-#     "${includeDir}/Config.hpp.cfg" @ONLY)
-
-# file(GENERATE OUTPUT "${includeDir}/Config.hpp"
-#   INPUT "${includeDir}/Config.hpp.cfg")
-
 list(APPEND vkaEngineSources 
   "${srcDir}/Logger.cpp"
   "${srcDir}/Text.cpp"
@@ -43,6 +35,7 @@ list(APPEND vkaEngineSources
   "${srcDir}/Pipeline.cpp"
   "${srcDir}/Fence.cpp"
   "${srcDir}/Semaphore.cpp"
+  "${srcDir}/spookyhash.cpp"
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
@@ -72,6 +65,8 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/Semaphore.hpp"
   "${includeDir}/VkEnumStrings.hpp"
   "${includeDir}/overloaded.hpp"
+  "${includeDir}/Input.hpp"
+  "${includeDir}/spookyhash.hpp"
   "${includeDir}/Surface.hpp")
 add_library(vkaEngine)
 target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
@@ -131,13 +126,6 @@ message("vk include dirs: ${Vulkan_INCLUDE_DIRS}")
 message("vk libs: ${Vulkan_LIBRARIES}")
 target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
-
-# add_library(dear_imgui 
-# external/imgui/imgui.cpp
-# external/imgui/imgui_draw.cpp
-# external/imgui/imgui_widgets.cpp)
-# target_include_directories(dear_imgui PUBLIC external/imgui)
-# target_link_libraries(vkaEngine PUBLIC dear_imgui)
 
 add_library(VulkanMemoryAllocator INTERFACE)
 target_include_directories(VulkanMemoryAllocator 

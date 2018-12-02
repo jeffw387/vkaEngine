@@ -34,4 +34,5 @@ public:
 private:
   CircularQueue<InputEvent, 256> inputQueue;
 };
+    return SpookyHash::Hash64(&value, sizeof(Input::Signature), 0);
 }
