@@ -309,13 +309,11 @@ struct AppState {
   std::shared_ptr<vka::RenderPass> renderPass;
 
   std::unique_ptr<vka::PipelineCache> pipelineCache;
-  float testValue = 0.004f;
   TextPipeline textPipeline;
   Font testFont;
   std::unique_ptr<TextObject> testText;
   vka::Clock::time_point lastRenderTime;
   std::unique_ptr<TextObject> fps_text;
-  std::unique_ptr<TextObject> test_value_text;
   P3DPipeline p3DPipeline;
 
   std::array<BufferedState, vka::BufferCount> bufState;
@@ -537,13 +535,6 @@ struct AppState {
       };
       renderText(testText);
       renderText(fps_text);
-      if (glfwGetKey(*surface, GLFW_KEY_LEFT)) {
-        testValue -= 0.0005f;
-      } else if (glfwGetKey(*surface, GLFW_KEY_RIGHT)) {
-        testValue += 0.0005f;
-      }
-      test_value_text->str = std::to_string(pushData.fragment.distanceFactor);
-      renderText(test_value_text);
     }
   }
 
@@ -759,11 +750,6 @@ struct AppState {
             glm::vec2(float(defaultWidth) - 100.f, 50.f),
             std::string{"NaN"},
             15,
-            testFont.font.get())},
-        test_value_text{std::make_unique<TextObject>(
-            glm::vec2(float(defaultWidth) - 400.f, 100.f),
-            std::to_string(testValue),
-            60,
             testFont.font.get())},
         p3DPipeline{device, renderPass.get(), pipelineCache.get()},
         bufState{createBufferedStates(device, &p3DPipeline)} {
