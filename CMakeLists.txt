@@ -67,6 +67,7 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/overloaded.hpp"
   "${includeDir}/Input.hpp"
   "${includeDir}/spookyhash.hpp"
+  "${includeDir}/physics/Particle.hpp"
   "${includeDir}/Surface.hpp")
 add_library(vkaEngine)
 target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
