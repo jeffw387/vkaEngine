@@ -1,29 +1,31 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "Clock.hpp"
-#include <chrono>
+#include "Force.hpp"
 
 namespace Physics {
-using namespace std::chrono_literals;
 class Particle {
 public:
-  glm::vec3 position;
-  glm::vec3 velocity;
-  glm::vec3 acceleration;
-  float damping;
+  glm::vec3 position = {};
+  glm::vec3 velocity = {};
+  glm::vec3 acceleration = {};
+  glm::vec3 forceAccum = {};
+  float damping = {};
+  float inverseMass = {};
 
-protected:
-  float inverseMass;
+  void setMass(float mass);
 };
 
-inline Particle integrate(Particle input, glm::vec3 newForces, float deltaTimeSeconds) {
-  input.position += input.velocity * deltaTimeSeconds;
-  input.acceleration += newForces * deltaTimeSeconds;
-  input.velocity += input.acceleration * deltaTimeSeconds;
-  
+class ParticleForceGenerator {
+  virtual void updateForces(Particle* particle, float duration) = 0;
+};
+
+inline Particle integrate(Particle input, float timeScale) {
+  input.position += input.velocity * timeScale;
+  input.acceleration += input.forceAccum * input.inverseMass;
+  input.velocity += input.acceleration * timeScale;
+  input.velocity *= input.damping;
+  input.forceAccum = {};
+  return input;
 }
 
-inline Particle updateVelocity(Particle input, float deltaTimeSeconds) {
-  input.velocity = input.velocity * input.damping + input.acceleration * deltaTimeSeconds;
-}
 }  // namespace Physics
