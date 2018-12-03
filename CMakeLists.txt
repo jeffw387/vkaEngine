@@ -36,6 +36,7 @@ list(APPEND vkaEngineSources
   "${srcDir}/Fence.cpp"
   "${srcDir}/Semaphore.cpp"
   "${srcDir}/spookyhash.cpp"
+  "${srcDir}/Particle.cpp"
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
