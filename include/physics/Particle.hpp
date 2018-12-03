@@ -11,11 +11,19 @@ public:
   glm::vec3 velocity;
   glm::vec3 acceleration;
   float damping;
+
 protected:
   float inverseMass;
 };
 
-inline Particle updatePosition(Particle input, vka::Clock::duration deltaTime) {
-  input.position += input.velocity *
+inline Particle integrate(Particle input, glm::vec3 newForces, float deltaTimeSeconds) {
+  input.position += input.velocity * deltaTimeSeconds;
+  input.acceleration += newForces * deltaTimeSeconds;
+  input.velocity += input.acceleration * deltaTimeSeconds;
+  
 }
+
+inline Particle updateVelocity(Particle input, float deltaTimeSeconds) {
+  input.velocity = input.velocity * input.damping + input.acceleration * deltaTimeSeconds;
 }
+}  // namespace Physics
