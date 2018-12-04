@@ -13,6 +13,7 @@ public:
   float inverseMass = {};
 
   void setMass(float mass);
+  bool hasInfiniteMass() const;
 };
 
 class ParticleForceGenerator {
@@ -20,15 +21,37 @@ public:
   virtual void updateForce(Particle* particle, float duration) = 0;
 };
 
+class ParticleGravityGenerator : public ParticleForceGenerator {
+public:
+  glm::vec3 gravity = {};
+  void updateForce(Particle* particle, float duration);
+};
+
+class ParticleDragGenerator : public ParticleForceGenerator {
+public:
+  float k1 = {};
+  float k2 = {};
+  void updateForce(Particle* particle, float duration);
+};
+
+class ParticleSpring : public ParticleForceGenerator {
+public:
+  Particle* other;
+  float springConstant;
+  float restLength;
+
+  void updateForce(Particle* particle, float duration);
+};
+
 class ParticleForceRegistry {
 protected:
   struct ParticleForceRegistration {
-    Particle* particle;
-    ParticleForceGenerator* generator;
+    Particle* particle = {};
+    ParticleForceGenerator* generator = {};
   };
 
   using Registry = std::vector<ParticleForceRegistration>;
-  Registry registry;
+  Registry registry = {};
 
 public:
   void add(Particle* particle, ParticleForceGenerator* generator);
