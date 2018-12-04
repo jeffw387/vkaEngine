@@ -48,6 +48,21 @@ void ParticleContact::resolveVelocity(float duration, float totalInverseMass) {
   }
 
   float newSeparatingVelocity = -separatingVelocity * restitution;
+
+  // correct for constant acceleration
+  glm::vec3 velocityFromAcceleration = particle[0]->constantAcceleration;
+  if (particle[1]) {
+    velocityFromAcceleration -= particle[1]->constantAcceleration;
+  }
+  float separatingVelocityFromAcceleration =
+      glm::dot(velocityFromAcceleration, contactNormal) * duration;
+  if (separatingVelocityFromAcceleration < 0) {
+    newSeparatingVelocity += restitution * separatingVelocityFromAcceleration;
+    if (newSeparatingVelocity < 0) {
+      newSeparatingVelocity = 0;
+    }
+  }
+
   float deltaVelocity = newSeparatingVelocity - separatingVelocity;
 
   float impulse = deltaVelocity / totalInverseMass;
@@ -69,6 +84,22 @@ void ParticleContact::resolveInterpenetration(
   particle[0]->position += movePerInverseMass * particle[0]->inverseMass;
   if (particle[1]) {
     particle[1]->position += movePerInverseMass * particle[1]->inverseMass;
+  }
+}
+
+void ParticleContactResolver::resolveContacts(gsl::span<ParticleContact> contacts, float duration) {
+  while (iterationsUsed < iterations) {
+    float max{};
+    int maxIndex{contacts.size()};
+    for (int i{}; i < contacts.size(); ++i) {
+      float separatingVelocity = contacts[i].calculateSeparatingVelocity();
+      if (separatingVelocity < max) {
+        max = separatingVelocity;
+        maxIndex = i;
+      }
+    }
+    contacts[maxIndex].resolve(duration);
+    ++iterationsUsed;
   }
 }
 

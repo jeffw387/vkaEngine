@@ -2,6 +2,7 @@
 #include <vector>
 #include <array>
 #include <glm/glm.hpp>
+#include <gsl-lite.hpp>
 
 namespace Physics {
 class Particle {
@@ -24,7 +25,6 @@ struct ParticleContact {
   glm::vec3 contactNormal = {};
   float penetration = {};
 
-protected:
   void resolve(float duration);
   float calculateSeparatingVelocity() const;
 
@@ -32,6 +32,13 @@ private:
   float getTotalInverseMass() const;
   void resolveVelocity(float duration, float totalInverseMass);
   void resolveInterpenetration(float duration, float totalInverseMass);
+};
+
+struct ParticleContactResolver {
+  int iterations = {};
+  void resolveContacts(gsl::span<ParticleContact> contacts, float duration);
+protected:
+  int iterationsUsed = {};
 };
 
 class ParticleForceGenerator {
