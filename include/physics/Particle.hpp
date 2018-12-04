@@ -1,6 +1,6 @@
 #pragma once
+#include <vector>
 #include <glm/glm.hpp>
-#include "Force.hpp"
 
 namespace Physics {
 class Particle {
@@ -17,6 +17,23 @@ public:
 
 class ParticleForceGenerator {
   virtual void updateForces(Particle* particle, float duration) = 0;
+};
+
+class ParticleForceRegistry {
+protected:
+  struct ParticleForceRegistration {
+    Particle* particle;
+    ParticleForceGenerator* generator;
+  };
+
+  using Registry = std::vector<ParticleForceRegistration>;
+  Registry registry;
+
+public:
+  void add(Particle* particle, ParticleForceGenerator* generator);
+  void remove(Particle* particle, ParticleForceGenerator* generator);
+  void clear();
+  void updateForces(float duration);
 };
 
 inline Particle integrate(Particle input, float timeScale) {
