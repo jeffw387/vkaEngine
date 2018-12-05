@@ -102,6 +102,58 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
   target_link_libraries(vkaEngine PUBLIC stdc++fs)
 endif()
 
+add_library(box2d)
+set(b2d ${CMAKE_CURRENT_SOURCE_DIR}/external/Box2D)
+target_sources(box2d PRIVATE 
+  ${b2d}/Box2D/Collision/Shapes/b2ChainShape.cpp
+  ${b2d}/Box2D/Collision/Shapes/b2CircleShape.cpp
+  ${b2d}/Box2D/Collision/Shapes/b2EdgeShape.cpp
+  ${b2d}/Box2D/Collision/Shapes/b2PolygonShape.cpp
+  ${b2d}/Box2D/Collision/b2BroadPhase.cpp
+  ${b2d}/Box2D/Collision/b2CollideCircle.cpp
+  ${b2d}/Box2D/Collision/b2CollideEdge.cpp
+  ${b2d}/Box2D/Collision/b2CollidePolygon.cpp
+  ${b2d}/Box2D/Collision/b2Collision.cpp
+  ${b2d}/Box2D/Collision/b2Distance.cpp
+  ${b2d}/Box2D/Collision/b2DynamicTree.cpp
+  ${b2d}/Box2D/Collision/b2TimeOfImpact.cpp
+  ${b2d}/Box2D/Common/b2BlockAllocator.cpp
+  ${b2d}/Box2D/Common/b2Draw.cpp
+  ${b2d}/Box2D/Common/b2Math.cpp
+  ${b2d}/Box2D/Common/b2Settings.cpp
+  ${b2d}/Box2D/Common/b2StackAllocator.cpp
+  ${b2d}/Box2D/Common/b2Timer.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2CircleContact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2Contact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2ContactSolver.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.cpp
+  ${b2d}/Box2D/Dynamics/Contacts/b2PolygonContact.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2DistanceJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2FrictionJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2GearJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2Joint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2MotorJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2MouseJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2PulleyJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2RevoluteJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2RopeJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2WeldJoint.cpp
+  ${b2d}/Box2D/Dynamics/Joints/b2WheelJoint.cpp
+  ${b2d}/Box2D/Dynamics/b2Body.cpp
+  ${b2d}/Box2D/Dynamics/b2ContactManager.cpp
+  ${b2d}/Box2D/Dynamics/b2Fixture.cpp
+  ${b2d}/Box2D/Dynamics/b2Island.cpp
+  ${b2d}/Box2D/Dynamics/b2World.cpp
+  ${b2d}/Box2D/Dynamics/b2WorldCallbacks.cpp
+  ${b2d}/Box2D/Rope/b2Rope.cpp)
+target_include_directories(box2d PUBLIC ${b2d})
+target_link_libraries(vkaEngine PUBLIC box2d)
+
 add_subdirectory(external/glslang)
 add_dependencies(vkaEngine glslangValidator)
 set(SPIRV_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/glslang/StandAlone)

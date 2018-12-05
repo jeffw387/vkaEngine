@@ -31,3 +31,6 @@
 [submodule "external/glslang"]
 	path = external/glslang
 	url = https://github.com/jeffw387/glslang.git
+[submodule "external/Box2D"]
+	path = external/Box2D
+	url = https://github.com/erincatto/Box2D.git
