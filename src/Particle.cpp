@@ -87,10 +87,12 @@ void ParticleContact::resolveInterpenetration(
   }
 }
 
-void ParticleContactResolver::resolveContacts(gsl::span<ParticleContact> contacts, float duration) {
+void ParticleContactResolver::resolveContacts(
+    gsl::span<ParticleContact> contacts,
+    float duration) {
   while (iterationsUsed < iterations) {
     float max{};
-    int maxIndex{contacts.size()};
+    int maxIndex{static_cast<int>(contacts.size())};
     for (int i{}; i < contacts.size(); ++i) {
       float separatingVelocity = contacts[i].calculateSeparatingVelocity();
       if (separatingVelocity < max) {

@@ -37,6 +37,7 @@ private:
 struct ParticleContactResolver {
   int iterations = {};
   void resolveContacts(gsl::span<ParticleContact> contacts, float duration);
+
 protected:
   int iterationsUsed = {};
 };
