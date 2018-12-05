@@ -67,6 +67,8 @@ list(APPEND vkaEngineIncludes
   "${includeDir}/VkEnumStrings.hpp"
   "${includeDir}/overloaded.hpp"
   "${includeDir}/Input.hpp"
+  "${includeDir}/IntrusiveList.hpp"
+  "${includeDir}/QuadTree.hpp"
   "${includeDir}/spookyhash.hpp"
   "${includeDir}/physics/Particle.hpp"
   "${includeDir}/Surface.hpp")
