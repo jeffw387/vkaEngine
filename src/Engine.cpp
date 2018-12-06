@@ -9,6 +9,7 @@
 #include <fstream>
 #include "Engine.hpp"
 #include "Instance.hpp"
+#include "Surface.hpp"
 #include "Device.hpp"
 #include "spdlog/spdlog.h"
 #include "Surface.hpp"
@@ -53,6 +54,10 @@ Engine::Engine(EngineCreateInfo engineCreateInfo)
 Instance* Engine::createInstance(InstanceCreateInfo instanceCreateInfo) {
   instance = std::make_unique<Instance>(this, instanceCreateInfo);
   return instance.get();
+}
+
+void Engine::registerSurface(Surface* surface) {
+  glfwSetWindowUserPointer(*surface, this);
 }
 
 void Engine::renderThreadFunc() {

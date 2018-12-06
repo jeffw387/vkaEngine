@@ -727,7 +727,7 @@ struct AppState {
     if (auto cmd = transfer.cmd.lock()) {
       uploadData(cmd, transfer.fence.get());
     }
-
+    engine->registerSurface(surface);
     engine->run();
   }
 };

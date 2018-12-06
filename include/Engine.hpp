@@ -16,6 +16,7 @@ namespace vka {
 static constexpr auto BufferCount = 3U;
 
 class Engine;
+class Surface;
 class Instance;
 struct InstanceCreateInfo;
 
@@ -51,6 +52,7 @@ public:
   ~Engine() = default;
 
   Instance* createInstance(InstanceCreateInfo);
+  void registerSurface(Surface* surface);
   Instance* getInstance() const noexcept { return instance.get(); }
   void run();
   void setUpdatesPerSecond(uint32_t count) { updatesPerSecond = count; }
