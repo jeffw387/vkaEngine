@@ -187,49 +187,15 @@ struct BufferedState {
 };
 
 struct Assets {
-  asset::Collection loadCollection(const std::string& assetPath) {
-    tinygltf::Model gltfModel;
-    std::string loadWarning;
-    std::string loadError;
-    auto loadResult = modelLoader.LoadASCIIFromFile(
-        &gltfModel, &loadError, &loadWarning, assetPath);
-    if (!loadResult) {
-      MultiLogger::get()->error(
-          "Error while loading {}: {}", assetPath, loadError);
-    }
-    asset::Collection result;
-    auto nodeIndex = 0U;
-    for (auto& node : gltfModel.nodes) {
-      asset::Model model{};
-      model.name = node.name;
-      auto primitive = gltfModel.meshes[node.mesh].primitives.at(0);
-      auto indexAccessor = gltfModel.accessors[primitive.indices];
-      auto positionAccessor =
-          gltfModel.accessors[primitive.attributes["POSITION"]];
-      auto normalAccessor = gltfModel.accessors[primitive.attributes["NORMAL"]];
-      auto indexBufferView = gltfModel.bufferViews[indexAccessor.bufferView];
-      auto positionBufferView =
-          gltfModel.bufferViews[positionAccessor.bufferView];
-      auto normalBufferView = gltfModel.bufferViews[normalAccessor.bufferView];
-      model.indexByteOffset = indexBufferView.byteOffset;
-      model.indexCount = indexAccessor.count;
-      model.positionByteOffset = positionBufferView.byteOffset;
-      model.normalByteOffset = normalBufferView.byteOffset;
-      result.models[nodeIndex] = std::move(model);
-      ++nodeIndex;
-    }
-    result.data = gltfModel.buffers.at(0).data;
-
-    return result;
-  }
-
+  entt::HashedString triangle{"content/models/triangle.gltf"};
+  entt::HashedString terrain{"content/models/terrain.gltf"};
   tinygltf::TinyGLTF modelLoader;
-  asset::Collection shapes;
-  asset::Collection terrain;
+  asset::Collection physicsCollection;
+  asset::Collection terrainCollection;
 
   Assets()
-      : shapes{loadCollection("content/models/shapes.gltf")},
-        terrain{loadCollection("content/models/terrain.gltf")} {}
+      : physicsCollection{modelLoader, {std::array{&triangle}}},
+        terrainCollection{modelLoader, {std::array{&terrain}}} {}
 };
 
 auto createRenderPass = [](vka::Device* device,
@@ -423,16 +389,17 @@ struct AppState {
            render.cameraSet,
            render.instanceSet},
           {0});
-      auto someModel = assets->shapes.models[0];
+      auto triangleMesh =
+          assets->physicsCollection.models[assets->triangle].renderMesh;
       cmd->bindIndexBuffer(
-          assets->shapes.buffer,
-          someModel.indexByteOffset,
+          assets->physicsCollection.buffer,
+          triangleMesh->indexByteOffset,
           VK_INDEX_TYPE_UINT16);
       cmd->bindVertexBuffers(
           0,
-          {assets->shapes.buffer, assets->shapes.buffer},
-          {someModel.positionByteOffset, someModel.normalByteOffset});
-      // cmd->drawIndexed(someModel.indexCount, 1, 0, 0, 0);
+          {assets->physicsCollection.buffer, assets->physicsCollection.buffer},
+          {triangleMesh->positionByteOffset, triangleMesh->normalByteOffset});
+      cmd->drawIndexed(triangleMesh->indexCount, 1, 0, 0, 0);
       uint32_t matIndex{};
       cmd->pushConstants(
           p3DPipeline.pipelineLayout,
@@ -440,16 +407,16 @@ struct AppState {
           0,
           4,
           &matIndex);
+      auto terrainBuffer = assets->terrainCollection.buffer;
+      auto terrainMesh =
+          assets->terrainCollection.models[assets->terrain].renderMesh;
       cmd->bindIndexBuffer(
-          assets->terrain.buffer,
-          assets->terrain.models[0].indexByteOffset,
-          VK_INDEX_TYPE_UINT16);
+          terrainBuffer, terrainMesh->indexByteOffset, VK_INDEX_TYPE_UINT16);
       cmd->bindVertexBuffers(
           0,
-          {assets->terrain.buffer, assets->terrain.buffer},
-          {assets->terrain.models[0].positionByteOffset,
-           assets->terrain.models[0].normalByteOffset});
-      cmd->drawIndexed(assets->terrain.models[0].indexCount, 1, 0, 0, 0);
+          {terrainBuffer, terrainBuffer},
+          {terrainMesh->positionByteOffset, terrainMesh->normalByteOffset});
+      cmd->drawIndexed(terrainMesh->indexCount, 1, 0, 0, 0);
     }
   }
 
@@ -694,8 +661,8 @@ struct AppState {
       cmd->copyBuffer(stagingBuffer, collection.buffer, {{0U, 0U, bufferSize}});
       return stagingBuffer;
     };
-    auto shapesStaging = uploadCollection(assets->shapes);
-    auto terrainStaging = uploadCollection(assets->terrain);
+    auto shapesStaging = uploadCollection(assets->physicsCollection);
+    auto terrainStaging = uploadCollection(assets->terrainCollection);
     cmd->end();
     device->queueSubmit({}, {cmd}, {}, fence);
     fence->wait();
