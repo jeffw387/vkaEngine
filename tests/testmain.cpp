@@ -227,7 +227,7 @@ struct Assets {
   asset::Collection shapes;
   asset::Collection terrain;
 
-  Assets(vka::Device* device, Transfer* transfer)
+  Assets()
       : shapes{loadCollection("content/models/shapes.gltf")},
         terrain{loadCollection("content/models/terrain.gltf")} {}
 };
@@ -731,7 +731,7 @@ struct AppState {
               return data.physicalDevices.at(0);
             })},
         transfer{device},
-        assets{std::make_unique<Assets>(device, &transfer)},
+        assets{std::make_unique<Assets>()},
         swap{std::make_unique<Swap>(device)},
         renderPass{
             createRenderPass(device, swap->swapFormat, swap->depthFormat)},
