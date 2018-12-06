@@ -29,4 +29,9 @@ struct Collection {
   std::map<uint64_t, Model> models;
 };
 
+struct PhysicsModel {
+  Model renderModel;
+  Model collisionModel;
+};
+
 }  // namespace asset
