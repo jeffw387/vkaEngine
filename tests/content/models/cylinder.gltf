@@ -1,0 +1,149 @@
+{
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 192,
+            "max" : [
+                1,
+                1,
+                1
+            ],
+            "min" : [
+                -1,
+                -1,
+                0
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 192,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5121,
+            "count" : 372,
+            "type" : "SCALAR"
+        },
+        {
+            "bufferView" : 3,
+            "componentType" : 5126,
+            "count" : 32,
+            "max" : [
+                1,
+                1,
+                0
+            ],
+            "min" : [
+                -1,
+                -1,
+                0
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 4,
+            "componentType" : 5126,
+            "count" : 32,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 5,
+            "componentType" : 5121,
+            "count" : 90,
+            "type" : "SCALAR"
+        }
+    ],
+    "asset" : {
+        "generator" : "Khronos Blender glTF 2.0 I/O",
+        "version" : "2.0"
+    },
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 2304,
+            "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 2304,
+            "byteOffset" : 2304
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 372,
+            "byteOffset" : 4608
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 384,
+            "byteOffset" : 4980
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 384,
+            "byteOffset" : 5364
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 90,
+            "byteOffset" : 5748
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 5840,
+            "uri" : "cylinder.bin"
+        }
+    ],
+    "extensions" : {},
+    "meshes" : [
+        {
+            "name" : "Cylinder",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "NORMAL" : 1,
+                        "POSITION" : 0
+                    },
+                    "indices" : 2
+                }
+            ]
+        },
+        {
+            "name" : "Collision",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "NORMAL" : 4,
+                        "POSITION" : 3
+                    },
+                    "indices" : 5
+                }
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "mesh" : 0,
+            "name" : "Cylinder"
+        },
+        {
+            "mesh" : 1,
+            "name" : "Collision"
+        }
+    ],
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                0,
+                1
+            ]
+        }
+    ]
+}

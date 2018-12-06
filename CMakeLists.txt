@@ -201,19 +201,19 @@ target_include_directories(
   external/json/single_include)
   target_link_libraries(vkaEngine PUBLIC json_nlohmann)
   
-  add_subdirectory(external/glfw)
-  if(NOT TARGET glfw)
-  message(FATAL_ERROR "glfw target not found")
-  endif()
-  target_link_libraries(vkaEngine PUBLIC glfw)
+add_subdirectory(external/glfw)
+if(NOT TARGET glfw)
+message(FATAL_ERROR "glfw target not found")
+endif()
+target_link_libraries(vkaEngine PUBLIC glfw)
   
-  add_subdirectory(external/spdlog)
-  add_library(spdlog::spdlog ALIAS spdlog)
-  target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
-  
-  add_library(tinygltf INTERFACE)
-  target_include_directories(tinygltf INTERFACE external/tinygltf)
-  target_link_libraries(tinygltf INTERFACE json_nlohmann)
-  target_link_libraries(vkaEngine PUBLIC tinygltf)
-  
-  add_subdirectory(tests)
+add_subdirectory(external/spdlog)
+add_library(spdlog::spdlog ALIAS spdlog)
+target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
+
+add_library(tinygltf INTERFACE)
+target_include_directories(tinygltf INTERFACE external/tinygltf)
+target_link_libraries(tinygltf INTERFACE json_nlohmann)
+target_link_libraries(vkaEngine PUBLIC tinygltf)
+
+add_subdirectory(tests)
