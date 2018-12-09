@@ -432,14 +432,8 @@ struct AppState {
         for (int i{}; i < currentString.size(); ++i) {
           auto currentCharCode = currentString[i];
           int currentGlyph = currentFont->getGlyphIndex(currentCharCode);
-          try {
             pushData.fragment.glyphIndex =
                 currentFont->getArrayIndex(currentGlyph);
-          } catch (std::exception e) {
-            MultiLogger::get()->error(
-                "Exception thrown getting glyph array index: {}", e.what());
-          }
-          int nextGlyph{-1};
           float kerning{};
           if ((i + 1) < currentString.size()) {
             nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
