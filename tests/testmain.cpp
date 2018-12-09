@@ -436,7 +436,7 @@ struct AppState {
                 currentFont->getArrayIndex(currentGlyph);
           float kerning{};
           if ((i + 1) < currentString.size()) {
-            nextGlyph = currentFont->getGlyphIndex(currentString[i + 1]);
+            int nextGlyph{currentFont->getGlyphIndex(currentString[i + 1])};
             kerning = currentFont->getKerning(
                 currentGlyph, nextGlyph, currentText->pixelHeight);
           }
