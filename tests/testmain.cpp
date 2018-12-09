@@ -64,7 +64,7 @@ struct Swap {
   std::shared_ptr<vka::ImageView> depthView;
 
   Swap() {}
-  Swap(vka::Device* device)
+  explicit Swap(vka::Device* device)
       : swapchain(device->createSwapchain()),
         images(swapchain->getSwapImages()),
         views([&]() {
@@ -432,8 +432,8 @@ struct AppState {
         for (int i{}; i < currentString.size(); ++i) {
           auto currentCharCode = currentString[i];
           int currentGlyph = currentFont->getGlyphIndex(currentCharCode);
-            pushData.fragment.glyphIndex =
-                currentFont->getArrayIndex(currentGlyph);
+          pushData.fragment.glyphIndex =
+              currentFont->getArrayIndex(currentGlyph);
           float kerning{};
           if ((i + 1) < currentString.size()) {
             int nextGlyph{currentFont->getGlyphIndex(currentString[i + 1])};
