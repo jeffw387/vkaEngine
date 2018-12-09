@@ -85,9 +85,11 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
   }
 
   Instance::vkCreateDebugUtilsMessengerEXT =
-      (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(instance, "vkCreateDebugUtilsMessengerEXT");
+      (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
+          instance, "vkCreateDebugUtilsMessengerEXT");
   Instance::vkDestroyDebugUtilsMessengerEXT =
-      (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(instance, "vkDestroyDebugUtilsMessengerEXT");
+      (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
+          instance, "vkDestroyDebugUtilsMessengerEXT");
 
   VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
   messengerCreateInfo.sType =
