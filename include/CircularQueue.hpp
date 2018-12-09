@@ -11,7 +11,8 @@ class CircularQueue
     size_t firstID = 0;
     size_t endID = 0;
     size_t count = 0;
-    mutable std::mutex storageMutex;
+    // TODO: is recursive_mutex needed due to a bug?
+    mutable std::recursive_mutex storageMutex;
 
 public:
     // returns the first T if it exists
@@ -22,7 +23,7 @@ public:
         {
             return result;
         }
-        std::lock_guard<std::mutex> lock(storageMutex);
+        std::scoped_lock lock{storageMutex};
         result = storage[firstID];
         return result;
     }
@@ -32,7 +33,7 @@ public:
     {
         auto first = readFirst();
         std::optional<T> result;
-        std::lock_guard<std::mutex> lock(storageMutex);
+        std::scoped_lock lock{storageMutex};
         if (!first.has_value())
             return result;
         result = first.value();
@@ -45,7 +46,7 @@ public:
     template <typename PredicateType>
     std::optional<T> popFirstIf(PredicateType p) {
         std::optional<T> result;
-        std::lock_guard<std::mutex> lock(storageMutex);
+        std::scoped_lock lock{storageMutex};
         if (auto first = readFirst()) {
           if (p(first.value())) {
               result = first.value();
@@ -60,7 +61,7 @@ public:
     // pushes the given T to the end of the queue if space is available, returns false otherwise
     bool pushLast(T newValue)
     {
-        std::lock_guard<std::mutex> lock(storageMutex);
+        std::scoped_lock lock{storageMutex};
         if (!(count < S))
             return false;
         storage[endID] = newValue;
