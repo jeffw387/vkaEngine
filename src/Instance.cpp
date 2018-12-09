@@ -45,10 +45,6 @@ PFN_vkCreateDebugUtilsMessengerEXT Instance::vkCreateDebugUtilsMessengerEXT =
 PFN_vkDestroyDebugUtilsMessengerEXT Instance::vkDestroyDebugUtilsMessengerEXT =
     {};
 
-void DebugMessengerDeleter::operator()(VkDebugUtilsMessengerEXT messenger) {
-  Instance::vkDestroyDebugUtilsMessengerEXT(instanceHandle, messenger, nullptr);
-}
-
 Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
     : engine(engine) {
   MultiLogger::get()->info("Creating instance.");
@@ -83,23 +79,15 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
   createInfo.ppEnabledLayerNames = instanceCreateInfo.layers.data();
   createInfo.pApplicationInfo = &appInfo;
 
-  // vulkanLibrary = LoadVulkanLibrary();
-  // LoadExportedEntryPoints(vulkanLibrary);
-  // LoadGlobalLevelEntryPoints();
-
-  auto instanceResult = vkCreateInstance(&createInfo, nullptr, &instanceHandle);
+  auto instanceResult = vkCreateInstance(&createInfo, nullptr, &instance);
   if (instanceResult != VK_SUCCESS) {
     // TODO: error handling
   }
-  instanceOwner = InstanceOwner(instanceHandle);
 
-  // LoadInstanceLevelEntryPoints(instanceHandle);
   Instance::vkCreateDebugUtilsMessengerEXT =
-      (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
-          instanceHandle, "vkCreateDebugUtilsMessengerEXT");
+      (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(instance, "vkCreateDebugUtilsMessengerEXT");
   Instance::vkDestroyDebugUtilsMessengerEXT =
-      (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
-          instanceHandle, "vkDestroyDebugUtilsMessengerEXT");
+      (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(instance, "vkDestroyDebugUtilsMessengerEXT");
 
   VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
   messengerCreateInfo.sType =
@@ -114,26 +102,26 @@ Instance::Instance(Engine* engine, InstanceCreateInfo instanceCreateInfo)
       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
   Instance::vkCreateDebugUtilsMessengerEXT(
-      instanceHandle, &messengerCreateInfo, nullptr, &debugMessenger);
-  debugMessengerOwner = DebugMessengerOwner(debugMessenger, instanceHandle);
+      instance, &messengerCreateInfo, nullptr, &debugMessenger);
 }
 
-Device* Instance::createDevice(
+std::unique_ptr<Device> Instance::createDevice(
+    VkSurfaceKHR surface,
     std::vector<const char*> deviceExtensions,
     std::vector<PhysicalDeviceFeatures> enabledFeatures,
     DeviceSelectCallback selectCallback) {
-  device = std::make_unique<Device>(
-      instanceHandle,
-      *surface,
-      deviceExtensions,
-      enabledFeatures,
-      selectCallback);
-  return device.get();
+  return std::make_unique<Device>(
+      instance, surface, deviceExtensions, enabledFeatures, selectCallback);
 }
 
-Surface* Instance::createSurface(SurfaceCreateInfo surfaceCreateInfo) {
-  surface = std::make_unique<Surface>(instanceHandle, surfaceCreateInfo);
-  return surface.get();
+std::unique_ptr<Surface> Instance::createSurface(
+    SurfaceCreateInfo surfaceCreateInfo) {
+  return std::make_unique<Surface>(engine, instance, surfaceCreateInfo);
+}
+
+Instance::~Instance() {
+  vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+  vkDestroyInstance(instance, nullptr);
 }
 
 }  // namespace vka

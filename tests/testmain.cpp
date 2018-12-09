@@ -265,10 +265,10 @@ struct AppState {
   vka::EngineCreateInfo engineCreateInfo;
   std::unique_ptr<vka::Engine> engine;
   vka::InstanceCreateInfo instanceCreateInfo;
-  vka::Instance* instance;
+  std::unique_ptr<vka::Instance> instance;
   vka::SurfaceCreateInfo surfaceCreateInfo;
-  vka::Surface* surface;
-  vka::Device* device;
+  std::unique_ptr<vka::Surface> surface;
+  std::unique_ptr<vka::Device> device;
   Transfer transfer;
   std::unique_ptr<Assets> assets;
   std::unique_ptr<Swap> swap;
@@ -316,26 +316,26 @@ struct AppState {
     for (auto i = 0U; i < matSize; ++i) {
       (*current.materialUniform)[i] = (*last.materialUniform)[i];
     }
-    current.materialUniform->flushMemory(device);
+    current.materialUniform->flushMemory(device.get());
 
     auto dynamicLightSize = last.dynamicLightsUniform->size();
     current.dynamicLightsUniform->resize(dynamicLightSize);
     for (auto i = 0U; i < dynamicLightSize; ++i) {
       (*current.dynamicLightsUniform)[i] = (*last.dynamicLightsUniform)[i];
     }
-    current.dynamicLightsUniform->flushMemory(device);
+    current.dynamicLightsUniform->flushMemory(device.get());
 
     current.lightDataUniform->resize(1);
     (*current.lightDataUniform)[0] = (*last.lightDataUniform)[0];
-    current.lightDataUniform->flushMemory(device);
+    current.lightDataUniform->flushMemory(device.get());
 
     current.cameraUniform->resize(1);
     (*current.cameraUniform)[0].projection = mainCamera.getProjection();
     (*current.cameraUniform)[0].view = mainCamera.getView();
-    current.cameraUniform->flushMemory(device);
+    current.cameraUniform->flushMemory(device.get());
 
     current.instanceUniform->copy_from(*last.instanceUniform);
-    current.instanceUniform->flushMemory(device);
+    current.instanceUniform->flushMemory(device.get());
   }
 
   void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
@@ -498,7 +498,7 @@ struct AppState {
         case VK_SUBOPTIMAL_KHR:
           device->waitIdle();
           swap.reset();
-          swap = std::make_unique<Swap>(device);
+          swap = std::make_unique<Swap>(device.get());
           return;
         default:
           MultiLogger::get()->critical(
@@ -560,7 +560,7 @@ struct AppState {
       case VK_SUBOPTIMAL_KHR:
         device->waitIdle();
         swap.reset();
-        swap = std::make_unique<Swap>(device);
+        swap = std::make_unique<Swap>(device.get());
         return;
       default:
         MultiLogger::get()->critical(
@@ -656,6 +656,7 @@ struct AppState {
         surfaceCreateInfo{defaultWidth, defaultHeight, "testmain window"},
         surface{instance->createSurface(surfaceCreateInfo)},
         device{instance->createDevice(
+            *surface,
             {"VK_KHR_swapchain"},
             {},
             [&](const vka::PhysicalDeviceData& data) {
@@ -666,15 +667,17 @@ struct AppState {
               }
               return data.physicalDevices.at(0);
             })},
-        transfer{device},
+        transfer{device.get()},
         assets{std::make_unique<Assets>()},
-        swap{std::make_unique<Swap>(device)},
-        renderPass{
-            createRenderPass(device, swap->swapFormat, swap->depthFormat)},
+        swap{std::make_unique<Swap>(device.get())},
+        renderPass{createRenderPass(
+            device.get(),
+            swap->swapFormat,
+            swap->depthFormat)},
         pipelineCache{device->createPipelineCache()},
-        textPipeline{device, renderPass.get(), pipelineCache.get()},
+        textPipeline{device.get(), renderPass.get(), pipelineCache.get()},
         testFont{"content/fonts/LiberationSans-Regular.ttf",
-                 device,
+                 device.get(),
                  textPipeline},
         testText{std::make_unique<TextObject>(
             glm::vec2(50.f, 100.f),
@@ -687,8 +690,9 @@ struct AppState {
             std::string{"NaN"},
             15,
             testFont.font.get())},
-        p3DPipeline{device, renderPass.get(), pipelineCache.get()},
-        bufState{createBufferedStates(device, &p3DPipeline)} {
+        p3DPipeline{device.get(), renderPass.get(), pipelineCache.get()},
+        bufState{createBufferedStates(device.get(), &p3DPipeline)} {
+    // initialize app data
     mainCamera.setDimensions(2, 2);
     mainCamera.setPosition({0.f, 0.f, 0.f});
     mainCamera.setNearFar(-10, 10);
@@ -721,8 +725,8 @@ struct AppState {
     if (auto cmd = transfer.cmd.lock()) {
       uploadData(cmd, transfer.fence.get());
     }
-    engine->registerSurface(surface);
     engine->run();
+    device->waitIdle();
   }
 };
 
