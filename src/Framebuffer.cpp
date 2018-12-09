@@ -1,4 +1,5 @@
 #include "Framebuffer.hpp"
+#include <range/v3/algorithm/for_each.hpp>
 
 namespace vka {
 Framebuffer::Framebuffer(
@@ -9,9 +10,7 @@ Framebuffer::Framebuffer(
     : device(device), views(std::move(views)) {
   std::vector<VkImageView> vkViews;
   vkViews.reserve(views.size());
-  for (auto& view : this->views) {
-    vkViews.push_back(*view);
-  }
+  ranges::for_each(this->views, [&](auto view) { vkViews.push_back(*view); });
   VkFramebufferCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
   createInfo.attachmentCount = static_cast<uint32_t>(vkViews.size());

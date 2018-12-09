@@ -1,4 +1,5 @@
 #include "CommandPool.hpp"
+#include <range/v3/algorithm/for_each.hpp>
 #include "Device.hpp"
 
 namespace vka {
@@ -189,11 +190,15 @@ void CommandBuffer::bindGraphicsDescriptorSets(
   checkRecording();
   checkRenderPassActive();
   checkGraphicsPipelineBound();
+
   std::vector<VkDescriptorSet> vkSets;
   vkSets.reserve(sets.size());
-  for (auto& set : sets) {
+  ranges::for_each(sets, [&](auto set) {
     vkSets.push_back(*set);
-  }
+    dependentResources.emplace_back(set);
+  });
+  dependentResources.emplace_back(layout);
+
   vkCmdBindDescriptorSets(
       commandBufferHandle,
       VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -203,10 +208,6 @@ void CommandBuffer::bindGraphicsDescriptorSets(
       vkSets.data(),
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
-  dependentResources.emplace_back(std::move(layout));
-  for (auto& set : sets) {
-    dependentResources.emplace_back(set);
-  }
 }
 
 void CommandBuffer::bindComputeDescriptorSets(
@@ -216,11 +217,15 @@ void CommandBuffer::bindComputeDescriptorSets(
     const std::vector<uint32_t>& dynamicOffsets) {
   checkRecording();
   checkComputePipelineBound();
+
   std::vector<VkDescriptorSet> vkSets;
   vkSets.reserve(sets.size());
-  for (auto& set : sets) {
+  ranges::for_each(sets, [&](auto set) {
     vkSets.push_back(*set);
-  }
+    dependentResources.emplace_back(set);
+  });
+  dependentResources.emplace_back(layout);
+
   vkCmdBindDescriptorSets(
       commandBufferHandle,
       VK_PIPELINE_BIND_POINT_COMPUTE,
@@ -230,10 +235,6 @@ void CommandBuffer::bindComputeDescriptorSets(
       vkSets.data(),
       static_cast<uint32_t>(dynamicOffsets.size()),
       dynamicOffsets.data());
-  dependentResources.emplace_back(std::move(layout));
-  for (auto& set : sets) {
-    dependentResources.emplace_back(set);
-  }
 }
 
 void CommandBuffer::bindIndexBuffer(
@@ -254,12 +255,14 @@ void CommandBuffer::bindVertexBuffers(
   checkRecording();
   checkRenderPassActive();
   checkGraphicsPipelineBound();
+
   std::vector<VkBuffer> vkBuffers;
   vkBuffers.reserve(buffers.size());
-  for (auto& buffer : buffers) {
+  ranges::for_each(buffers, [&](auto buffer) {
     vkBuffers.push_back(*buffer);
     dependentResources.emplace_back(std::move(buffer));
-  }
+  });
+
   vkCmdBindVertexBuffers(
       commandBufferHandle,
       firstBinding,
@@ -432,12 +435,13 @@ void CommandBuffer::beginRenderPass(
   beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
   beginInfo.pClearValues = clearValues.data();
   vkCmdBeginRenderPass(commandBufferHandle, &beginInfo, contents);
+
   activeRenderPass = renderPass;
-  dependentResources.emplace_back(std::move(renderPass));
-  for (auto& view : framebuffer->views) {
+  dependentResources.emplace_back(renderPass);
+  ranges::for_each(framebuffer->views, [&](auto view) {
     dependentResources.emplace_back(view);
-  }
-  dependentResources.emplace_back(std::move(framebuffer));
+  });
+  dependentResources.emplace_back(framebuffer);
 }
 
 void CommandBuffer::nextSubpass(VkSubpassContents contents) {
@@ -468,12 +472,14 @@ void CommandBuffer::executeCommands(
         "buffer.");
     throw std::runtime_error("");
   }
+
   std::vector<VkCommandBuffer> vkCmds;
   vkCmds.reserve(commandBuffers.size());
-  for (auto& cmd : commandBuffers) {
+  ranges::for_each(commandBuffers, [&](auto cmd) {
     vkCmds.push_back(*cmd);
     dependentResources.emplace_back(std::move(cmd));
-  }
+  });
+
   vkCmdExecuteCommands(
       commandBufferHandle, static_cast<uint32_t>(vkCmds.size()), vkCmds.data());
 }
@@ -555,17 +561,17 @@ void CommandPool::reset(bool releaseResources) {
       device,
       poolHandle,
       releaseResources ? VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT : 0);
-  for (auto& cmd : cmdBuffers) {
-    cmd->state = CommandBuffer::Initial;
-  }
+
+  ranges::for_each(
+      cmdBuffers, [](auto cmd) { cmd->state = CommandBuffer::Initial; });
 }
 
 CommandPool::~CommandPool() {
   if (poolHandle != VK_NULL_HANDLE) {
-    for (auto& cmd : cmdBuffers) {
-      cmd->state = CommandBuffer::Invalid;
-    }
     vkDestroyCommandPool(device, poolHandle, nullptr);
+
+    ranges::for_each(
+        cmdBuffers, [](auto cmd) { cmd->state = CommandBuffer::Invalid; });
   }
 }
 }  // namespace vka
