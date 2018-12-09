@@ -288,35 +288,7 @@ struct AppState {
   std::unordered_multimap<Input::Action, Input::Signature> mouseBindings;
   std::unordered_map<Input::Signature, Input::Action> inverseMouseBindings;
 
-  void initCallback(vka::Engine* engine, int32_t initialIndex) {
-    MultiLogger::get()->info("Init Callback");
-    auto& initial = bufState[initialIndex];
-
-    initial.materialUniform->push_back({glm::vec4(0.8f, 1.f, 0.8f, 1.f)});
-    initial.materialUniform->flushMemory(device);
-
-    initial.dynamicLightsUniform->push_back(
-        {{0.8f, 0.8f, 0.8f, 25.f}, {0.f, 0.f, 2.f, 0.f}});
-    initial.dynamicLightsUniform->flushMemory(device);
-
-    LightData lightData;
-    lightData.count = 1;
-    lightData.ambient = glm::vec4(0.f, 0.f, 1.f, 10.0f);
-    initial.lightDataUniform->push_back(std::move(lightData));
-    initial.lightDataUniform->flushMemory(device);
-
-    Camera camData{};
-    camData.projection = mainCamera.getProjection();
-    camData.view = mainCamera.getView();
-    initial.cameraUniform->push_back(std::move(camData));
-    initial.cameraUniform->flushMemory(device);
-
-    initial.instanceUniform->push_back(
-        {glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f))});
-    initial.instanceUniform->flushMemory(device);
-  }
-
-  void updateCallback(vka::Engine* engine) {
+  void updateCallback() {
     auto updateIndex = engine->currentUpdateIndex();
     auto lastUpdateIndex = engine->previousUpdateIndex();
     auto& last = bufState[lastUpdateIndex];
@@ -505,7 +477,7 @@ struct AppState {
     }
   }
 
-  void renderCallback(vka::Engine* engine) {
+  void renderCallback() {
     auto renderIndex = engine->currentRenderIndex();
     auto& render = bufState[renderIndex];
 
@@ -673,11 +645,8 @@ struct AppState {
       : defaultWidth{900U},
         defaultHeight{900U},
         mainCamera{},
-        engineCreateInfo{[this](auto engine, auto initialIndex) {
-                           initCallback(engine, initialIndex);
-                         },
-                         [this](auto engine) { updateCallback(engine); },
-                         [this](auto engine) { renderCallback(engine); }},
+        engineCreateInfo{[this]() { updateCallback(); },
+                         [this]() { renderCallback(); }},
         engine{std::make_unique<vka::Engine>(engineCreateInfo)},
         instanceCreateInfo{"testmain",
                            {0, 0, 1},
@@ -723,6 +692,31 @@ struct AppState {
     mainCamera.setDimensions(2, 2);
     mainCamera.setPosition({0.f, 0.f, 0.f});
     mainCamera.setNearFar(-10, 10);
+    int32_t initialIndex{};
+    auto& initial = bufState[initialIndex];
+
+    initial.materialUniform->push_back({glm::vec4(0.8f, 1.f, 0.8f, 1.f)});
+    initial.materialUniform->flushMemory(device.get());
+
+    initial.dynamicLightsUniform->push_back(
+        {{0.8f, 0.8f, 0.8f, 25.f}, {0.f, 0.f, 2.f, 0.f}});
+    initial.dynamicLightsUniform->flushMemory(device.get());
+
+    LightData lightData;
+    lightData.count = 1;
+    lightData.ambient = glm::vec4(0.f, 0.f, 1.f, 10.0f);
+    initial.lightDataUniform->push_back(std::move(lightData));
+    initial.lightDataUniform->flushMemory(device.get());
+
+    Camera camData{};
+    camData.projection = mainCamera.getProjection();
+    camData.view = mainCamera.getView();
+    initial.cameraUniform->push_back(std::move(camData));
+    initial.cameraUniform->flushMemory(device.get());
+
+    initial.instanceUniform->push_back(
+        {glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f))});
+    initial.instanceUniform->flushMemory(device.get());
 
     if (auto cmd = transfer.cmd.lock()) {
       uploadData(cmd, transfer.fence.get());

@@ -17,31 +17,8 @@
 #include "Logger.hpp"
 
 namespace vka {
-
-static void
-keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
-  enginePtr->inputManager.addInputToQueue(
-      Input::Event<Input::Key>{{key, action}, Clock::now()});
-}
-
-static void
-cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
-  enginePtr->mouseX = xpos;
-  enginePtr->mouseY = ypos;
-}
-
-static void
-mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
-  enginePtr->inputManager.addInputToQueue(
-      Input::Event<Input::Mouse>{{button, action}, Clock::now()});
-}
-
 Engine::Engine(EngineCreateInfo engineCreateInfo)
-    : initCallback(engineCreateInfo.initCallback),
-      updateCallback(engineCreateInfo.updateCallback),
+    : updateCallback(engineCreateInfo.updateCallback),
       renderCallback(engineCreateInfo.renderCallback) {
   // sometimes valve's overlay causes problems, this next line will disable it
   // on windows
@@ -64,7 +41,7 @@ void Engine::renderThreadFunc() {
   continueRendering = true;
   while (true) {
     acquireRenderSlot();
-    renderCallback(this);
+    renderCallback();
     if (!continueRendering || !continueUpdating) {
       return;
     }
@@ -119,7 +96,7 @@ void Engine::run() {
     if (nextUpdateTime < currentTime) {
       acquireUpdateSlot();
       if (updateCallback) {
-        updateCallback(this);
+        updateCallback();
       }
       setLastUpdated(updateIndex);
     }
