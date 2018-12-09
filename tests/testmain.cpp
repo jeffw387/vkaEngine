@@ -294,7 +294,7 @@ struct AppState {
     auto& last = bufState[lastUpdateIndex];
     auto& current = bufState[updateIndex];
     auto updateTime = engine->updateTimePoint(updateIndex);
-
+    // TODO: default bindings or do nothing on unbound input events
     auto handleInputEvent = [&](auto inputEvent) {
       std::visit(
           overloaded{[&](Input::Event<Input::Key> keyEvent) {
@@ -307,6 +307,7 @@ struct AppState {
                      }},
           inputEvent);
     };
+    surface->handleOSMessages();
 
     while (auto inputEvent = engine->inputManager.getEventBefore(updateTime)) {
       handleInputEvent(*inputEvent);
