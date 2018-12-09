@@ -46,9 +46,8 @@ void Engine::renderThreadFunc() {
 }
 
 void Engine::run() {
-  running = true;
-  initCallback(this, 0);
-  lastUpdatedIndex = 0;
+  startTime = Clock::now();
+  markStateUpdated(0, startTime);
   MultiLogger::get()->log(spdlog::level::info, "Running engine.");
 
   MultiLogger::get()->info("Starting render thread.");
@@ -57,17 +56,17 @@ void Engine::run() {
   continueUpdating = true;
   MultiLogger::get()->info("Starting update loop.");
   while (true) {
-    auto lastUpdateTime = (lastUpdatedIndex != -1)
-                              ? indexUpdateTime[lastUpdatedIndex]
-                              : startTime;
+    auto lastUpdateTime =
+        (lastUpdatedIndex != -1) ? updateTimes[lastUpdatedIndex] : startTime;
     auto nextUpdateTime = lastUpdateTime + updateDuration();
     auto currentTime = Clock::now();
     if (nextUpdateTime < currentTime) {
       acquireUpdateSlot();
+      updateTime = nextUpdateTime;
       if (updateCallback) {
         updateCallback();
+        markStateUpdated(updateIndex, updateTime);
       }
-      setLastUpdated(updateIndex);
     }
 
     if (!continueRendering || !continueUpdating) {
@@ -75,13 +74,8 @@ void Engine::run() {
     }
   }
   renderThread.join();
-  vkDeviceWaitIdle(*instance->getDevice());
 }
 
-void Engine::setLastUpdated(int32_t index) {
-  std::scoped_lock updateFinishLock(stateMutex);
-  lastUpdatedIndex = index;
-}
 void Engine::acquireUpdateSlot() {
   std::scoped_lock updateLock(stateMutex);
   for (int32_t i = 0; i < BufferCount; ++i) {
@@ -93,6 +87,13 @@ void Engine::acquireUpdateSlot() {
   }
   MultiLogger::get()->error("Error acquiring update slot, no valid indices.");
 }
+
+void Engine::markStateUpdated(int32_t index, Clock::time_point updateTime) {
+  std::lock_guard<std::mutex> markUpdatedLock{stateMutex};
+  lastUpdatedIndex = index;
+  updateTimes[index] = updateTime;
+}
+
 void Engine::acquireRenderSlot() {
   std::scoped_lock renderLock(stateMutex);
   for (int32_t i = 0; i < BufferCount; ++i) {

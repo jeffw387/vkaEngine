@@ -51,6 +51,9 @@ public:
   int32_t previousUpdateIndex() const noexcept { return lastUpdatedIndex; }
   int32_t currentUpdateIndex() const noexcept { return updateIndex; }
   int32_t currentRenderIndex() const noexcept { return renderIndex; }
+  Clock::time_point updateTimePoint(int32_t index) const {
+    return updateTimes[index];
+  }
   void stop() {
     std::lock_guard<std::mutex> stateLock{stateMutex};
     continueUpdating = false;
@@ -64,7 +67,7 @@ public:
 private:
   void renderThreadFunc();
   void acquireUpdateSlot();
-  void setLastUpdated(int32_t);
+  void markStateUpdated(int32_t index, Clock::time_point updateTime);
   void acquireRenderSlot();
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
@@ -77,8 +80,8 @@ private:
   bool continueUpdating;
   uint32_t updatesPerSecond = 60;
   Clock::time_point startTime;
-  std::array<Clock::time_point, BufferCount> indexUpdateTime;
-  InitCallback initCallback;
+  Clock::time_point updateTime;
+  std::array<Clock::time_point, BufferCount> updateTimes;
   UpdateCallback updateCallback;
   RenderCallback renderCallback;
 };
