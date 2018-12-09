@@ -80,7 +80,7 @@ target_include_directories(vkaEngine PUBLIC
 set_property(TARGET vkaEngine PROPERTY CXX_STANDARD 17)
 set_property(TARGET vkaEngine PROPERTY CXX_STANDARD_REQUIRED ON)
 if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-  set_property(TARGET vkaEngine PROPERTY CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+  set_property(TARGET vkaEngine PROPERTY CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi -Wlifetime")
 endif()
 
 target_compile_definitions(vkaEngine 
