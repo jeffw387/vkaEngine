@@ -4,4 +4,10 @@
     <platform>Unspecified</platform>
     <importproject>build/compile_commands.json</importproject>
     <analyze-all-vs-configs>true</analyze-all-vs-configs>
+    <addons>
+        <addon>threadsafety</addon>
+    </addons>
+    <tools>
+        <tool>clang-tidy</tool>
+    </tools>
 </project>
