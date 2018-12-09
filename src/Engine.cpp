@@ -77,7 +77,7 @@ void Engine::run() {
 }
 
 void Engine::acquireUpdateSlot() {
-  std::scoped_lock updateLock(stateMutex);
+  std::scoped_lock updateLock{stateMutex};
   for (int32_t i = 0; i < BufferCount; ++i) {
     if (i == renderIndex || i == lastUpdatedIndex) {
       continue;
@@ -89,13 +89,13 @@ void Engine::acquireUpdateSlot() {
 }
 
 void Engine::markStateUpdated(int32_t index, Clock::time_point updateTime) {
-  std::lock_guard<std::mutex> markUpdatedLock{stateMutex};
+  std::scoped_lock markUpdatedLock{stateMutex};
   lastUpdatedIndex = index;
   updateTimes[index] = updateTime;
 }
 
 void Engine::acquireRenderSlot() {
-  std::scoped_lock renderLock(stateMutex);
+  std::scoped_lock renderLock{stateMutex};
   for (int32_t i = 0; i < BufferCount; ++i) {
     if (i == lastUpdatedIndex) {
       renderIndex = i;
