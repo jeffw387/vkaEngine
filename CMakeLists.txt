@@ -102,6 +102,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
   target_link_libraries(vkaEngine PUBLIC stdc++fs)
 endif()
 
+# add_subdirectory(external/cpp-taskflow)
+# target_link_libraries(vkaEngine PUBLIC Cpp-Taskflow)
+add_library(cpp-taskflow INTERFACE)
+target_include_directories(cpp-taskflow INTERFACE external/cpp-taskflow)
+target_link_libraries(vkaEngine PUBLIC cpp-taskflow)
+
 add_library(box2d)
 set(b2d ${CMAKE_CURRENT_SOURCE_DIR}/external/Box2D)
 target_sources(box2d PRIVATE 
