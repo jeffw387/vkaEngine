@@ -8,6 +8,7 @@
 #include <range/v3/all.hpp>
 #include <fstream>
 #include <string>
+#include <taskflow/taskflow.hpp>
 #include "entt/entt.hpp"
 #include "Engine.hpp"
 #include "Surface.hpp"
@@ -115,7 +116,7 @@ struct BufferedState {
   std::unique_ptr<vka::CommandPool> commandPool;
   std::weak_ptr<vka::CommandBuffer> cmd;
   entt::DefaultRegistry ecs;
-  std::unordered_map<Input::Action, bool> inputState;
+  Input::State inputState;
   BufferedState() {}
   BufferedState(
       vka::Device* device,
@@ -257,6 +258,36 @@ auto createBufferedStates = [](vka::Device* device, P3DPipeline* pipeline) {
   return result;
 };
 
+using namespace Input;
+struct InputUpdate {
+  vka::Clock::time_point updateTime;
+  Manager* inputManager;
+  Bindings* keyBindings;
+  InverseBindings* inverseKeys;
+  Bindings* mouseBindings;
+  InverseBindings* inverseMouseButtons;
+  State* state;
+
+  void operator()() {
+    auto handleInputEvent = [&](auto inputEvent) {
+      std::visit(
+          overloaded{[&](Event<Key> keyEvent) {
+                       state->at(inverseKeys->at(keyEvent.signature)) =
+                           keyEvent.signature.action;
+                     },
+                     [&](Event<Mouse> mouseEvent) {
+                       state->at(inverseMouseButtons->at(
+                           mouseEvent.signature)) = mouseEvent.signature.action;
+                     }},
+          inputEvent);
+    };
+
+    while (auto inputEvent = inputManager->getEventBefore(updateTime)) {
+      handleInputEvent(*inputEvent);
+    }
+  }
+};
+
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
   PolySize defaultHeight = PolySize{900U};
@@ -282,11 +313,14 @@ struct AppState {
   std::unique_ptr<TextObject> fps_text;
   P3DPipeline p3DPipeline;
 
+  tf::Taskflow renderFlow;
+
   std::array<BufferedState, vka::BufferCount> bufState;
-  std::unordered_multimap<Input::Action, Input::Signature> keyBindings;
-  std::unordered_map<Input::Signature, Input::Action> inverseKeyBindings;
-  std::unordered_multimap<Input::Action, Input::Signature> mouseBindings;
-  std::unordered_map<Input::Signature, Input::Action> inverseMouseBindings;
+  Input::Manager inputManager;
+  Bindings keyBindings;
+  InverseBindings inverseKeyBindings;
+  Bindings mouseBindings;
+  InverseBindings inverseMouseButtons;
 
   void updateCallback() {
     auto updateIndex = engine->currentUpdateIndex();
@@ -295,48 +329,63 @@ struct AppState {
     auto& current = bufState[updateIndex];
     auto updateTime = engine->updateTimePoint(updateIndex);
     // TODO: default bindings or do nothing on unbound input events
-    auto handleInputEvent = [&](auto inputEvent) {
-      std::visit(
-          overloaded{[&](Input::Event<Input::Key> keyEvent) {
-                       current.inputState.at(inverseKeyBindings.at(
-                           keyEvent.signature)) = keyEvent.signature.action;
-                     },
-                     [&](Input::Event<Input::Mouse> mouseEvent) {
-                       current.inputState.at(inverseMouseBindings.at(
-                           mouseEvent.signature)) = mouseEvent.signature.action;
-                     }},
-          inputEvent);
-    };
     surface->handleOSMessages();
+    tf::Taskflow updateFlow;
+    auto inputTask = updateFlow
+                         .silent_emplace(InputUpdate{updateTime,
+                                                     &inputManager,
+                                                     &keyBindings,
+                                                     &inverseKeyBindings,
+                                                     &mouseBindings,
+                                                     &inverseMouseButtons,
+                                                     &current.inputState})
+                         .name("Input Update Task");
 
-    while (auto inputEvent = engine->inputManager.getEventBefore(updateTime)) {
-      handleInputEvent(*inputEvent);
-    }
-    auto matSize = last.materialUniform->size();
-    current.materialUniform->resize(matSize);
-    for (auto i = 0U; i < matSize; ++i) {
-      (*current.materialUniform)[i] = (*last.materialUniform)[i];
-    }
-    current.materialUniform->flushMemory(device.get());
+    auto materialsTask =
+        updateFlow
+            .silent_emplace([&]() {
+              current.materialUniform->copy_from(*last.materialUniform);
+              current.materialUniform->flushMemory(device.get());
+            })
+            .name("Material Update Task");
 
-    auto dynamicLightSize = last.dynamicLightsUniform->size();
-    current.dynamicLightsUniform->resize(dynamicLightSize);
-    for (auto i = 0U; i < dynamicLightSize; ++i) {
-      (*current.dynamicLightsUniform)[i] = (*last.dynamicLightsUniform)[i];
-    }
-    current.dynamicLightsUniform->flushMemory(device.get());
+    auto dynamicLightsTask =
+        updateFlow
+            .silent_emplace([&]() {
+              current.dynamicLightsUniform->copy_from(
+                  *last.dynamicLightsUniform);
+              current.dynamicLightsUniform->flushMemory(device.get());
+            })
+            .name("Dynamic Lights Update Task");
 
-    current.lightDataUniform->resize(1);
-    (*current.lightDataUniform)[0] = (*last.lightDataUniform)[0];
-    current.lightDataUniform->flushMemory(device.get());
+    auto lightDataTask =
+        updateFlow
+            .silent_emplace([&]() {
+              current.lightDataUniform->copy_from(*last.lightDataUniform);
+              current.lightDataUniform->flushMemory(device.get());
+            })
+            .name("Light Data Update Task");
 
-    current.cameraUniform->resize(1);
-    (*current.cameraUniform)[0].projection = mainCamera.getProjection();
-    (*current.cameraUniform)[0].view = mainCamera.getView();
-    current.cameraUniform->flushMemory(device.get());
+    auto cameraTask = updateFlow
+                          .silent_emplace([&]() {
+                            (*current.cameraUniform)[0].projection =
+                                mainCamera.getProjection();
+                            (*current.cameraUniform)[0].view =
+                                mainCamera.getView();
+                            current.cameraUniform->flushMemory(device.get());
+                          })
+                          .name("Camera Update Task");
 
-    current.instanceUniform->copy_from(*last.instanceUniform);
-    current.instanceUniform->flushMemory(device.get());
+    auto instanceTask =
+        updateFlow
+            .silent_emplace([&]() {
+              current.instanceUniform->copy_from(*last.instanceUniform);
+              current.instanceUniform->flushMemory(device.get());
+            })
+            .name("Instance Update Task");
+
+    updateFlow.linearize({inputTask, cameraTask, dynamicLightsTask});
+    updateFlow.wait_for_all();
   }
 
   void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
@@ -720,6 +769,7 @@ struct AppState {
     if (auto cmd = transfer.cmd.lock()) {
       uploadData(cmd, transfer.fence.get());
     }
+
     engine->run();
     device->waitIdle();
   }

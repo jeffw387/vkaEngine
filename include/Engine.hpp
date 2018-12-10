@@ -7,6 +7,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <taskflow/taskflow.hpp>
 
 #include "Clock.hpp"
 #include "Logger.hpp"
@@ -34,8 +35,14 @@ struct GLFW {
   }
 };
 
-using UpdateCallback = std::function<void()>;
-using RenderCallback = std::function<void()>;
+struct StateData {
+  std::shared_future<void> stateUpdate;
+  std::shared_future<void> frameRender;
+  Clock::time_point updateTime;
+};
+
+using UpdateCallback = std::function<std::shared_future<void>()>;
+using RenderCallback = std::function<std::shared_future<void>()>;
 struct EngineCreateInfo {
   UpdateCallback updateCallback;
   RenderCallback renderCallback;
@@ -65,13 +72,12 @@ public:
   double mouseY;
 
 private:
-  void renderThreadFunc();
   void acquireUpdateSlot();
-  void markStateUpdated(int32_t index, Clock::time_point updateTime);
   void acquireRenderSlot();
   Clock::duration updateDuration() { return OneSecond / updatesPerSecond; }
 
   std::unique_ptr<GLFW> glfwInstance;
+  std::array<StateData, BufferCount> stateData;
   std::mutex stateMutex;
   int32_t updateIndex = -1;
   int32_t lastUpdatedIndex = -1;

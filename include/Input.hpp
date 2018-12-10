@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include <map>
 
 #include "spookyhash.hpp"
 #include "CircularQueue.hpp"
@@ -49,6 +50,10 @@ public:
 private:
   CircularQueue<InputEvent, 256> inputQueue;
 };
+
+using Bindings = std::unordered_multimap<Action, Signature>;
+using InverseBindings = std::unordered_map<Signature, Action>;
+using State = std::unordered_map<Action, bool>;
 }  // namespace Input
 
 namespace std {

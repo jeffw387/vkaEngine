@@ -34,24 +34,12 @@ std::unique_ptr<Instance> Engine::createInstance(
   return std::make_unique<Instance>(this, instanceCreateInfo);
 }
 
-void Engine::renderThreadFunc() {
-  continueRendering = true;
-  while (true) {
-    acquireRenderSlot();
-    renderCallback();
-    if (!continueRendering || !continueUpdating) {
-      return;
-    }
-  }
-}
-
 void Engine::run() {
   startTime = Clock::now();
-  markStateUpdated(0, startTime);
+  stateData[0].updateTime = startTime;
+  lastUpdatedIndex = 0;
+  // markStateUpdated(0, startTime);
   MultiLogger::get()->log(spdlog::level::info, "Running engine.");
-
-  MultiLogger::get()->info("Starting render thread.");
-  std::thread renderThread(&Engine::renderThreadFunc, this);
 
   continueUpdating = true;
   MultiLogger::get()->info("Starting update loop.");
@@ -63,17 +51,21 @@ void Engine::run() {
     if (nextUpdateTime < currentTime) {
       acquireUpdateSlot();
       updateTime = nextUpdateTime;
-      if (updateCallback) {
-        updateCallback();
-        markStateUpdated(updateIndex, updateTime);
+      if (stateData[updateIndex].stateUpdate.valid()) {
+        stateData[updateIndex].stateUpdate.wait();
+        stateData[updateIndex].stateUpdate = updateCallback();
+        stateData[updateIndex].updateTime = updateTime;
       }
     }
-
+    
+    acquireRenderSlot();
+    
+    renderCallback();
     if (!continueRendering || !continueUpdating) {
-      break;
+      return;
     }
   }
-  renderThread.join();
+  // renderThread.join();
 }
 
 void Engine::acquireUpdateSlot() {
@@ -88,14 +80,14 @@ void Engine::acquireUpdateSlot() {
   MultiLogger::get()->error("Error acquiring update slot, no valid indices.");
 }
 
-void Engine::markStateUpdated(int32_t index, Clock::time_point updateTime) {
-  std::scoped_lock markUpdatedLock{stateMutex};
-  lastUpdatedIndex = index;
-  updateTimes[index] = updateTime;
-}
+// void Engine::markStateUpdated(int32_t index, Clock::time_point updateTime) {
+//   std::scoped_lock markUpdatedLock{stateMutex};
+//   lastUpdatedIndex = index;
+//   updateTimes[index] = updateTime;
+// }
 
 void Engine::acquireRenderSlot() {
-  std::scoped_lock renderLock{stateMutex};
+  // std::scoped_lock renderLock{stateMutex};
   for (int32_t i = 0; i < BufferCount; ++i) {
     if (i == lastUpdatedIndex) {
       renderIndex = i;
