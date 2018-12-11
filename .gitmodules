@@ -37,3 +37,6 @@
 [submodule "external/cpp-taskflow"]
 	path = external/cpp-taskflow
 	url = https://github.com/cpp-taskflow/cpp-taskflow.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git
