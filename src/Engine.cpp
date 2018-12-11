@@ -59,13 +59,12 @@ void Engine::run() {
     }
     
     acquireRenderSlot();
-    
+
     renderCallback();
     if (!continueRendering || !continueUpdating) {
       return;
     }
   }
-  // renderThread.join();
 }
 
 void Engine::acquireUpdateSlot() {
@@ -79,12 +78,6 @@ void Engine::acquireUpdateSlot() {
   }
   MultiLogger::get()->error("Error acquiring update slot, no valid indices.");
 }
-
-// void Engine::markStateUpdated(int32_t index, Clock::time_point updateTime) {
-//   std::scoped_lock markUpdatedLock{stateMutex};
-//   lastUpdatedIndex = index;
-//   updateTimes[index] = updateTime;
-// }
 
 void Engine::acquireRenderSlot() {
   // std::scoped_lock renderLock{stateMutex};
