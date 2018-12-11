@@ -10,10 +10,9 @@ project(vkaEngineProject
 set(BUILD_SHARED_LIBS OFF)
   
 set(srcDir "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(includeDir "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-configure_file("${includeDir}/version.hpp.in" 
-  "${includeDir}/version.hpp" @ONLY)
+configure_file("${srcDir}/version.hpp.in" 
+  "${srcDir}/version.hpp" @ONLY)
 
 list(APPEND vkaEngineSources 
   "${srcDir}/Logger.cpp"
@@ -40,38 +39,39 @@ list(APPEND vkaEngineSources
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
-  "${includeDir}/version.hpp"
-  "${includeDir}/thsvs_simpler_vulkan_synchronization.h"
-  "${includeDir}/Text.hpp"
-  "${includeDir}/Logger.hpp"
-  "${includeDir}/IO.hpp"
-  "${includeDir}/Camera.hpp"
-  "${includeDir}/Engine.hpp"
-  "${includeDir}/LevelData.hpp"
-  "${includeDir}/vulkan_vector.hpp"
-  "${includeDir}/RenderPass.hpp"
-  "${includeDir}/Instance.hpp"
-  "${includeDir}/Device.hpp"
-  "${includeDir}/Buffer.hpp"
-  "${includeDir}/Image.hpp"
-  "${includeDir}/Framebuffer.hpp"
-  "${includeDir}/CommandPool.hpp"
-  "${includeDir}/DescriptorPool.hpp"
-  "${includeDir}/DescriptorSetLayout.hpp"
-  "${includeDir}/ShaderModule.hpp"
-  "${includeDir}/Swapchain.hpp"
-  "${includeDir}/PipelineLayout.hpp"
-  "${includeDir}/Pipeline.hpp"
-  "${includeDir}/Fence.hpp"
-  "${includeDir}/Semaphore.hpp"
-  "${includeDir}/VkEnumStrings.hpp"
-  "${includeDir}/overloaded.hpp"
-  "${includeDir}/Input.hpp"
-  "${includeDir}/IntrusiveList.hpp"
-  "${includeDir}/QuadTree.hpp"
-  "${includeDir}/spookyhash.hpp"
-  "${includeDir}/physics/Particle.hpp"
-  "${includeDir}/Surface.hpp")
+  "${srcDir}/version.hpp"
+  "${srcDir}/thsvs_simpler_vulkan_synchronization.h"
+  "${srcDir}/Text.hpp"
+  "${srcDir}/Logger.hpp"
+  "${srcDir}/ObjectPool.hpp"
+  "${srcDir}/BasicLoop.hpp"
+  "${srcDir}/IO.hpp"
+  "${srcDir}/Camera.hpp"
+  "${srcDir}/Engine.hpp"
+  "${srcDir}/LevelData.hpp"
+  "${srcDir}/vulkan_vector.hpp"
+  "${srcDir}/RenderPass.hpp"
+  "${srcDir}/Instance.hpp"
+  "${srcDir}/Device.hpp"
+  "${srcDir}/Buffer.hpp"
+  "${srcDir}/Image.hpp"
+  "${srcDir}/Framebuffer.hpp"
+  "${srcDir}/CommandPool.hpp"
+  "${srcDir}/DescriptorPool.hpp"
+  "${srcDir}/DescriptorSetLayout.hpp"
+  "${srcDir}/ShaderModule.hpp"
+  "${srcDir}/Swapchain.hpp"
+  "${srcDir}/PipelineLayout.hpp"
+  "${srcDir}/Pipeline.hpp"
+  "${srcDir}/Fence.hpp"
+  "${srcDir}/Semaphore.hpp"
+  "${srcDir}/VkEnumStrings.hpp"
+  "${srcDir}/overloaded.hpp"
+  "${srcDir}/Input.hpp"
+  "${srcDir}/IntrusiveList.hpp"
+  "${srcDir}/QuadTree.hpp"
+  "${srcDir}/spookyhash.hpp"
+  "${srcDir}/Surface.hpp")
 add_library(vkaEngine)
 target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
 target_include_directories(vkaEngine PUBLIC 
@@ -222,5 +222,8 @@ add_library(tinygltf INTERFACE)
 target_include_directories(tinygltf INTERFACE external/tinygltf)
 target_link_libraries(tinygltf INTERFACE json_nlohmann)
 target_link_libraries(vkaEngine PUBLIC tinygltf)
+
+add_executable(glfw_test src/GLFW.test.cpp)
+target_link_libraries(glfw_test vkaEngine Catch2)
 
 add_subdirectory(tests)

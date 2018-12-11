@@ -6,13 +6,9 @@
 #include "version.hpp"
 #include "spdlog/spdlog.h"
 #include "Device.hpp"
+#include "Surface.hpp"
 
 namespace vka {
-
-class Engine;
-class Surface;
-class Device;
-struct SurfaceCreateInfo;
 
 struct InstanceCreateInfo {
   const char* appName;
@@ -21,21 +17,22 @@ struct InstanceCreateInfo {
   std::vector<const char*> layers;
 };
 
+template <typename PlatformT>
 class Instance {
 public:
-  Instance(Engine*, InstanceCreateInfo);
+  Instance(std::shared_ptr<PlatformT> platform, InstanceCreateInfo);
   ~Instance();
 
+  std::unique_ptr<Surface> createSurface(SurfaceCreateInfo);
   std::unique_ptr<Device> createDevice(
-      VkSurfaceKHR surface,
+      Surface* surface,
       std::vector<const char*> deviceExtensions,
       std::vector<PhysicalDeviceFeatures> enabledFeatures,
       DeviceSelectCallback selectCallback);
-  std::unique_ptr<Surface> createSurface(SurfaceCreateInfo);
   operator VkInstance() { return instance; }
 
 private:
-  Engine* engine;
+  std::shared_ptr<PlatformT> platform;
   VkInstance instance;
   VkDebugUtilsMessengerEXT debugMessenger;
 

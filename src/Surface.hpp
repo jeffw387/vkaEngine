@@ -16,18 +16,21 @@ struct SurfaceCreateInfo {
   const char* windowTitle;
 };
 
+template <typename SurfaceSource>
 class Surface {
 public:
   operator VkSurfaceKHR() { return surface; }
   operator GLFWwindow*() { return window; }
-  Surface(Engine* engine, VkInstance, SurfaceCreateInfo);
+  Surface(Engine* engine, VkInstance instance, SurfaceCreateInfo) {
+    
+  }
   ~Surface();
-  void handleOSMessages();
+  [[nodiscard]] bool handleOSMessages();
 
 private:
   Engine* engine;
   VkInstance instance;
-  GLFWwindow* window;
+  SurfaceSource::Window* window;
   VkSurfaceKHR surface;
 };
 }  // namespace vka

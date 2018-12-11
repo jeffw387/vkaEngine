@@ -26,14 +26,13 @@ mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
       Input::Event<Input::Mouse>{{button, action}, Clock::now()});
 }
 
-void Surface::handleOSMessages() {
+bool Surface::handleOSMessages() {
   glfwPollEvents();
-  if (glfwWindowShouldClose(window)) {
-    engine->stop();
-  }
+  return glfwWindowShouldClose(window);
 };
 
-Surface::Surface(
+template <typename SurfaceSource>
+Surface<SurfaceSource>::Surface(
     Engine* engine,
     VkInstance instance,
     SurfaceCreateInfo surfaceCreateInfo)

@@ -9,6 +9,10 @@
 #include <fstream>
 #include <string>
 #include <taskflow/taskflow.hpp>
+
+#include "ObjectPool.hpp"
+#include "CircularQueue.hpp"
+#include "BasicLoop.hpp"
 #include "entt/entt.hpp"
 #include "Engine.hpp"
 #include "Surface.hpp"
@@ -117,6 +121,7 @@ struct BufferedState {
   std::weak_ptr<vka::CommandBuffer> cmd;
   entt::DefaultRegistry ecs;
   Input::State inputState;
+
   BufferedState() {}
   BufferedState(
       vka::Device* device,
@@ -313,27 +318,28 @@ struct AppState {
   std::unique_ptr<TextObject> fps_text;
   P3DPipeline p3DPipeline;
 
-  tf::Taskflow renderFlow;
+  ObjectPool<BufferedState, vka::BufferCount> statePool;
+  CircularQueue<BufferedState, vka::BufferCount> statesInFlight;
 
-  std::array<BufferedState, vka::BufferCount> bufState;
-  Input::Manager inputManager;
   Bindings keyBindings;
   InverseBindings inverseKeyBindings;
   Bindings mouseBindings;
   InverseBindings inverseMouseButtons;
 
-  void updateCallback() {
+  std::shared_future<void> updateCallback() {
     auto updateIndex = engine->currentUpdateIndex();
     auto lastUpdateIndex = engine->previousUpdateIndex();
     auto& last = bufState[lastUpdateIndex];
     auto& current = bufState[updateIndex];
     auto updateTime = engine->updateTimePoint(updateIndex);
     // TODO: default bindings or do nothing on unbound input events
-    surface->handleOSMessages();
+    if (!surface->handleOSMessages()) {
+      // TODO: exit program when requested
+    }
     tf::Taskflow updateFlow;
     auto inputTask = updateFlow
                          .silent_emplace(InputUpdate{updateTime,
-                                                     &inputManager,
+                                                     &engine->inputManager,
                                                      &keyBindings,
                                                      &inverseKeyBindings,
                                                      &mouseBindings,
@@ -385,7 +391,7 @@ struct AppState {
             .name("Instance Update Task");
 
     updateFlow.linearize({inputTask, cameraTask, dynamicLightsTask});
-    updateFlow.wait_for_all();
+    return updateFlow.dispatch();
   }
 
   void pipeline3DRender(uint32_t renderIndex, VkExtent2D swapExtent) {
@@ -521,7 +527,7 @@ struct AppState {
     }
   }
 
-  void renderCallback() {
+  std::shared_future<void> renderCallback() {
     auto renderIndex = engine->currentRenderIndex();
     auto& render = bufState[renderIndex];
 
@@ -537,13 +543,13 @@ struct AppState {
     } else {
       switch (index.error()) {
         case VK_NOT_READY:
-          return;
+          return {};
         case VK_ERROR_OUT_OF_DATE_KHR:
         case VK_SUBOPTIMAL_KHR:
           device->waitIdle();
           swap.reset();
           swap = std::make_unique<Swap>(device.get());
-          return;
+          return {};
         default:
           MultiLogger::get()->critical(
               "Unrecoverable vulkan error: {}", vka::Results[index.error()]);
@@ -563,7 +569,7 @@ struct AppState {
 
     auto swapExtent = swap->swapchain->getSwapExtent();
     if (swapExtent.width == 0 || swapExtent.height == 0) {
-      return;
+      return {};
     }
     render.framebuffer = device->createFramebuffer(
         *renderPass,
@@ -599,13 +605,13 @@ struct AppState {
 
     switch (presentResult) {
       case VK_SUCCESS:
-        return;
+        return {};
       case VK_ERROR_OUT_OF_DATE_KHR:
       case VK_SUBOPTIMAL_KHR:
         device->waitIdle();
         swap.reset();
         swap = std::make_unique<Swap>(device.get());
-        return;
+        return {};
       default:
         MultiLogger::get()->critical(
             "Unrecoverable vulkan error: {}", vka::Results[presentResult]);
@@ -689,8 +695,8 @@ struct AppState {
       : defaultWidth{900U},
         defaultHeight{900U},
         mainCamera{},
-        engineCreateInfo{[this]() { updateCallback(); },
-                         [this]() { renderCallback(); }},
+        engineCreateInfo{[this]() { return updateCallback(); },
+                         [this]() { return renderCallback(); }},
         engine{std::make_unique<vka::Engine>(engineCreateInfo)},
         instanceCreateInfo{"testmain",
                            {0, 0, 1},

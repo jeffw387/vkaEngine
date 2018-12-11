@@ -57,7 +57,7 @@ void Engine::run() {
         stateData[updateIndex].updateTime = updateTime;
       }
     }
-    
+
     acquireRenderSlot();
 
     renderCallback();
