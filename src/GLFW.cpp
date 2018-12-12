@@ -8,7 +8,8 @@ void Context::init() {
   }
 }
 
-Context::WindowType* Context::createWindow(int width, int height, std::string_view windowTitle) {
+Context::WindowType*
+Context::createWindow(int width, int height, std::string_view windowTitle) {
   init();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   return glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
@@ -17,7 +18,8 @@ Context::WindowType* Context::createWindow(int width, int height, std::string_vi
 VkSurfaceKHR Context::createSurface(VkInstance instance, WindowType* window) {
   init();
   VkSurfaceKHR result{};
-  auto surfaceResult = glfwCreateWindowSurface(instance, window, nullptr, &result);
+  auto surfaceResult =
+      glfwCreateWindowSurface(instance, window, nullptr, &result);
   return result;
 }
-}
+}  // namespace GLFW

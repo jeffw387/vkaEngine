@@ -3,8 +3,9 @@
 
 class BasicLoop {
   std::function<bool()> callback = {};
+
 public:
-  BasicLoop() {};
+  BasicLoop(){};
   BasicLoop(std::function<bool()> callback) : callback(callback) {}
   void run() const {
     while (true) {

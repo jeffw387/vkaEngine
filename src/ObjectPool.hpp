@@ -4,9 +4,10 @@
 
 template <typename T>
 class Pooled {
-friend class Pool;
+  friend class Pool;
   T* object = {};
   size_t index = {};
+
 public:
   operator T*() { return object; }
   T* get() { return object; }
@@ -14,9 +15,9 @@ public:
 
 template <typename T, size_t N>
 class Pool {
-  std::array<T,N> storage;
+  std::array<T, N> storage;
   std::array<bool, N> allocated;
-  
+
 public:
   [[nodiscard]] Pooled<T> allocate() noexcept {
     for (size_t resultIndex{}; resultIndex < N; ++resultIndex) {

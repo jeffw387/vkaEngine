@@ -52,83 +52,83 @@ static VkBool32 vulkanDebugCallback(
 template <typename PlatformT>
 class Instance {
 public:
-  Instance(std::shared_ptr<PlatformT> platform, InstanceCreateInfo instanceCreateInfo)
-    : engine(engine) {
-  MultiLogger::get()->info("Creating instance.");
+  Instance(InstanceCreateInfo instanceCreateInfo) {
+    MultiLogger::get()->info("Creating instance.");
 
-  VkApplicationInfo appInfo{};
-  appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.engineVersion = VK_MAKE_VERSION(
-      EngineVersion.major, EngineVersion.minor, EngineVersion.patch);
-  appInfo.applicationVersion = VK_MAKE_VERSION(
-      instanceCreateInfo.appVersion.major,
-      instanceCreateInfo.appVersion.minor,
-      instanceCreateInfo.appVersion.patch);
-  appInfo.pEngineName = "vkaEngine";
-  appInfo.pApplicationName = instanceCreateInfo.appName;
+    VkApplicationInfo appInfo{};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.engineVersion = VK_MAKE_VERSION(
+        EngineVersion.major, EngineVersion.minor, EngineVersion.patch);
+    appInfo.applicationVersion = VK_MAKE_VERSION(
+        instanceCreateInfo.appVersion.major,
+        instanceCreateInfo.appVersion.minor,
+        instanceCreateInfo.appVersion.patch);
+    appInfo.pEngineName = "vkaEngine";
+    appInfo.pApplicationName = instanceCreateInfo.appName;
 
-  uint32_t glfwRequiredInstanceExtensionCount{};
-  auto glfwRequiredInstanceExtensions =
-      glfwGetRequiredInstanceExtensions(&glfwRequiredInstanceExtensionCount);
-  for (auto i = 0U; i < glfwRequiredInstanceExtensionCount; ++i) {
-    instanceCreateInfo.instanceExtensions.push_back(
-        glfwRequiredInstanceExtensions[i]);
+    uint32_t glfwRequiredInstanceExtensionCount{};
+    auto glfwRequiredInstanceExtensions =
+        glfwGetRequiredInstanceExtensions(&glfwRequiredInstanceExtensionCount);
+    for (auto i = 0U; i < glfwRequiredInstanceExtensionCount; ++i) {
+      instanceCreateInfo.instanceExtensions.push_back(
+          glfwRequiredInstanceExtensions[i]);
+    }
+    VkInstanceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.enabledExtensionCount =
+        static_cast<uint32_t>(instanceCreateInfo.instanceExtensions.size());
+    createInfo.ppEnabledExtensionNames =
+        instanceCreateInfo.instanceExtensions.data();
+    createInfo.enabledLayerCount =
+        static_cast<uint32_t>(instanceCreateInfo.layers.size());
+    createInfo.ppEnabledLayerNames = instanceCreateInfo.layers.data();
+    createInfo.pApplicationInfo = &appInfo;
+
+    auto instanceResult = vkCreateInstance(&createInfo, nullptr, &instance);
+    if (instanceResult != VK_SUCCESS) {
+      // TODO: error handling
+    }
+
+    vkCreateDebugUtilsMessengerEXT =
+        (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
+            instance, "vkCreateDebugUtilsMessengerEXT");
+    vkDestroyDebugUtilsMessengerEXT =
+        (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
+            instance, "vkDestroyDebugUtilsMessengerEXT");
+
+    VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
+    messengerCreateInfo.sType =
+        VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    messengerCreateInfo.messageSeverity =
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+    messengerCreateInfo.messageType =
+        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
+    vkCreateDebugUtilsMessengerEXT(
+        instance, &messengerCreateInfo, nullptr, &debugMessenger);
   }
-  VkInstanceCreateInfo createInfo{};
-  createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-  createInfo.enabledExtensionCount =
-      static_cast<uint32_t>(instanceCreateInfo.instanceExtensions.size());
-  createInfo.ppEnabledExtensionNames =
-      instanceCreateInfo.instanceExtensions.data();
-  createInfo.enabledLayerCount =
-      static_cast<uint32_t>(instanceCreateInfo.layers.size());
-  createInfo.ppEnabledLayerNames = instanceCreateInfo.layers.data();
-  createInfo.pApplicationInfo = &appInfo;
-
-  auto instanceResult = vkCreateInstance(&createInfo, nullptr, &instance);
-  if (instanceResult != VK_SUCCESS) {
-    // TODO: error handling
-  }
-
-  vkCreateDebugUtilsMessengerEXT =
-      (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
-          instance, "vkCreateDebugUtilsMessengerEXT");
-  vkDestroyDebugUtilsMessengerEXT =
-      (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
-          instance, "vkDestroyDebugUtilsMessengerEXT");
-
-  VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
-  messengerCreateInfo.sType =
-      VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-  messengerCreateInfo.messageSeverity =
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-  messengerCreateInfo.messageType =
-      VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-  messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
-  vkCreateDebugUtilsMessenger(
-      instance, &messengerCreateInfo, nullptr, &debugMessenger);
-}
   ~Instance() {
     vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-  vkDestroyInstance(instance, nullptr);
+    vkDestroyInstance(instance, nullptr);
   }
 
-  std::unique_ptr<Surface<PlatformT>> createSurface(SurfaceCreateInfo) {
-    return std::make_unique<Surface<PlatformT>(engine, instance, surfaceCreateInfo);
+  std::unique_ptr<Surface<PlatformT>> createSurface(
+      SurfaceCreateInfo createInfo) {
+    return std::make_unique<Surface<PlatformT>>(instance, createInfo);
   }
   std::unique_ptr<Device> createDevice(
       Surface<PlatformT>* surface,
       std::vector<const char*> deviceExtensions,
       std::vector<PhysicalDeviceFeatures> enabledFeatures,
       DeviceSelectCallback selectCallback) {
-      return std::make_unique<Device>(
+    return std::make_unique<Device>(
         instance, surface, deviceExtensions, enabledFeatures, selectCallback);
-    }
+  }
   operator VkInstance() { return instance; }
 
 private:

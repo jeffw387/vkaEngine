@@ -18,9 +18,7 @@ struct SurfaceCreateInfo {
 class SurfaceBase {
 public:
   operator VkSurfaceKHR() { return surface; }
-  SurfaceBase(VkInstance instance, SurfaceCreateInfo createInfo) {
-    
-  }
+  SurfaceBase(VkInstance instance, SurfaceCreateInfo createInfo) {}
   virtual ~SurfaceBase() {}
   [[nodiscard]] virtual bool handleOSMessages() = 0;
 
@@ -37,13 +35,10 @@ template <typename PlatformT>
 class Surface : public SurfaceBase {
 public:
   Surface(VkInstance instance, SurfaceCreateInfo createInfo)
-   : SurfaceBase(instance, createInfo) {
+      : SurfaceBase(instance, createInfo) {}
 
-  }
+  bool handleOSMessages() override {}
 
-  bool SurfaceBase::handleOSMessages() {
-  }
-};
 private:
   typename PlatformT::WindowType* window;
 };

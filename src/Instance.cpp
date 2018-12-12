@@ -6,6 +6,4 @@
 #include <iostream>
 #include "spdlog/spdlog.h"
 
-namespace vka {
-
-}  // namespace vka
+namespace vka {}  // namespace vka
