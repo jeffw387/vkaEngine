@@ -22,4 +22,10 @@ VkSurfaceKHR Context::createSurface(VkInstance instance, WindowType* window) {
       glfwCreateWindowSurface(instance, window, nullptr, &result);
   return result;
 }
+
+bool Context::pollOS(Context::WindowType* window) {
+  init();
+  glfwPollEvents();
+  return glfwWindowShouldClose(window);
+}
 }  // namespace GLFW

@@ -31,15 +31,11 @@ public:
     return reinterpret_cast<T>(glfwGetInstanceProcAddress(instance, functionName.data()));
   }
 
-  template <typename T>
-  static T loadVulkanFunction(std::string_view functionName) {
-    init();
-    return reinterpret_cast<T>(glfwGetProcAddress(functionName.data()));
-  }
-
   static WindowType* createWindow(int width, int height, std::string_view windowTitle);
 
   static VkSurfaceKHR createSurface(VkInstance instance, WindowType* window);
+
+  static bool pollOS(WindowType* window);
 
 private:
   static std::unique_ptr<detail::GLFWOwner> glfwOwner;
