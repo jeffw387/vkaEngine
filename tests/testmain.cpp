@@ -14,7 +14,6 @@
 #include "CircularQueue.hpp"
 #include "BasicLoop.hpp"
 #include "entt/entt.hpp"
-#include "Engine.hpp"
 #include "Surface.hpp"
 #include "Instance.hpp"
 #include "Device.hpp"

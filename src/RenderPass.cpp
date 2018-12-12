@@ -2,7 +2,6 @@
 #include "Device.hpp"
 #include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
-#include "Engine.hpp"
 
 namespace vka {
 Subpass::Subpass(VkPipelineBindPoint bindPoint) : bindPoint(bindPoint){};

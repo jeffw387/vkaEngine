@@ -10,6 +10,7 @@ void Context::init() {
 
 Context::WindowType* Context::createWindow(int width, int height, std::string_view windowTitle) {
   init();
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   return glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
 }
 

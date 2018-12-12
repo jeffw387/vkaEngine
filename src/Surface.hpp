@@ -25,6 +25,8 @@ public:
   [[nodiscard]] virtual bool handleOSMessages() = 0;
 
   Input::Manager inputManager;
+  double mouseX = {};
+  double mouseY = {};
 
 private:
   VkInstance instance;

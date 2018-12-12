@@ -4,7 +4,6 @@
 #include "Surface.hpp"
 #include <stdexcept>
 #include <iostream>
-#include "Engine.hpp"
 #include "spdlog/spdlog.h"
 
 namespace vka {
