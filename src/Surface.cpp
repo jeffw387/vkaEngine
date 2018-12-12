@@ -21,15 +21,12 @@ cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
 
 static void
 mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-  auto enginePtr = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
+  auto enginePtr = reinterpret_cast<Surface*>(glfwGetWindowUserPointer(window));
   enginePtr->inputManager.addInputToQueue(
       Input::Event<Input::Mouse>{{button, action}, Clock::now()});
 }
 
-bool Surface::handleOSMessages() {
-  glfwPollEvents();
-  return glfwWindowShouldClose(window);
-};
+
 
 template <typename SurfaceSource>
 Surface<SurfaceSource>::Surface(

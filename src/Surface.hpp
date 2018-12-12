@@ -5,10 +5,9 @@
 #include <memory>
 #include <vector>
 
-namespace vka {
+#include "Input.hpp"
 
-class Engine;
-class Instance;
+namespace vka {
 
 struct SurfaceCreateInfo {
   int width;
@@ -16,21 +15,35 @@ struct SurfaceCreateInfo {
   const char* windowTitle;
 };
 
-template <typename SurfaceSource>
-class Surface {
+class SurfaceBase {
 public:
   operator VkSurfaceKHR() { return surface; }
-  operator GLFWwindow*() { return window; }
-  Surface(Engine* engine, VkInstance instance, SurfaceCreateInfo) {
+  SurfaceBase(VkInstance instance, SurfaceCreateInfo createInfo) {
     
   }
-  ~Surface();
-  [[nodiscard]] bool handleOSMessages();
+  virtual ~SurfaceBase() {}
+  [[nodiscard]] virtual bool handleOSMessages() = 0;
+
+  Input::Manager inputManager;
 
 private:
-  Engine* engine;
   VkInstance instance;
-  SurfaceSource::Window* window;
   VkSurfaceKHR surface;
 };
+
+template <typename PlatformT>
+class Surface : public SurfaceBase {
+public:
+  Surface(VkInstance instance, SurfaceCreateInfo createInfo)
+   : SurfaceBase(instance, createInfo) {
+
+  }
+
+  bool SurfaceBase::handleOSMessages() {
+  }
+};
+private:
+  typename PlatformT::WindowType* window;
+};
+
 }  // namespace vka

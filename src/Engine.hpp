@@ -16,22 +16,22 @@
 namespace vka {
 static constexpr auto BufferCount = 3U;
 
-class Engine;
-class Surface;
-class Instance;
-struct InstanceCreateInfo;
+// class Engine;
+// class Surface;
+// class Instance;
+// struct InstanceCreateInfo;
 
 
 
-class Engine {
-public:
-  std::unique_ptr<Instance> createInstance(InstanceCreateInfo);
+// class Engine {
+// public:
+//   std::unique_ptr<Instance> createInstance(InstanceCreateInfo);
 
-  Input::Manager inputManager;
-  double mouseX;
-  double mouseY;
+//   Input::Manager inputManager;
+//   double mouseX;
+//   double mouseY;
 
-private:
-  std::unique_ptr<GLFW> glfwInstance;
-};
+// private:
+//   // std::unique_ptr<GLFW> glfwInstance;
+// };
 }  // namespace vka

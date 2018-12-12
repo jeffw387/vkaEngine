@@ -1,46 +1,48 @@
 #include <string_view>
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
+#include <memory>
 #include "Logger.hpp"
 
 namespace GLFW {
 
-struct Window {
-  GLFWwindow* handle;
-  VkSurfaceKHR surface;
-};
-
-struct Context {
-  using WindowType = Window;
-  
-  Context() {
-    MultiLogger::get()->info("Initializing GLFW");
-    auto initResult = glfwInit();
-    glfwSetErrorCallback([](int error, const char* desc) {
-      MultiLogger::get()->error("GLFW error {}: {}", error, desc);
-    });
+namespace detail {
+struct GLFWOwner {
+  GLFWOwner() {
+    auto result = glfwInit();
+    if (result != GLFW_TRUE) {
+      throw result;
+    }
   }
 
+  ~GLFWOwner() {
+    glfwTerminate();
+  }
+};
+}
+
+class Context {
+public:
+  using WindowType = GLFWwindow;
+
   template <typename T>
-  T loadVulkanFunction(VkInstance instance, std::string_view functionName) {
+  static T loadVulkanFunction(VkInstance instance, std::string_view functionName) {
+    init();
     return reinterpret_cast<T>(glfwGetInstanceProcAddress(instance, functionName.data()));
   }
 
   template <typename T>
-  T loadVulkanFunction(std::string_view functionName) {
+  static T loadVulkanFunction(std::string_view functionName) {
+    init();
     return reinterpret_cast<T>(glfwGetProcAddress(functionName.data()));
   }
 
+  static WindowType* createWindow(int width, int height, std::string_view windowTitle);
 
-  WindowType createSurface(VkInstance instance, int width, int height, std::string_view windowTitle) {
-    Window window{};
-    window.handle = glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
-    auto surfaceResult = glfwCreateWindowSurface(instance, window.handle, nullptr, &window.surface);
-  }
+  static VkSurfaceKHR createSurface(VkInstance instance, WindowType* window);
 
-  ~Context() {
-    MultiLogger::get()->info("Terminating GLFW");
-    glfwTerminate();
-  }
+private:
+  static std::unique_ptr<detail::GLFWOwner> glfwOwner;
+  static void init();
 };
 }

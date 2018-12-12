@@ -7,12 +7,12 @@
 #include <string>
 #include <algorithm>
 #include <optional>
-#include <gsl-lite.hpp>
 #include <range/v3/all.hpp>
 #include <stdexcept>
 #include <glm/glm.hpp>
 #include <optional>
 #include <msdfgen.h>
+#include "gsl-lite.hpp"
 #include "IO.hpp"
 #include "Logger.hpp"
 

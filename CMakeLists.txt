@@ -16,6 +16,7 @@ configure_file("${srcDir}/version.hpp.in"
 
 list(APPEND vkaEngineSources 
   "${srcDir}/Logger.cpp"
+  "${srcDir}/GLFW.cpp"
   "${srcDir}/Text.cpp"
   "${srcDir}/Engine.cpp"
   "${srcDir}/Camera.cpp"
@@ -35,7 +36,6 @@ list(APPEND vkaEngineSources
   "${srcDir}/Fence.cpp"
   "${srcDir}/Semaphore.cpp"
   "${srcDir}/spookyhash.cpp"
-  "${srcDir}/Particle.cpp"
   "${srcDir}/Device.cpp")
   
 list(APPEND vkaEngineIncludes
@@ -225,5 +225,7 @@ target_link_libraries(vkaEngine PUBLIC tinygltf)
 
 add_executable(glfw_test src/GLFW.test.cpp)
 target_link_libraries(glfw_test vkaEngine Catch2)
+set_property(TARGET glfw_test PROPERTY CXX_STANDARD 17)
+set_property(TARGET glfw_test PROPERTY CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(tests)

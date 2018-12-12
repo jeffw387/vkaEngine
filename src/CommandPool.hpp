@@ -6,7 +6,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
-#include <gsl-lite.hpp>
+#include "gsl-lite.hpp"
 #include "Pipeline.hpp"
 #include "PipelineLayout.hpp"
 #include "DescriptorPool.hpp"
