@@ -79,19 +79,15 @@ struct PhysicalDeviceData {
 };
 using DeviceSelectCallback =
     std::function<VkPhysicalDevice(const PhysicalDeviceData&)>;
+
 class Device {
 public:
-  Device() = delete;
-  Device(const Device&) = delete;
-  Device& operator=(const Device&) = delete;
   Device(
       VkInstance,
       VkSurfaceKHR,
       std::vector<const char*>,
       std::vector<PhysicalDeviceFeatures>,
       DeviceSelectCallback);
-  Device(Device&&) = default;
-  Device& operator=(Device&&) = default;
   ~Device();
 
   operator VkPhysicalDevice() { return physicalDevice; }
