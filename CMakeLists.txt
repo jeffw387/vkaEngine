@@ -16,6 +16,8 @@ configure_file("${srcDir}/version.hpp.in"
 
 list(APPEND vkaEngineSources 
   "${srcDir}/Logger.cpp"
+  "${srcDir}/sync_helper.cpp"
+  "${srcDir}/VmaImplementation.cpp"
   "${srcDir}/GLFW.cpp"
   "${srcDir}/Text.cpp"
   "${srcDir}/Camera.cpp"
