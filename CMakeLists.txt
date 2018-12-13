@@ -228,9 +228,14 @@ function(create_test_target target_name source_file)
   target_link_libraries(${target_name} vkaEngine Catch2)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED ON)
+  add_custom_command(
+    TARGET ${target_name}
+    POST_BUILD
+    COMMAND clang-format -i -style=file ${source_file})
 endfunction()
 
-create_test_target(GLFW.test src/GLFW.test.cpp)
-create_test_target(Instance.test src/Instance.test.cpp)
+create_test_target(GLFW.test ${srcDir}/GLFW.test.cpp)
+create_test_target(Instance.test ${srcDir}/Instance.test.cpp)
+create_test_target(Device.test ${srcDir}/Device.test.cpp)
 
 add_subdirectory(tests)
