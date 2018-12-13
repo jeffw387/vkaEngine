@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include "gsl-lite.hpp"
 #include "Logger.hpp"
 
 namespace GLFW {
@@ -36,6 +37,13 @@ public:
   static VkSurfaceKHR createSurface(VkInstance instance, WindowType* window);
 
   static bool pollOS(WindowType* window);
+
+  static gsl::span<const char*> getRequiredInstanceExtensions() {
+    init();
+    uint32_t count{};
+    const char** ptr = glfwGetRequiredInstanceExtensions(&count);
+    return gsl::span<const char*>{ptr, count};
+  }
 
 private:
   static std::unique_ptr<detail::GLFWOwner> glfwOwner;

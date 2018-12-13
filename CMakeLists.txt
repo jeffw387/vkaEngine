@@ -208,7 +208,7 @@ target_include_directories(
   
 add_subdirectory(external/glfw)
 if(NOT TARGET glfw)
-message(FATAL_ERROR "glfw target not found")
+  message(FATAL_ERROR "glfw target not found")
 endif()
 target_link_libraries(vkaEngine PUBLIC glfw)
   
@@ -221,9 +221,14 @@ target_include_directories(tinygltf INTERFACE external/tinygltf)
 target_link_libraries(tinygltf INTERFACE json_nlohmann)
 target_link_libraries(vkaEngine PUBLIC tinygltf)
 
-add_executable(glfw_test src/GLFW.test.cpp)
-target_link_libraries(glfw_test vkaEngine Catch2)
-set_property(TARGET glfw_test PROPERTY CXX_STANDARD 17)
-set_property(TARGET glfw_test PROPERTY CXX_STANDARD_REQUIRED ON)
+function(create_test_target target_name source_file)
+  add_executable(${target_name} ${source_file})
+  target_link_libraries(${target_name} vkaEngine Catch2)
+  set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
+  set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED ON)
+endfunction()
+
+create_test_target(GLFW.test src/GLFW.test.cpp)
+create_test_target(Instance.test src/Instance.test.cpp)
 
 add_subdirectory(tests)

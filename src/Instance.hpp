@@ -67,13 +67,12 @@ public:
     appInfo.pEngineName = "vkaEngine";
     appInfo.pApplicationName = instanceCreateInfo.appName;
 
-    uint32_t glfwRequiredInstanceExtensionCount{};
-    auto glfwRequiredInstanceExtensions =
-        glfwGetRequiredInstanceExtensions(&glfwRequiredInstanceExtensionCount);
-    for (auto i = 0U; i < glfwRequiredInstanceExtensionCount; ++i) {
-      instanceCreateInfo.instanceExtensions.push_back(
-          glfwRequiredInstanceExtensions[i]);
+    auto platformRequiredExtensions = PlatformT::getRequiredInstanceExtensions();
+    instanceCreateInfo.instanceExtensions.reserve(platformRequiredExtensions.size());
+    for (const auto& required : platformRequiredExtensions) {
+      instanceCreateInfo.instanceExtensions.push_back(required);
     }
+
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.enabledExtensionCount =
@@ -90,12 +89,14 @@ public:
       // TODO: error handling
     }
 
-    vkCreateDebugUtilsMessengerEXT =
-        (PFN_vkCreateDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
-            instance, "vkCreateDebugUtilsMessengerEXT");
+    vkCreateDebugUtilsMessengerEXT = 
+    typename PlatformT::loadVulkanFunction<PFN_vkCreateDebugUtilsMessengerEXT>(
+      instance,
+      "vkCreateDebugUtilsMessengerEXT");
     vkDestroyDebugUtilsMessengerEXT =
-        (PFN_vkDestroyDebugUtilsMessengerEXT)glfwGetInstanceProcAddress(
-            instance, "vkDestroyDebugUtilsMessengerEXT");
+      typename PlatformT::loadVulkanFunction<PFN_vkDestroyDebugUtilsMessengerEXT>(
+        instance,
+    "vkDestroyDebugUtilsMessengerEXT");
 
     VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
     messengerCreateInfo.sType =
