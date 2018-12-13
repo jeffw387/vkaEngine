@@ -2,8 +2,6 @@
 #include "Instance.hpp"
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
-#define VMA_STATIC_VULKAN_FUNCTIONS 1
-#define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 #include <memory>
 // #include "Config.hpp"
