@@ -67,8 +67,10 @@ public:
     appInfo.pEngineName = "vkaEngine";
     appInfo.pApplicationName = instanceCreateInfo.appName;
 
-    auto platformRequiredExtensions = PlatformT::getRequiredInstanceExtensions();
-    instanceCreateInfo.instanceExtensions.reserve(platformRequiredExtensions.size());
+    auto platformRequiredExtensions =
+        PlatformT::getRequiredInstanceExtensions();
+    instanceCreateInfo.instanceExtensions.reserve(
+        platformRequiredExtensions.size());
     for (const auto& required : platformRequiredExtensions) {
       instanceCreateInfo.instanceExtensions.push_back(required);
     }
@@ -89,32 +91,34 @@ public:
       // TODO: error handling
     }
 
-    vkCreateDebugUtilsMessengerEXT = 
-    typename PlatformT::loadVulkanFunction<PFN_vkCreateDebugUtilsMessengerEXT>(
-      instance,
-      "vkCreateDebugUtilsMessengerEXT");
-    vkDestroyDebugUtilsMessengerEXT =
-      typename PlatformT::loadVulkanFunction<PFN_vkDestroyDebugUtilsMessengerEXT>(
-        instance,
-    "vkDestroyDebugUtilsMessengerEXT");
+    if (debugExtensionEnabled) {
+      vkCreateDebugUtilsMessengerEXT = PlatformT::template loadVulkanFunction<
+          PFN_vkCreateDebugUtilsMessengerEXT>(
+          instance, "vkCreateDebugUtilsMessengerEXT");
+      vkDestroyDebugUtilsMessengerEXT = PlatformT::template loadVulkanFunction<
+          PFN_vkDestroyDebugUtilsMessengerEXT>(
+          instance, "vkDestroyDebugUtilsMessengerEXT");
 
-    VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
-    messengerCreateInfo.sType =
-        VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    messengerCreateInfo.messageSeverity =
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-    messengerCreateInfo.messageType =
-        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
-    vkCreateDebugUtilsMessengerEXT(
-        instance, &messengerCreateInfo, nullptr, &debugMessenger);
+      VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
+      messengerCreateInfo.sType =
+          VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+      messengerCreateInfo.messageSeverity =
+          VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+          VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+          VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+      messengerCreateInfo.messageType =
+          VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+          VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+          VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+      messengerCreateInfo.pfnUserCallback = vulkanDebugCallback;
+      vkCreateDebugUtilsMessengerEXT(
+          instance, &messengerCreateInfo, nullptr, &debugMessenger);
+    }
   }
   ~Instance() {
-    vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+    if (debugExtensionEnabled) {
+      vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+    }
     vkDestroyInstance(instance, nullptr);
   }
 
@@ -128,16 +132,16 @@ public:
       std::vector<PhysicalDeviceFeatures> enabledFeatures,
       DeviceSelectCallback selectCallback) {
     return std::make_unique<Device>(
-        instance, surface, deviceExtensions, enabledFeatures, selectCallback);
+        instance, *surface, deviceExtensions, enabledFeatures, selectCallback);
   }
   operator VkInstance() { return instance; }
 
 private:
-  std::shared_ptr<PlatformT> platform;
-  VkInstance instance;
-  VkDebugUtilsMessengerEXT debugMessenger;
+  VkInstance instance = {};
 
-  PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
-  PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
+  bool debugExtensionEnabled = {};
+  VkDebugUtilsMessengerEXT debugMessenger = {};
+  PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = {};
+  PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = {};
 };
 }  // namespace vka
