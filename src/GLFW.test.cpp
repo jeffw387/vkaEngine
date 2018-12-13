@@ -3,12 +3,15 @@
 #include <catch2/catch.hpp>
 
 TEST_CASE("Init/Create Window") {
-  try {
+  SECTION("No exception during window creation.") {
+    REQUIRE_NOTHROW (
+      GLFW::Context::createWindow(100, 100, "test")
+    );
+  }
+  
+  SECTION("Valid window handle returned") {
     auto window = GLFW::Context::createWindow(100, 100, "test");
     REQUIRE(window != nullptr);
-  }
-  catch(const std::exception& e) {
-    REQUIRE_FALSE(true);      
   }
 }
 
