@@ -23,6 +23,24 @@ VkSurfaceKHR Context::createSurface(VkInstance instance, WindowType* window) {
   return result;
 }
 
+void Context::setKeyCallback(
+    WindowType* window,
+    Context::KeyCallback callback) {
+  glfwSetKeyCallback(window, callback);
+}
+
+void Context::setMouseButtonCallback(
+    WindowType* window,
+    Context::MouseButtonCallback callback) {
+  glfwSetMouseButtonCallback(window, callback);
+}
+
+void Context::setCursorCallback(
+    WindowType* window,
+    Context::CursorCallback callback) {
+  glfwSetCursorPosCallback(window, callback);
+}
+
 bool Context::pollOS(Context::WindowType* window) {
   init();
   glfwPollEvents();

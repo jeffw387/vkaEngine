@@ -25,6 +25,9 @@ struct GLFWOwner {
 class Context {
 public:
   using WindowType = GLFWwindow;
+  using KeyCallback = GLFWkeyfun;
+  using MouseButtonCallback = GLFWmousebuttonfun;
+  using CursorCallback = GLFWcursorposfun;
 
   template <typename T>
   static T loadVulkanFunction(VkInstance instance, std::string_view functionName) {
@@ -35,6 +38,12 @@ public:
   static WindowType* createWindow(int width, int height, std::string_view windowTitle);
 
   static VkSurfaceKHR createSurface(VkInstance instance, WindowType* window);
+
+  static void setKeyCallback(WindowType* window, KeyCallback callback);
+
+  static void setMouseButtonCallback(WindowType* window, MouseButtonCallback callback);
+  
+  static void setCursorCallback(WindowType* window, CursorCallback callback);
 
   static bool pollOS(WindowType* window);
 
