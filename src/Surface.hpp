@@ -18,14 +18,15 @@ struct SurfaceCreateInfo {
 class SurfaceBase {
 public:
   operator VkSurfaceKHR() { return surface; }
-  SurfaceBase(VkInstance instance, SurfaceCreateInfo createInfo) {}
+  SurfaceBase(VkInstance instance, SurfaceCreateInfo createInfo)
+      : instance(instance) {}
   virtual ~SurfaceBase(){}[[nodiscard]] virtual bool handleOSMessages() = 0;
 
   Input::Manager inputManager;
   double mouseX = {};
   double mouseY = {};
 
-private:
+protected:
   VkInstance instance;
   VkSurfaceKHR surface;
 };
@@ -34,7 +35,11 @@ template <typename PlatformT>
 class Surface : public SurfaceBase {
 public:
   Surface(VkInstance instance, SurfaceCreateInfo createInfo)
-      : SurfaceBase(instance, createInfo) {}
+      : SurfaceBase(instance, createInfo) {
+    window = PlatformT::createWindow(
+        createInfo.width, createInfo.height, createInfo.windowTitle);
+    surface = PlatformT::createSurface(instance, window);
+  }
 
   bool handleOSMessages() override {}
 
