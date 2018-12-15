@@ -41,6 +41,7 @@ list(APPEND vkaEngineSources
   
 list(APPEND vkaEngineIncludes
   "${srcDir}/version.hpp"
+  "${srcDir}/gsl-lite.hpp"
   "${srcDir}/thsvs_simpler_vulkan_synchronization.h"
   "${srcDir}/Text.hpp"
   "${srcDir}/Logger.hpp"
@@ -75,7 +76,7 @@ list(APPEND vkaEngineIncludes
 add_library(vkaEngine)
 target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
 target_include_directories(vkaEngine PUBLIC 
-  "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  ${srcDir})
 
 set_property(TARGET vkaEngine PROPERTY CXX_STANDARD 17)
 set_property(TARGET vkaEngine PROPERTY CXX_STANDARD_REQUIRED ON)
