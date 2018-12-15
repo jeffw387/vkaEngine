@@ -11,7 +11,7 @@
 #include <memory>
 #include <optional>
 #include <tiny_gltf.h>
-#include <gsl-lite.hpp>
+#include "gsl-lite.hpp"
 #include "entt/entt.hpp"
 #include "Device.hpp"
 #include "Buffer.hpp"
