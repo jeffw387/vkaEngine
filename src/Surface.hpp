@@ -64,9 +64,9 @@ public:
         createInfo.width, createInfo.height, createInfo.windowTitle);
     surface = PlatformT::createSurface(instance, window);
 
-    PlatformT::setKeyCallback(keyCallback);
-    PlatformT::setMouseButtonCallback(mouseButtonCallback);
-    PlatformT::setCursorCallback(cursorPositionCallback);
+    PlatformT::setKeyCallback(window, keyCallback);
+    PlatformT::setMouseButtonCallback(window, mouseButtonCallback);
+    PlatformT::setCursorCallback(window, cursorPositionCallback);
   }
 
   bool handleOSMessages() override {}
