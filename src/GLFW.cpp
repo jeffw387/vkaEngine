@@ -1,21 +1,21 @@
 #include "GLFW.hpp"
 
-namespace GLFW {
-std::unique_ptr<detail::GLFWOwner> Context::glfwOwner = {};
-void Context::init() {
+namespace platform {
+std::unique_ptr<detail::GLFWOwner> GLFW::glfwOwner = {};
+void GLFW::init() {
   if (!glfwOwner) {
     glfwOwner = std::make_unique<detail::GLFWOwner>();
   }
 }
 
-Context::WindowType*
-Context::createWindow(int width, int height, std::string_view windowTitle) {
+GLFW::WindowType*
+GLFW::createWindow(int width, int height, std::string_view windowTitle) {
   init();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   return glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
 }
 
-VkSurfaceKHR Context::createSurface(VkInstance instance, WindowType* window) {
+VkSurfaceKHR GLFW::createSurface(VkInstance instance, WindowType* window) {
   init();
   VkSurfaceKHR result{};
   auto surfaceResult =
@@ -23,27 +23,25 @@ VkSurfaceKHR Context::createSurface(VkInstance instance, WindowType* window) {
   return result;
 }
 
-void Context::setKeyCallback(
-    WindowType* window,
-    Context::KeyCallback callback) {
+void GLFW::setKeyCallback(WindowType* window, GLFW::KeyCallback callback) {
   glfwSetKeyCallback(window, callback);
 }
 
-void Context::setMouseButtonCallback(
+void GLFW::setMouseButtonCallback(
     WindowType* window,
-    Context::MouseButtonCallback callback) {
+    GLFW::MouseButtonCallback callback) {
   glfwSetMouseButtonCallback(window, callback);
 }
 
-void Context::setCursorCallback(
+void GLFW::setCursorCallback(
     WindowType* window,
-    Context::CursorCallback callback) {
+    GLFW::CursorCallback callback) {
   glfwSetCursorPosCallback(window, callback);
 }
 
-bool Context::pollOS(Context::WindowType* window) {
+bool GLFW::pollOS(GLFW::WindowType* window) {
   init();
   glfwPollEvents();
   return glfwWindowShouldClose(window);
 }
-}  // namespace GLFW
+}  // namespace platform

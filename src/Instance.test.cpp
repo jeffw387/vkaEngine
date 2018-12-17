@@ -6,10 +6,10 @@
 #include "GLFW.hpp"
 #include "Device.hpp"
 
-using namespace GLFW;
+using namespace platform;
 
 TEST_CASE("Create Instance") {
-  auto instance = std::make_unique<vka::Instance<GLFW::Context>>(
+  auto instance = std::make_unique<vka::Instance<GLFW>>(
       vka::InstanceCreateInfo{"test app name",
                               Version{0, 0, 0},
                               std::vector<const char*>{},
@@ -19,7 +19,7 @@ TEST_CASE("Create Instance") {
 }
 
 TEST_CASE("Create Surface") {
-  auto instance = std::make_unique<vka::Instance<GLFW::Context>>(
+  auto instance = std::make_unique<vka::Instance<GLFW>>(
       vka::InstanceCreateInfo{"test app name",
                               Version{0, 0, 0},
                               std::vector<const char*>{},
@@ -31,7 +31,7 @@ TEST_CASE("Create Surface") {
 }
 
 TEST_CASE("Create Device") {
-  auto instance = std::make_unique<vka::Instance<GLFW::Context>>(
+  auto instance = std::make_unique<vka::Instance<GLFW>>(
       vka::InstanceCreateInfo{"test app name",
                               Version{0, 0, 0},
                               std::vector<const char*>{},

@@ -5,7 +5,7 @@
 #include "gsl-lite.hpp"
 #include "Logger.hpp"
 
-namespace GLFW {
+namespace platform {
 
 namespace detail {
 struct GLFWOwner {
@@ -22,7 +22,7 @@ struct GLFWOwner {
 };
 }
 
-class Context {
+class GLFW {
 public:
   using WindowType = GLFWwindow;
   using KeyCallback = GLFWkeyfun;
