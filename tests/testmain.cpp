@@ -259,17 +259,17 @@ struct InputUpdate {
   InverseBindings* inverseKeys;
   Bindings* mouseBindings;
   InverseBindings* inverseMouseButtons;
-  State* state;
 
-  void operator()() {
+  State operator()(State previous) {
+    State next = previous;
     auto handleInputEvent = [&](auto inputEvent) {
       std::visit(
           overloaded{[&](Event<Key> keyEvent) {
-                       state->at(inverseKeys->at(keyEvent.signature)) =
+                       next.at(inverseKeys->at(keyEvent.signature)) =
                            keyEvent.signature.action;
                      },
                      [&](Event<Mouse> mouseEvent) {
-                       state->at(inverseMouseButtons->at(
+                       next.at(inverseMouseButtons->at(
                            mouseEvent.signature)) = mouseEvent.signature.action;
                      }},
           inputEvent);
@@ -278,6 +278,7 @@ struct InputUpdate {
     while (auto inputEvent = inputManager->getEventBefore(updateTime)) {
       handleInputEvent(*inputEvent);
     }
+    return next;
   }
 };
 
@@ -304,20 +305,21 @@ struct AppState {
   std::unique_ptr<TextObject> fps_text;
   P3DPipeline p3DPipeline;
 
-  ObjectPool<BufferedState, vka::BufferCount> statePool;
-  CircularQueue<BufferedState, vka::BufferCount> statesInFlight;
+  Pool<BufferedState, BufferCount> statePool;
+  CircularQueue<BufferedState, BufferCount> statesInFlight;
 
   Bindings keyBindings;
   InverseBindings inverseKeyBindings;
   Bindings mouseBindings;
   InverseBindings inverseMouseButtons;
 
-  std::shared_future<void> updateCallback() {
-    auto updateIndex = engine->currentUpdateIndex();
-    auto lastUpdateIndex = engine->previousUpdateIndex();
-    auto& last = bufState[lastUpdateIndex];
-    auto& current = bufState[updateIndex];
-    auto updateTime = engine->updateTimePoint(updateIndex);
+  void updateCallback() {
+    
+    if (auto nextState = statePool.allocate()) {
+
+    }
+    
+    auto currentTime = vka::Clock::now();
     // TODO: default bindings or do nothing on unbound input events
     if (!surface->handleOSMessages()) {
       // TODO: exit program when requested
