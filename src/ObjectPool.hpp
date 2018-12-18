@@ -30,9 +30,10 @@ public:
     return {};
   }
 
-  void free(Pooled<T> pooled) noexcept {
-    if (pooled.get() != nullptr) {
+  void free(Pooled<T>& pooled) noexcept {
+    if (pooled) {
       allocated[index] = false;
+      pooled = {};
     }
   }
 };
