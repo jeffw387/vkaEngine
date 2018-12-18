@@ -7,7 +7,7 @@
 
 TEST_CASE("Create device-dependent objects") {
   auto instance =
-      std::make_unique<vka::Instance<GLFW::Context>>(vka::InstanceCreateInfo{
+      std::make_unique<vka::Instance<platform::GLFW>>(vka::InstanceCreateInfo{
           "test app name",
           Version{0, 0, 0},
           std::vector<const char*>{},
