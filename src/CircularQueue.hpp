@@ -4,7 +4,7 @@
 #include <functional>
 #include <optional>
 
-template <typename T, size_t S>
+template <typename T, size_t S, typename MutexT = std::recursive_mutex>
 class CircularQueue
 {
     std::array<T, S> storage;
@@ -12,7 +12,7 @@ class CircularQueue
     size_t endID = 0;
     size_t count = 0;
     // TODO: is recursive_mutex needed due to a bug?
-    mutable std::recursive_mutex storageMutex;
+    mutable MutexT storageMutex;
 
 public:
     // returns the first T if it exists
