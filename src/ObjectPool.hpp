@@ -10,6 +10,7 @@ class Pooled {
 
 public:
   operator T*() { return object; }
+  operator bool() { return object != nullptr; }
   T* get() { return object; }
 };
 
