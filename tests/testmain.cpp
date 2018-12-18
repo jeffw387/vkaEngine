@@ -10,6 +10,7 @@
 #include <string>
 #include <taskflow/taskflow.hpp>
 
+#include "GLFW.hpp"
 #include "ObjectPool.hpp"
 #include "CircularQueue.hpp"
 #include "BasicLoop.hpp"
@@ -39,6 +40,8 @@
 namespace fs = std::experimental::filesystem;
 namespace view = ranges::view;
 namespace action = ranges::action;
+constexpr size_t BufferCount = 3U;
+
 namespace Components {
 
 struct Mesh {
@@ -248,20 +251,6 @@ auto createRenderPass = [](vka::Device* device,
   return device->createRenderPass(renderPassCreateInfo);
 };
 
-auto createBufferedStates = [](vka::Device* device, P3DPipeline* pipeline) {
-  std::array<BufferedState, vka::BufferCount> result;
-  for (auto& state : result) {
-    state = BufferedState(
-        device,
-        pipeline->materialLayout.get(),
-        pipeline->dynamicLightLayout.get(),
-        pipeline->lightDataLayout.get(),
-        pipeline->cameraLayout.get(),
-        pipeline->instanceLayout.get());
-  }
-  return result;
-};
-
 using namespace Input;
 struct InputUpdate {
   vka::Clock::time_point updateTime;
@@ -297,12 +286,10 @@ struct AppState {
   PolySize defaultHeight = PolySize{900U};
 
   vka::OrthoCamera mainCamera;
-  vka::EngineCreateInfo engineCreateInfo;
-  std::unique_ptr<vka::Engine> engine;
   vka::InstanceCreateInfo instanceCreateInfo;
-  std::unique_ptr<vka::Instance> instance;
+  std::unique_ptr<vka::Instance<platform::GLFW>> instance;
   vka::SurfaceCreateInfo surfaceCreateInfo;
-  std::unique_ptr<vka::Surface> surface;
+  std::unique_ptr<vka::Surface<platform::GLFW>> surface;
   std::unique_ptr<vka::Device> device;
   Transfer transfer;
   std::unique_ptr<Assets> assets;
@@ -775,7 +762,7 @@ struct AppState {
       uploadData(cmd, transfer.fence.get());
     }
 
-    engine->run();
+    BasicLoop main_loop{}
     device->waitIdle();
   }
 };
