@@ -261,24 +261,27 @@ struct InputUpdate {
   InverseBindings* inverseMouseButtons;
 
   State operator()(State previous) {
-    State next = previous;
-    auto handleInputEvent = [&](auto inputEvent) {
-      std::visit(
-          overloaded{[&](Event<Key> keyEvent) {
-                       next.at(inverseKeys->at(keyEvent.signature)) =
-                           keyEvent.signature.action;
-                     },
-                     [&](Event<Mouse> mouseEvent) {
-                       next.at(inverseMouseButtons->at(
-                           mouseEvent.signature)) = mouseEvent.signature.action;
-                     }},
-          inputEvent);
-    };
+    
+  }
+};
 
-    while (auto inputEvent = inputManager->getEventBefore(updateTime)) {
-      handleInputEvent(*inputEvent);
-    }
-    return next;
+template <typename T>
+struct State {
+  std::shared_future<T> future;
+  Pooled<T> data;
+};
+
+template <typename T, size_t N>
+struct States {
+  Pool<T, N> pool;
+  CircularQueue<State<T>> history;
+
+  auto latest() {
+    return std::optional<T>{history.readFirst().value_or({})};
+  }
+
+  T* add() {
+
   }
 };
 
@@ -306,34 +309,48 @@ struct AppState {
   P3DPipeline p3DPipeline;
 
   Pool<BufferedState, BufferCount> statePool;
-  CircularQueue<BufferedState, BufferCount> statesInFlight;
+  CircularQueue<> stateHistory;
 
   Bindings keyBindings;
-  InverseBindings inverseKeyBindings;
+  InverseBindings inverseKeys;
   Bindings mouseBindings;
   InverseBindings inverseMouseButtons;
 
-  void updateCallback() {
-    
-    if (auto nextState = statePool.allocate()) {
+  bool updateCallback() {
+    if (readState)
+    if (auto availableState = statePool.allocate()) {
 
     }
     
     auto currentTime = vka::Clock::now();
     // TODO: default bindings or do nothing on unbound input events
     if (!surface->handleOSMessages()) {
-      // TODO: exit program when requested
+      return false;
     }
     tf::Taskflow updateFlow;
-    auto inputTask = updateFlow
-                         .silent_emplace(InputUpdate{updateTime,
-                                                     &engine->inputManager,
-                                                     &keyBindings,
-                                                     &inverseKeyBindings,
-                                                     &mouseBindings,
-                                                     &inverseMouseButtons,
-                                                     &current.inputState})
-                         .name("Input Update Task");
+    auto[inputTask, inputFuture] =
+        updateFlow.emplace([](State previous) {
+                    State next = previous;
+                    auto handleInputEvent = [&](auto inputEvent) {
+                      std::visit(overloaded{[&](Event<Key> keyEvent) {
+                                              next.at(inverseKeys->at(
+                                                  keyEvent.signature)) =
+                                                  keyEvent.signature.action;
+                                            },
+                                            [&](Event<Mouse> mouseEvent) {
+                                              next.at(inverseMouseButtons->at(
+                                                  mouseEvent.signature)) =
+                                                  mouseEvent.signature.action;
+                                            }},
+                                inputEvent);
+                    };
+
+                    while (auto inputEvent =
+                              inputManager->getEventBefore(updateTime)) {
+                      handleInputEvent(*inputEvent);
+                    }
+                    return next;
+                  }, previousInputState).name("Input Update Task");
 
     auto materialsTask =
         updateFlow
