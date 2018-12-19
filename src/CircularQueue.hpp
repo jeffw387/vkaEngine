@@ -99,7 +99,7 @@ public:
     {
         if (!(size() < S))
             return false;
-        *(m_end++) = newValue;
+        *m_end = std::move(newValue);
         ++m_size;
         return true;
     }
