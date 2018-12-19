@@ -18,27 +18,27 @@ public:
     T* data = {};
     size_t index = {};
 
-    bool operator !=(const iterator& other) {
+    bool operator !=(const iterator& other) const {
       return index != other.index;
     }
 
-    bool operator ==(const iterator& other) {
+    bool operator ==(const iterator& other) const {
       return !(*this != other);
     }
 
-    bool operator <(const iterator& other) {
+    bool operator <(const iterator& other) const {
       return index < other.index;
     }
 
-    bool operator >(const iterator& other) {
+    bool operator >(const iterator& other) const {
       return index > other.index;
     }
 
-    bool operator>=(const iterator& other) { return !(*this) < other; }
+    bool operator>=(const iterator& other) const { return !(*this) < other; }
 
-    bool operator<=(const iterator& other) { return !(*this) > other; }
+    bool operator<=(const iterator& other) const { return !(*this) > other; }
 
-    reference operator*() { return data[index]; }
+    reference operator*() const { return data[index]; }
     pointer operator->() { return &(data[index]); }
 
     iterator& operator++() {
