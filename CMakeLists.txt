@@ -70,6 +70,7 @@ list(APPEND vkaEngineIncludes
   "${srcDir}/overloaded.hpp"
   "${srcDir}/Input.hpp"
   "${srcDir}/IntrusiveList.hpp"
+  "${srcDir}/CircularQueue.hpp"
   "${srcDir}/QuadTree.hpp"
   "${srcDir}/spookyhash.hpp"
   "${srcDir}/Surface.hpp")
@@ -224,9 +225,9 @@ target_include_directories(tinygltf INTERFACE external/tinygltf)
 target_link_libraries(tinygltf INTERFACE json_nlohmann)
 target_link_libraries(vkaEngine PUBLIC tinygltf)
 
-function(create_test_target target_name source_file)
+function(create_test_target target_name source_file dependencies)
   add_executable(${target_name} ${source_file})
-  target_link_libraries(${target_name} vkaEngine Catch2)
+  target_link_libraries(${target_name} ${dependencies})
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED ON)
   add_custom_command(
@@ -235,8 +236,9 @@ function(create_test_target target_name source_file)
     COMMAND clang-format -i -style=file ${source_file})
 endfunction()
 
-create_test_target(GLFW.test ${srcDir}/GLFW.test.cpp)
-create_test_target(Instance.test ${srcDir}/Instance.test.cpp)
-create_test_target(Device.test ${srcDir}/Device.test.cpp)
+create_test_target(GLFW.test ${srcDir}/GLFW.test.cpp "vkaEngine Catch2")
+create_test_target(Instance.test ${srcDir}/Instance.test.cpp "vkaEngine Catch2")
+create_test_target(Device.test ${srcDir}/Device.test.cpp "vkaEngine Catch2")
+create_test_target(CircularQueue.test ${srcDir}/CircularQueue.test.cpp Catch2)
 
 add_subdirectory(tests)

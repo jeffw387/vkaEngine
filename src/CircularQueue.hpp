@@ -88,9 +88,8 @@ public:
 
     void pop_first() {
       if (m_size > 0) {
-        auto newFirstID = (++begin_index) % S;
-        m_size--;
-        begin_index = newFirstID;
+        first()++;
+        --m_size;
       }
     }
 
@@ -100,12 +99,11 @@ public:
         
     }
     
-    template <typename PredicateType>
-    std::optional<T> first_if(PredicateType p) {
+    template <typename PredicateT>
+    std::optional<T> first_if(PredicateT p) {
         if (auto first = read_first()) {
           if (p(first.value())) {
               return first;
-
           }
         }
         return {};
@@ -114,12 +112,10 @@ public:
     // pushes the given T to the end of the queue if space is available, returns false otherwise
     bool push_last(T newValue)
     {
-        if (!(m_size < S))
+        if (!(size() < S))
             return false;
-        storage[end_index] = newValue;
-        m_size++;
-        auto newEnd = (++end_index) % S;
-        end_index = newEnd;
+        *(++m_end) = newValue;
+        ++m_size;
         return true;
     }
 
@@ -136,7 +132,7 @@ public:
   private:
 
     std::array<T, S> storage;
-    iterator m_begin;
-    iterator m_end;
+    iterator m_begin = {storage.data(), 0};
+    iterator m_end = {storage.data(), 1};
     size_t m_size = 0;
 };
