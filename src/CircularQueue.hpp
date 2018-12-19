@@ -94,7 +94,7 @@ public:
         --m_size;
       }
     }
-
+    
     template <typename PredicateT>
     std::optional<T> first_if(PredicateT p) {
         if (auto first = first()) {

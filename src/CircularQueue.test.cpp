@@ -23,3 +23,12 @@ TEST_CASE("Adding an item when at capacity should fail") {
   push_result = queue.push_last(1);
   REQUIRE(push_result == false);
 }
+
+TEST_CASE("Read first item in queue with size 1") {
+  CircularQueue<int, 3> queue;
+  auto push_result = queue.push_last(1);
+  auto first = queue.first();
+
+  REQUIRE(first);
+  REQUIRE(*first == 1);
+}
