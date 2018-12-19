@@ -265,25 +265,7 @@ struct InputUpdate {
   }
 };
 
-template <typename T>
-struct State {
-  std::shared_future<T> future;
-  Pooled<T> data;
-};
 
-template <typename T, size_t N>
-struct States {
-  Pool<T, N> pool;
-  CircularQueue<State<T>> history;
-
-  auto latest() {
-    return std::optional<T>{history.readFirst().value_or({})};
-  }
-
-  T* add() {
-
-  }
-};
 
 struct AppState {
   PolySize defaultWidth = PolySize{900U};
@@ -308,8 +290,7 @@ struct AppState {
   std::unique_ptr<TextObject> fps_text;
   P3DPipeline p3DPipeline;
 
-  Pool<BufferedState, BufferCount> statePool;
-  CircularQueue<> stateHistory;
+
 
   Bindings keyBindings;
   InverseBindings inverseKeys;
@@ -317,10 +298,10 @@ struct AppState {
   InverseBindings inverseMouseButtons;
 
   bool updateCallback() {
-    if (readState)
-    if (auto availableState = statePool.allocate()) {
+    // if (readState)
+    // if (auto availableState = statePool.allocate()) {
 
-    }
+    // }
     
     auto currentTime = vka::Clock::now();
     // TODO: default bindings or do nothing on unbound input events
