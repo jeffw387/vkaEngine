@@ -35,6 +35,14 @@ TEST_CASE("Read first item in queue with size 1") {
 }
 
 
+TEST_CASE("Add a single item them pop it, leaving queue empty") {
+  CircularQueue<int, 3> queue;
+  auto push_result = queue.push_last(1);
+  queue.pop_first();
+
+  REQUIRE(queue.size() == 0);
+}
+
 TEST_CASE("Add two items, pop the first, read the next") {
   CircularQueue<int, 3> queue;
   auto push_result = queue.push_last(1);
