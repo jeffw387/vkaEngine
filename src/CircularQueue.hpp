@@ -15,7 +15,7 @@ public:
     using value_type = T;
     using reference = T&;
     
-    T* data = {};
+    pointer data = {};
     size_t index = {};
 
     bool operator !=(const iterator& other) const {
