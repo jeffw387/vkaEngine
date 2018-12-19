@@ -49,23 +49,11 @@ public:
       return *this;
     }
 
-    iterator operator++(int) {
-      auto result = *this;
-      ++(*this);
-      return result;
-    }
-
     iterator& operator--() {
       if (index == 0) {
         index += S;
       }
       return *this;
-    }
-
-    iterator operator--(int) {
-      auto result = *this;
-      --(*this);
-      return result;
     }
   };
 
