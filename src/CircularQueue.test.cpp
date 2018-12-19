@@ -91,3 +91,15 @@ TEST_CASE("Item destructor is called on item pop") {
   queue.pop_first();
   REQUIRE(destructorRun == true);
 }
+
+TEST_CASE("Add three items, get item behind first") {
+  CircularQueue<int, 3> queue;
+  auto push_result = queue.push_last(1);
+  push_result = queue.push_last(2);
+  push_result = queue.push_last(3);
+
+  auto begin = queue.begin();
+  ++begin;
+
+  REQUIRE(*begin == 2);
+}
