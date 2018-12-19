@@ -3,81 +3,140 @@
 #include <mutex>
 #include <functional>
 #include <optional>
+#include <iterator>
 
-template <typename T, size_t S, typename MutexT = std::recursive_mutex>
+template <typename T, size_t S>
 class CircularQueue
 {
-    std::array<T, S> storage;
-    size_t firstID = 0;
-    size_t endID = 0;
-    size_t count = 0;
-    // TODO: is recursive_mutex needed due to a bug?
-    mutable MutexT storageMutex;
-
 public:
+  struct iterator {
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using value_type = T;
+    using reference = T&;
+    
+    T* data = {};
+    size_t index = {};
+
+    bool operator !=(const iterator& other) {
+      return index != other.index;
+    }
+
+    bool operator ==(const iterator& other) {
+      return !(*this != other);
+    }
+
+    bool operator <(const iterator& other) {
+      return index < other.index;
+    }
+
+    bool operator >(const iterator& other) {
+      return index > other.index;
+    }
+
+    bool operator>=(const iterator& other) { return !(*this) < other; }
+
+    bool operator<=(const iterator& other) { return !(*this) > other; }
+
+    reference operator*() { return data[index]; }
+    pointer operator->() { return &(data[index]); }
+
+    iterator& operator++() {
+      ++index;
+      if (index == S) {
+        index -= S;
+      }
+      return *this;
+    }
+
+    iterator& operator++(int) {
+      auto result = *this;
+      ++(*this);
+      return result;
+    }
+
+    iterator& operator--() {
+      if (index == 0) {
+        index += S;
+      }
+      return *this;
+    }
+
+    iterator& operator--(int) {
+      auto result = *this;
+      --(*this);
+      return result;
+    }
+  };
+
+    iterator begin() { return m_begin; }
+    iterator end() { return m_end; };
+
     // returns the first T if it exists
-    std::optional<T> readFirst() const
-    {
-        auto result = std::optional<T>();
-        if (count == 0)
-        {
-            return result;
+    std::optional<T> first() const {
+        if (m_size == 0) {
+            return {};
         }
-        std::scoped_lock lock{storageMutex};
-        result = storage[firstID];
-        return result;
+        return {*(begin());};
+    }
+
+    std::optional<T> last() const {
+      if (m_size > 0) {
+        return *(--end());
+      }
+    }
+
+    void pop_first() {
+      if (m_size > 0) {
+        auto newFirstID = (++begin_index) % S;
+        m_size--;
+        begin_index = newFirstID;
+      }
     }
 
     // removes and returns the first T if it exists
-    std::optional<T> popFirst()
-    {
-        auto first = readFirst();
-        std::optional<T> result;
-        std::scoped_lock lock{storageMutex};
-        if (!first.has_value())
-            return result;
-        result = first.value();
-        auto newFirst = (++firstID) % S;
-        count--;
-        firstID = newFirst;
-        return result;
+    std::optional<T> first() {
+        return first;
+        
     }
     
     template <typename PredicateType>
-    std::optional<T> popFirstIf(PredicateType p) {
-        std::optional<T> result;
-        std::scoped_lock lock{storageMutex};
-        if (auto first = readFirst()) {
+    std::optional<T> first_if(PredicateType p) {
+        if (auto first = read_first()) {
           if (p(first.value())) {
-              result = first.value();
-              auto newFirst = (++firstID) % S;
-              count--;
-              firstID = newFirst;
+              return first;
+
           }
         }
-        return result;
+        return {};
     }
 
     // pushes the given T to the end of the queue if space is available, returns false otherwise
-    bool pushLast(T newValue)
+    bool push_last(T newValue)
     {
-        std::scoped_lock lock{storageMutex};
-        if (!(count < S))
+        if (!(m_size < S))
             return false;
-        storage[endID] = newValue;
-        count++;
-        auto newEnd = (++endID) % S;
-        endID = newEnd;
+        storage[end_index] = newValue;
+        m_size++;
+        auto newEnd = (++end_index) % S;
+        end_index = newEnd;
         return true;
     }
 
     size_t size()
     {
-        return count;
+        return m_size;
     }
 
     size_t capacity()
     {
         return S;
     }
+
+  private:
+
+    std::array<T, S> storage;
+    iterator m_begin;
+    iterator m_end;
+    size_t m_size = 0;
 };
