@@ -77,7 +77,7 @@ public:
         if (m_size == 0) {
             return {};
         }
-        return {*(begin())};
+        return {*m_begin};
     }
 
     std::optional<T> last() const {
