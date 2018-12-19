@@ -35,6 +35,22 @@ TEST_CASE("Read first item in queue with size 1") {
 }
 
 
+TEST_CASE("Add two items, pop the first, read the next") {
+  CircularQueue<int, 3> queue;
+  auto push_result = queue.push_last(1);
+  push_result = queue.push_last(2);
+
+  REQUIRE(queue.size() == 2);
+  REQUIRE(queue.first().value() == 1);
+
+  queue.pop_first();
+  auto next = queue.first();
+
+  REQUIRE(next);
+  REQUIRE(*next == 2);
+  REQUIRE(queue.size() == 1);
+}
+
 template <typename T>
 struct TestStructWithDestructor {
   TestStructWithDestructor(T func) : func{func} {}
