@@ -101,7 +101,7 @@ public:
     
     template <typename PredicateT>
     std::optional<T> first_if(PredicateT p) {
-        if (auto first = read_first()) {
+        if (auto first = first()) {
           if (p(first.value())) {
               return first;
           }
