@@ -78,7 +78,8 @@ public:
 
     void pop_first() {
       if (m_size > 0) {
-        first()++;
+        m_begin->~T();
+        ++m_begin;
         --m_size;
       }
     }
