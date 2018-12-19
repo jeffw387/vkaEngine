@@ -49,7 +49,7 @@ public:
       return *this;
     }
 
-    iterator& operator++(int) {
+    iterator operator++(int) {
       auto result = *this;
       ++(*this);
       return result;
@@ -62,7 +62,7 @@ public:
       return *this;
     }
 
-    iterator& operator--(int) {
+    iterator operator--(int) {
       auto result = *this;
       --(*this);
       return result;
