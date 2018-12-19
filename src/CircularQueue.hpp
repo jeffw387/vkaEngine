@@ -82,7 +82,9 @@ public:
 
     std::optional<T> last() const {
       if (m_size > 0) {
-        return *(--end());
+        auto lastIt = m_end;
+        --lastIt;
+        return {*lastIt};
       }
     }
 
