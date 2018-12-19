@@ -129,6 +129,6 @@ public:
 
     std::array<T, S> storage;
     iterator m_begin = {storage.data(), 0};
-    iterator m_end = {storage.data(), 1};
+    iterator m_end = {storage.data(), 0};
     size_t m_size = 0;
 };
