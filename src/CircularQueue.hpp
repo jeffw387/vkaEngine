@@ -110,7 +110,7 @@ public:
     {
         if (!(size() < S))
             return false;
-        *(++m_end) = newValue;
+        *(m_end++) = newValue;
         ++m_size;
         return true;
     }
