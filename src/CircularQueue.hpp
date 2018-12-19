@@ -95,12 +95,6 @@ public:
       }
     }
 
-    // removes and returns the first T if it exists
-    std::optional<T> first() {
-        return first;
-        
-    }
-    
     template <typename PredicateT>
     std::optional<T> first_if(PredicateT p) {
         if (auto first = first()) {
