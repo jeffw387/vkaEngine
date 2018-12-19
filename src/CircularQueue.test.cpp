@@ -1,6 +1,7 @@
 #include "CircularQueue.hpp"
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
+#include <memory>
 
 TEST_CASE("Adding item to queue") {
   CircularQueue<int, 3> queue;
@@ -31,4 +32,29 @@ TEST_CASE("Read first item in queue with size 1") {
 
   REQUIRE(first);
   REQUIRE(*first == 1);
+}
+
+
+template <typename T>
+struct TestStructWithDestructor {
+  TestStructWithDestructor(T func) : func{func} {}
+  ~TestStructWithDestructor() { func(); }
+  T func;
+};
+
+TEST_CASE("Item destructor is called on item pop") {
+  bool destructorRun = false;
+  auto reportDestruct = [&destructorRun]() { destructorRun = true; };
+  CircularQueue<
+      std::unique_ptr<TestStructWithDestructor<decltype(reportDestruct)>>,
+      1>
+      queue;
+  queue.push_last(
+      std::make_unique<TestStructWithDestructor<decltype(reportDestruct)>>(
+          reportDestruct));
+
+  REQUIRE(destructorRun == false);
+
+  queue.pop_first();
+  REQUIRE(destructorRun == true);
 }
