@@ -7,6 +7,7 @@ struct Pooled {
   T* object = {};
   size_t index = {};
 
+  T& operator *() { return *object; }
   operator T*() { return object; }
   operator bool() const { return object != nullptr; }
   T* get() { return object; }
@@ -15,8 +16,8 @@ struct Pooled {
 
 template <typename T, size_t N>
 class Pool {
-  std::array<T, N> storage;
-  std::array<bool, N> allocated;
+  std::array<T, N> storage = {};
+  std::array<bool, N> allocated = {};
 
 public:
   [[nodiscard]] Pooled<T> allocate() noexcept {
