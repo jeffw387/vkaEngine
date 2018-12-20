@@ -11,19 +11,27 @@ struct State {
 };
 
 template <typename T, size_t N>
-struct States {
+class States {
   Pool<T, N> pool;
   FlatList<State<T>, N> history;
 
-
-  auto latest() {
-    return history.readFirst();
+  void expire_oldest() {
+    auto first = history.first();
+    pool.free(first->data);
+    history.pop_first();
   }
 
-  void add(State<T> new_state) {
+public:
+  auto latest() {
+    return history.last();
+  }
+
+  void add(T new_state, std::shared_future<T> future) {
     if (history.size() == N) {
-      history.popFirst()
+      expire_oldest();
     }
-    history.pushLast(std::move(new_state));
+    auto new_pooled = pool.allocate();
+    *new_pooled.get() = std::move(new_state);
+    history.push_last(State<T>{std::move(future), std::move(new_pooled)});
   }
 };
