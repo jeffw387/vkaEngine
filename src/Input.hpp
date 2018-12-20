@@ -3,7 +3,7 @@
 #include <map>
 
 #include "spookyhash.hpp"
-#include "CircularQueue.hpp"
+#include "FlatList.hpp"
 #include "Clock.hpp"
 
 namespace Input {
@@ -48,7 +48,7 @@ public:
   }
 
 private:
-  CircularQueue<InputEvent, 256> inputQueue;
+  FlatList<InputEvent, 256> inputQueue;
 };
 
 using Bindings = std::unordered_multimap<Action, Signature>;

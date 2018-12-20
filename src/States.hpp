@@ -1,6 +1,6 @@
 #include <future>
 #include "ObjectPool.hpp"
-#include "CircularQueue.hpp"
+#include "FlatList.hpp"
 
 template <typename T>
 struct State {
@@ -11,7 +11,8 @@ struct State {
 template <typename T, size_t N>
 struct States {
   Pool<T, N> pool;
-  CircularQueue<State<T>, N> history;
+  FlatList<State<T>, N> history;
+
 
   auto latest() {
     return history.readFirst();

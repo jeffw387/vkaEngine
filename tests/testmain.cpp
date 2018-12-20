@@ -12,7 +12,7 @@
 
 #include "GLFW.hpp"
 #include "ObjectPool.hpp"
-#include "CircularQueue.hpp"
+#include "FlatList.hpp"
 #include "BasicLoop.hpp"
 #include "entt/entt.hpp"
 #include "Surface.hpp"

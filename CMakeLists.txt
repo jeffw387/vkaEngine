@@ -70,7 +70,7 @@ list(APPEND vkaEngineIncludes
   "${srcDir}/overloaded.hpp"
   "${srcDir}/Input.hpp"
   "${srcDir}/IntrusiveList.hpp"
-  "${srcDir}/CircularQueue.hpp"
+  "${srcDir}/FlatList.hpp"
   "${srcDir}/QuadTree.hpp"
   "${srcDir}/spookyhash.hpp"
   "${srcDir}/Surface.hpp")
@@ -239,6 +239,6 @@ endfunction()
 create_test_target(GLFW.test ${srcDir}/GLFW.test.cpp "vkaEngine Catch2")
 create_test_target(Instance.test ${srcDir}/Instance.test.cpp "vkaEngine Catch2")
 create_test_target(Device.test ${srcDir}/Device.test.cpp "vkaEngine Catch2")
-create_test_target(CircularQueue.test ${srcDir}/CircularQueue.test.cpp Catch2)
+create_test_target(FlatList.test ${srcDir}/FlatList.test.cpp Catch2)
 
 add_subdirectory(tests)

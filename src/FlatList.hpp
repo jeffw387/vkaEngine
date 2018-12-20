@@ -6,7 +6,7 @@
 #include <iterator>
 
 template <typename T, size_t S>
-class CircularQueue
+class FlatList
 {
 public:
   struct iterator {
@@ -53,6 +53,9 @@ public:
       if (index == 0) {
         index += S;
       }
+      else {
+        --index;
+      }
       return *this;
     }
   };
@@ -70,16 +73,30 @@ public:
 
     std::optional<T> last() const {
       if (m_size > 0) {
-        auto lastIt = m_end;
-        --lastIt;
-        return {*lastIt};
+        return *last_iterator();
       }
+      return {};
+    }
+
+    iterator last_iterator() const {
+      auto lastIt = m_end;
+        --lastIt;
+        return lastIt;
     }
 
     void pop_first() {
       if (m_size > 0) {
         m_begin->~T();
         ++m_begin;
+        --m_size;
+      }
+    }
+
+    void pop_last() {
+      if (m_size > 0) {
+        auto lastIt = last_iterator();
+        lastIt->~T();
+        --m_end;
         --m_size;
       }
     }
