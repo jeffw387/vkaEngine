@@ -6,6 +6,8 @@ template <typename T>
 struct State {
   std::shared_future<T> future;
   Pooled<T> data;
+
+  T operator* () const { return data.value(); }
 };
 
 template <typename T, size_t N>
