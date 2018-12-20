@@ -8,6 +8,9 @@ struct State {
   Pooled<T> data;
 
   T operator* () const { return data.value(); }
+  void sync() {
+    *data = future.get();
+  }
 };
 
 template <typename T, size_t N>
@@ -26,12 +29,11 @@ public:
     return history.last();
   }
 
-  void add(T new_state, std::shared_future<T> future) {
+  void add(std::shared_future<T> future) {
     if (history.size() == N) {
       expire_oldest();
     }
     auto new_pooled = pool.allocate();
-    *new_pooled.get() = std::move(new_state);
     history.push_last(State<T>{std::move(future), std::move(new_pooled)});
   }
 };
