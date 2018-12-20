@@ -240,5 +240,6 @@ create_test_target(GLFW.test ${srcDir}/GLFW.test.cpp "vkaEngine Catch2")
 create_test_target(Instance.test ${srcDir}/Instance.test.cpp "vkaEngine Catch2")
 create_test_target(Device.test ${srcDir}/Device.test.cpp "vkaEngine Catch2")
 create_test_target(FlatList.test ${srcDir}/FlatList.test.cpp Catch2)
+create_test_target(States.test ${srcDir}/States.test.cpp Catch2)
 
 add_subdirectory(tests)
