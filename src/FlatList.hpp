@@ -125,12 +125,12 @@ public:
         return true;
     }
 
-    size_t size()
+    size_t size() const noexcept
     {
         return m_size;
     }
 
-    size_t capacity()
+    constexpr size_t capacity() const noexcept
     {
         return S;
     }
