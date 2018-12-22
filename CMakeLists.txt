@@ -104,8 +104,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
   target_link_libraries(vkaEngine PUBLIC stdc++fs)
 endif()
 
-add_subdirectory(external/Catch2)
-# target_link_libraries()
+find_package(Threads)
 
 add_library(cpp-taskflow INTERFACE)
 target_include_directories(cpp-taskflow INTERFACE external/cpp-taskflow)
