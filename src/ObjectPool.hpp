@@ -8,7 +8,7 @@ struct Pooled {
   size_t index = {};
 
   T& operator *() { return *object; }
-  operator T*() { return object; }
+  operator T() { return *object; }
   operator bool() const { return object != nullptr; }
   T* get() { return object; }
   T value() const { return *object; }
