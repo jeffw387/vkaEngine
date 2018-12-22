@@ -6,10 +6,7 @@
 #include <iterator>
 
 template <typename T, size_t S>
-class FlatList
-{
-public:
-  struct iterator {
+struct flatlist_iterator {
     using difference_type = std::ptrdiff_t;
     using pointer = T*;
     using value_type = T;
@@ -18,38 +15,38 @@ public:
     pointer data = {};
     size_t index = {};
 
-    bool operator !=(const iterator& other) const {
+  bool operator !=(const flatlist_iterator& other) const {
       return index != other.index;
     }
 
-    bool operator ==(const iterator& other) const {
+  bool operator ==(const flatlist_iterator& other) const {
       return !(*this != other);
     }
 
-    bool operator <(const iterator& other) const {
+  bool operator <(const flatlist_iterator& other) const {
       return index < other.index;
     }
 
-    bool operator >(const iterator& other) const {
+  bool operator >(const flatlist_iterator& other) const {
       return index > other.index;
     }
 
-    bool operator>=(const iterator& other) const { return !(*this) < other; }
+  bool operator>=(const flatlist_iterator& other) const { return !(*this) < other; }
 
-    bool operator<=(const iterator& other) const { return !(*this) > other; }
+  bool operator<=(const flatlist_iterator& other) const { return !(*this) > other; }
 
     reference operator*() const { return data[index]; }
     pointer operator->() { return &(data[index]); }
 
-    iterator& operator++() {
+  flatlist_iterator& operator++() {
       ++index;
-      if (index == S) {
+    if (index > S) {
         index -= S;
       }
       return *this;
     }
 
-    iterator& operator--() {
+  flatlist_iterator& operator--() {
       if (index == 0) {
         index += S;
       }
@@ -59,6 +56,12 @@ public:
       return *this;
     }
   };
+
+template <typename T, size_t S>
+class FlatList
+{
+public:
+    using iterator = flatlist_iterator<T, S>;
 
     iterator begin() { return m_begin; }
     iterator end() { return m_end; };
