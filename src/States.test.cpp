@@ -13,18 +13,30 @@ TEST_CASE("Add state to history") {
   REQUIRE(state);
 }
 
-TEST_CASE("State points to data, future indicates when data is available") {
+TEST_CASE("Sync data") {
   States<int, 1> states;
   std::promise<int> int_promise;
   auto int_future = int_promise.get_future().share();
   states.add(int_future);
-  auto worker_lambda = [](std::promise<int> work_promise) {
-    work_promise.set_value(3);
-  };
-  std::thread worker{worker_lambda, std::move(int_promise)};
+  auto int_future2 = int_future;
+
+  REQUIRE_NOTHROW(int_promise.set_value(3));
+
+  REQUIRE(int_future.valid());
+  REQUIRE(int_future2.valid());
+  REQUIRE_NOTHROW([&]() {
+    auto result = int_future.get();
+    REQUIRE(result == 3);
+  }());
+
+  REQUIRE_NOTHROW([&]() {
+    auto result = int_future2.get();
+    REQUIRE(result == 3);
+  }());
 
   auto state = states.latest();
   REQUIRE(state);
   state->sync();
-  REQUIRE(states.latest()->data.value() == 3);
+  int result = state->data;
+  REQUIRE(result == 3);
 }
