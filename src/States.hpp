@@ -34,6 +34,6 @@ public:
       expire_oldest();
     }
     auto new_pooled = pool.allocate();
-    history.push_last(State<T>{std::move(future), std::move(new_pooled)});
+    history.push_last(State<T>{future, new_pooled});
   }
 };
