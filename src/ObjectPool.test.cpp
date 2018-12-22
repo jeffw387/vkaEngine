@@ -29,6 +29,12 @@ TEST_CASE("Over-allocation results in null pooled objects") {
   REQUIRE(obj2 == false);
 }
 
+TEST_CASE("Dereference object and assign") {
+  Pool<int, 1> pool;
+  auto obj = pool.allocate();
+  REQUIRE_NOTHROW(*obj = 1);
+}
+
 TEST_CASE("Returning null pooled object to empty pool doesn't free anything") {
   Pool<int, 1> pool = {};
   auto obj = pool.allocate();
