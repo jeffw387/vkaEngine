@@ -119,3 +119,14 @@ TEST_CASE("Add two items, pop last in queue") {
   REQUIRE(*queue.last() == 1);
   REQUIRE(queue.size() == 1);
 }
+
+TEST_CASE("Wrap forward to beginning of storage") {
+  FlatList<int, 2> list;
+  list.push_last(1);
+  REQUIRE(list.last_iterator().index == 0);
+  list.push_last(2);
+  REQUIRE(list.last_iterator().index == 1);
+  list.pop_first();
+  list.push_last(3);
+  REQUIRE(list.last_iterator().index == 0);
+}
