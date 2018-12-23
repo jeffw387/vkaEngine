@@ -11,29 +11,33 @@ struct flatlist_iterator {
   using pointer = T*;
   using value_type = T;
   using reference = T&;
-  
+
   pointer data = {};
   size_t index = {};
 
-  bool operator !=(const flatlist_iterator& other) const {
+  bool operator!=(const flatlist_iterator& other) const {
     return index != other.index;
   }
 
-  bool operator ==(const flatlist_iterator& other) const {
+  bool operator==(const flatlist_iterator& other) const {
     return !(*this != other);
   }
 
-  bool operator <(const flatlist_iterator& other) const {
+  bool operator<(const flatlist_iterator& other) const {
     return index < other.index;
   }
 
-  bool operator >(const flatlist_iterator& other) const {
+  bool operator>(const flatlist_iterator& other) const {
     return index > other.index;
   }
 
-  bool operator>=(const flatlist_iterator& other) const { return !(*this) < other; }
+  bool operator>=(const flatlist_iterator& other) const {
+    return !(*this) < other;
+  }
 
-  bool operator<=(const flatlist_iterator& other) const { return !(*this) > other; }
+  bool operator<=(const flatlist_iterator& other) const {
+    return !(*this) > other;
+  }
 
   reference operator*() const { return data[index]; }
   pointer operator->() { return &(data[index]); }
@@ -49,8 +53,7 @@ struct flatlist_iterator {
   flatlist_iterator& operator--() {
     if (index == 0) {
       index += S;
-    }
-    else {
+    } else {
       --index;
     }
     return *this;
@@ -58,87 +61,78 @@ struct flatlist_iterator {
 };
 
 template <typename T, size_t S>
-class FlatList
-{
+class FlatList {
 public:
-    using iterator = flatlist_iterator<T, S>;
+  using iterator = flatlist_iterator<T, S>;
 
-    iterator begin() { return m_begin; }
-    iterator end() { return m_end; };
+  iterator begin() { return m_begin; }
+  iterator end() { return m_end; };
 
-    // returns the first T if it exists
-    std::optional<T> first() const {
-        if (m_size == 0) {
-            return {};
-        }
-        return {*m_begin};
-    }
-
-    std::optional<T> last() const {
-      if (m_size > 0) {
-        return *last_iterator();
-      }
+  // returns the first T if it exists
+  std::optional<T> first() const {
+    if (m_size == 0) {
       return {};
     }
+    return {*m_begin};
+  }
 
-    iterator last_iterator() const {
-      auto lastIt = m_end;
-        --lastIt;
-        return lastIt;
+  std::optional<T> last() const {
+    if (m_size > 0) {
+      return *last_iterator();
     }
+    return {};
+  }
 
-    void pop_first() {
-      if (m_size > 0) {
-        m_begin->~T();
-        ++m_begin;
-        --m_size;
-      }
-    }
+  iterator last_iterator() const {
+    auto lastIt = m_end;
+    --lastIt;
+    return lastIt;
+  }
 
-    void pop_last() {
-      if (m_size > 0) {
-        auto lastIt = last_iterator();
-        lastIt->~T();
-        --m_end;
-        --m_size;
-      }
+  void pop_first() {
+    if (m_size > 0) {
+      m_begin->~T();
+      ++m_begin;
+      --m_size;
     }
-    
-    template <typename PredicateT>
-    std::optional<T> first_if(PredicateT p) {
+  }
+
+  void pop_last() {
+    if (m_size > 0) {
+      auto lastIt = last_iterator();
+      lastIt->~T();
+      --m_end;
+      --m_size;
+    }
+  }
+
+  template <typename PredicateT>
+  std::optional<T> first_if(PredicateT p) {
         if (auto first = first()) {
           if (p(first.value())) {
               return first;
-          }
-        }
-        return {};
+      }
     }
+    return {};
+  }
 
-    // pushes the given T to the end of the queue if space is available, returns false otherwise
-    bool push_last(T newValue)
-    {
-        if (!(size() < S))
-            return false;
-        *m_end = std::move(newValue);
-        ++m_end;
-        ++m_size;
-        return true;
-    }
+  // pushes the given T to the end of the queue if space is available, returns
+  // false otherwise
+  bool push_last(T newValue) {
+    if (!(size() < S)) return false;
+    *m_end = std::move(newValue);
+    ++m_end;
+    ++m_size;
+    return true;
+  }
 
-    size_t size() const noexcept
-    {
-        return m_size;
-    }
+  size_t size() const noexcept { return m_size; }
 
-    constexpr size_t capacity() const noexcept
-    {
-        return S;
-    }
+  constexpr size_t capacity() const noexcept { return S; }
 
-  private:
-
-    std::array<T, S> storage;
-    iterator m_begin = {storage.data(), 0};
-    iterator m_end = {storage.data(), 0};
-    size_t m_size = 0;
+private:
+  std::array<T, S> storage;
+  iterator m_begin = {storage.data(), 0};
+  iterator m_end = {storage.data(), 0};
+  size_t m_size = 0;
 };
