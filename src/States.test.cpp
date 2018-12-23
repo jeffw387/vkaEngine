@@ -37,6 +37,8 @@ TEST_CASE("Sync data (single thread)") {
   auto state = states.latest();
   REQUIRE(state);
   state->sync();
-  int result = state->data;
+  int result = state->data.value();
+  REQUIRE(result == 3);
+}
   REQUIRE(result == 3);
 }
