@@ -20,8 +20,7 @@ public:
   operator VkSurfaceKHR() { return surface; }
   SurfaceBase(VkInstance instance, SurfaceCreateInfo createInfo)
       : instance(instance) {}
-  virtual ~SurfaceBase() {}
-  [[nodiscard]] virtual bool handleOSMessages() = 0;
+  virtual ~SurfaceBase(){}[[nodiscard]] virtual bool handleOSMessages() = 0;
 
   Input::Manager inputManager;
   double mouseX = {};
