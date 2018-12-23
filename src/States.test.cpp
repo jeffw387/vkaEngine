@@ -13,7 +13,7 @@ TEST_CASE("Add state to history") {
   REQUIRE(state);
 }
 
-TEST_CASE("Sync data") {
+TEST_CASE("Sync data (single thread)") {
   States<int, 1> states;
   std::promise<int> int_promise;
   auto int_future = int_promise.get_future().share();
