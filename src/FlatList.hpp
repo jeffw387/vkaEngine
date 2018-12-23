@@ -44,7 +44,7 @@ struct flatlist_iterator {
 
   flatlist_iterator& operator++() {
     ++index;
-    if (index > S) {
+    if (index == S) {
       index -= S;
     }
     return *this;
@@ -53,9 +53,8 @@ struct flatlist_iterator {
   flatlist_iterator& operator--() {
     if (index == 0) {
       index += S;
-    } else {
-      --index;
     }
+    --index;
     return *this;
   }
 };
