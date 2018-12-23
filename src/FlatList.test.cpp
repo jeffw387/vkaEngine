@@ -122,11 +122,21 @@ TEST_CASE("Add two items, pop last in queue") {
 
 TEST_CASE("Wrap forward to beginning of storage") {
   FlatList<int, 2> list;
+  CHECK(list.end().index == 0);
+
   list.push_last(1);
-  REQUIRE(list.last_iterator().index == 0);
+
+  CHECK(list.last_iterator().index == 0);
+  CHECK(list.end().index == 1);
+
   list.push_last(2);
-  REQUIRE(list.last_iterator().index == 1);
+
+  CHECK(list.last_iterator().index == 1);
+  CHECK(list.end().index == 0);
+
   list.pop_first();
   list.push_last(3);
-  REQUIRE(list.last_iterator().index == 0);
+
+  CHECK(list.last_iterator().index == 0);
+  CHECK(list.end().index == 1);
 }
