@@ -39,12 +39,12 @@ TEST_CASE("Returning null pooled object to empty pool doesn't free anything") {
   Pool<int, 1> pool = {};
   auto obj = pool.allocate();
   auto obj2 = pool.allocate();
-  REQUIRE(obj2 == false);
+  REQUIRE(!obj2);
 
   pool.free(obj2);
   auto obj3 = pool.allocate();
 
-  REQUIRE(obj3 == false);
+  REQUIRE(!obj3);
 }
 
 TEST_CASE("Default constructor default-inits array") {

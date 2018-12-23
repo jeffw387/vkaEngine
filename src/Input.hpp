@@ -39,11 +39,11 @@ public:
   };
   auto getEventBefore(vka::Clock::time_point cutoff) {
     if (auto eventOptional = inputQueue.first_if([=](auto inputEvent) {
-      return std::visit(
-          [=](const auto& inputVariant) {
-            return inputVariant.eventTime < cutoff;
-          },
-          inputEvent);
+          return std::visit(
+              [=](const auto& inputVariant) {
+                return inputVariant.eventTime < cutoff;
+              },
+              inputEvent);
         })) {
       inputQueue.pop_first();
       return eventOptional;
