@@ -40,5 +40,20 @@ TEST_CASE("Sync data (single thread)") {
   int result = state->data.value();
   REQUIRE(result == 3);
 }
+
+TEST_CASE("Sync data (two threads)") {
+  States<int, 1> states;
+  std::promise<int> int_promise;
+  auto int_future = int_promise.get_future().share();
+  states.add(int_future);
+
+  auto update_state = [](auto promise) { promise.set_value(3); };
+  std::thread worker(update_state, std::move(int_promise));
+
+  auto latest = states.latest();
+  REQUIRE(latest);
+  REQUIRE_NOTHROW(latest->sync());
+  int result = *latest->data;
   REQUIRE(result == 3);
+  worker.join();
 }
