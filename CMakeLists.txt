@@ -225,10 +225,11 @@ target_link_libraries(tinygltf INTERFACE json_nlohmann)
 target_link_libraries(vkaEngine PUBLIC tinygltf)
 
 add_subdirectory(external/Catch2)
-
+add_custom_target(tests)
 function(create_test_target target_name source_file dependencies)
   message("${target_name} dependencies: ${${dependencies}}")
   add_executable(${target_name} ${source_file})
+  add_dependencies(tests ${target_name})
   target_link_libraries(${target_name} ${${dependencies}})
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED ON)
