@@ -35,16 +35,19 @@ using InputEvent = std::variant<Event<Key>, Event<Mouse>>;
 class Manager {
 public:
   void addInputToQueue(InputEvent inputEvent) {
-    inputQueue.pushLast(inputEvent);
+    inputQueue.push_last(inputEvent);
   };
   auto getEventBefore(vka::Clock::time_point cutoff) {
-    return inputQueue.popFirstIf([=](auto inputEvent) {
+    if (auto eventOptional = inputQueue.first_if([=](auto inputEvent) {
       return std::visit(
           [=](const auto& inputVariant) {
             return inputVariant.eventTime < cutoff;
           },
           inputEvent);
-    });
+        })) {
+      inputQueue.pop_first();
+      return eventOptional;
+    }
   }
 
 private:
