@@ -120,7 +120,7 @@ public:
   // false otherwise
   bool push_last(T newValue) {
     if (!(m_size < S)) return false;
-    *m_end = std::move(newValue);
+    new (m_end) T(std::move(newValue));
     ++m_end;
     ++m_size;
     return true;
@@ -131,8 +131,8 @@ public:
   constexpr size_t capacity() const noexcept { return S; }
 
 private:
-  std::array<T, S> storage;
-  iterator m_begin = {storage.data(), 0};
-  iterator m_end = {storage.data(), 0};
+  std::array<std::byte, sizeof(T) * S> storage;
+  iterator m_begin = {reinterpret_cast<T*>(storage.data()), 0};
+  iterator m_end = {reinterpret_cast<T*>(storage.data()), 0};
   size_t m_size = 0;
 };
