@@ -39,6 +39,7 @@ struct flatlist_iterator {
     return !(*this) > other;
   }
 
+  operator pointer() { return &data[index]; }
   reference operator*() const { return data[index]; }
   pointer operator->() { return &(data[index]); }
 
