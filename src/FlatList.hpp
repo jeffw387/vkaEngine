@@ -118,7 +118,7 @@ public:
   // pushes the given T to the end of the queue if space is available, returns
   // false otherwise
   bool push_last(T newValue) {
-    if (!(size() < S)) return false;
+    if (!(m_size < S)) return false;
     *m_end = std::move(newValue);
     ++m_end;
     ++m_size;
