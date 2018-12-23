@@ -57,3 +57,34 @@ TEST_CASE("Sync data (two threads)") {
   REQUIRE(result == 3);
   worker.join();
 }
+
+TEST_CASE("Roughly intended use case") {
+  using Position = std::array<float, 2>;
+  auto posUpdate = [](Position pos) {
+    constexpr auto constantAccel = Position{0.f, 9.8f};
+    pos[0] += constantAccel[0];
+    pos[1] += constantAccel[1];
+    return pos;
+  };
+  States<Position, 3> positionStates;
+  auto initialPos =
+      std::packaged_task<Position(Position)>([](auto pos) { return pos; });
+  positionStates.add(initialPos.get_future());
+  initialPos(Position{});
+
+  auto updateLoop = [&]() {
+    for (int updateCount{}; updateCount < 5; ++updateCount) {
+      if (auto latest = positionStates.latest()) {
+        auto update_task = std::packaged_task<Position(Position)>(posUpdate);
+        latest->sync();
+        auto positionFuture = update_task.get_future().share();
+        positionStates.add(positionFuture);
+        std::thread worker{std::move(update_task), latest->value()};
+        worker.join();
+      }
+    }
+  };
+  REQUIRE_NOTHROW(updateLoop());
+  positionStates.latest()->sync();
+  REQUIRE(positionStates.latest()->value()[1] == 9.8f * 5.f);
+}
