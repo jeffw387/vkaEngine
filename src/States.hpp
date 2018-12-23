@@ -7,9 +7,10 @@ struct State {
   std::shared_future<T> future;
   Pooled<T> data;
 
-  T operator* () const { return data.value(); }
+  T value() const { return data.value(); }
+  T& value() { return data.value(); }
   void sync() {
-    *data = future.get();
+    data.value() = future.get();
   }
 };
 

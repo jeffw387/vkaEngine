@@ -7,11 +7,9 @@ struct Pooled {
   T* object = {};
   size_t index = {};
 
-  T& operator*() { return *object; }
-  // operator T() { return *object; }
   operator bool() const { return object != nullptr; }
-  T* get() { return object; }
   T value() const { return *object; }
+  T& value() { return *object; }
 };
 
 template <typename T, size_t N>

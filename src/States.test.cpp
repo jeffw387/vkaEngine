@@ -53,7 +53,7 @@ TEST_CASE("Sync data (two threads)") {
   auto latest = states.latest();
   REQUIRE(latest);
   REQUIRE_NOTHROW(latest->sync());
-  int result = *latest->data;
+  int result = latest->value();
   REQUIRE(result == 3);
   worker.join();
 }
