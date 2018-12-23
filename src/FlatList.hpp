@@ -108,9 +108,9 @@ public:
 
   template <typename PredicateT>
   std::optional<T> first_if(PredicateT p) {
-        if (auto first = first()) {
-          if (p(first.value())) {
-              return first;
+    if (auto firstOptional = first()) {
+      if (p(firstOptional.value())) {
+        return firstOptional;
       }
     }
     return {};
