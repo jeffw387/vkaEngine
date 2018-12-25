@@ -1,32 +1,30 @@
 #include "DescriptorSetLayout.hpp"
 #include "Device.hpp"
+#include "overloaded.hpp"
 
 namespace vka {
 DescriptorSetLayout::DescriptorSetLayout(
     VkDevice device,
-    std::vector<VkDescriptorSetLayoutBinding> bindings)
+    DescriptorBindings bindings)
     : device(device), bindings(std::move(bindings)) {
   VkDescriptorSetLayoutCreateInfo createInfo{
       VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-  createInfo.bindingCount = static_cast<uint32_t>(this->bindings.size());
-  createInfo.pBindings = this->bindings.data();
-  vkCreateDescriptorSetLayout(device, &createInfo, nullptr, &layoutHandle);
-}
 
-DescriptorSetLayout& DescriptorSetLayout::operator=(
-    DescriptorSetLayout&& other) {
-  if (this != &other) {
-    device = other.device;
-    layoutHandle = other.layoutHandle;
-    bindings = std::move(other.bindings);
-    other.device = {};
-    other.layoutHandle = {};
+  for (auto [binding, descriptors] : this->bindings) {
+    if (descriptors.size() > 0) {
+      VkDescriptorSetLayoutBinding vkBinding{};
+      vkBinding.binding = binding;
+      vkBinding.descriptorCount;
+      std::visit([&](auto descriptor) {
+        vkBinding.descriptorType = static_cast<VkDescriptorType>(
+          descriptor.descriptorType());
+      }, **descriptors.begin());
+      vkBinding.
+    }
   }
-  return *this;
-}
-
-DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& other) {
-  *this = std::move(other);
+  createInfo.bindingCount = static_cast<uint32_t>(vkBindings.size());
+  createInfo.pBindings = vkBindings.data();
+  vkCreateDescriptorSetLayout(device, &createInfo, nullptr, &layoutHandle);
 }
 
 DescriptorSetLayout::~DescriptorSetLayout() {
@@ -35,3 +33,7 @@ DescriptorSetLayout::~DescriptorSetLayout() {
   }
 }
 }  // namespace vka
+
+// Descriptor Set contains bindings
+// Bindings contain descriptors of a single type (array of descriptors)
+// each binding must specify which shader stages use it

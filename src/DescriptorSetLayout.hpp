@@ -1,29 +1,25 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
+#include "Descriptors.hpp"
 
 namespace vka {
-class Device;
-
 class DescriptorSetLayout {
 public:
   DescriptorSetLayout(
       VkDevice device,
-      std::vector<VkDescriptorSetLayoutBinding>);
-  DescriptorSetLayout(DescriptorSetLayout&&);
-  DescriptorSetLayout& operator=(DescriptorSetLayout&&);
-  DescriptorSetLayout(const DescriptorSetLayout&) = delete;
-  DescriptorSetLayout& operator=(const DescriptorSetLayout&) = delete;
+      DescriptorBindings);
   ~DescriptorSetLayout();
 
   operator VkDescriptorSetLayout() { return layoutHandle; }
-  const std::vector<VkDescriptorSetLayoutBinding>& getBindings() {
+  DescriptorBindings getBindings() {
     return bindings;
   }
 
 private:
   VkDevice device;
   VkDescriptorSetLayout layoutHandle;
-  std::vector<VkDescriptorSetLayoutBinding> bindings;
+  DescriptorBindings bindings;
+  std::vector<VkDescriptorSetLayoutBinding> vkBindings;
 };
 }  // namespace vka

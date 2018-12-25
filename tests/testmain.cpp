@@ -9,10 +9,12 @@
 #include <fstream>
 #include <string>
 #include <taskflow/taskflow.hpp>
+#include <unordered_map>
 
 #include "GLFW.hpp"
 #include "ObjectPool.hpp"
 #include "FlatList.hpp"
+#include "States.hpp"
 #include "BasicLoop.hpp"
 #include "entt/entt.hpp"
 #include "Surface.hpp"
@@ -290,7 +292,21 @@ struct AppState {
   std::unique_ptr<TextObject> fps_text;
   P3DPipeline p3DPipeline;
 
+  template <typename T>
+  using StorageBuffer = std::unique_ptr<vka::vulkan_vector<T, vka::StorageBufferDescriptor>>;
 
+  template <typename T>
+  using UniformBuffer = std::unique_ptr<vka::vulkan_vector<T>>;
+
+  template <typename T>
+  using DynamicUniformBuffer = std::unique_ptr<vka::vulkan_vector<T, vka::DynamicBufferDescriptor>>;
+  
+  States<Input::State> inputStates;
+  States<StorageBuffer<Material>> materialStates;
+  States<StorageBuffer<Light>> dynamicLightStates;
+  States<UniformBuffer<LightData>> lightDataStates;
+  States<UniformBuffer<Camera>> cameraStates;
+  States<DynamicUniformBuffer<Instance>> instanceStates;
 
   Bindings keyBindings;
   InverseBindings inverseKeys;

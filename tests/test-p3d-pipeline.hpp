@@ -11,6 +11,7 @@
 
 namespace fs = std::experimental::filesystem;
 
+namespace p3d {
 struct Material {
   glm::vec4 diffuse;
 };
@@ -43,7 +44,11 @@ struct FragmentPushConstants {
   uint32_t materialIndex;
 };
 
-struct P3DPipeline {
+struct BufferedData {
+
+};
+
+struct Pipeline {
   std::unique_ptr<vka::ShaderModule> vertexShader;
   std::unique_ptr<vka::ShaderModule> fragmentShader;
   VkDescriptorSetLayoutBinding materialBinding;
@@ -59,8 +64,8 @@ struct P3DPipeline {
   std::shared_ptr<vka::PipelineLayout> pipelineLayout;
   std::shared_ptr<vka::GraphicsPipeline> pipeline;
 
-  P3DPipeline() {}
-  P3DPipeline(
+  Pipeline() {}
+  Pipeline(
       vka::Device* device,
       vka::RenderPass* renderPass,
       vka::PipelineCache* pipelineCache)
@@ -146,3 +151,4 @@ struct P3DPipeline {
     pipeline = device->createGraphicsPipeline(*pipelineCache, pipeline3DInfo);
   }
 };
+}

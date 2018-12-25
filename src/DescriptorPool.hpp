@@ -3,102 +3,15 @@
 #include <vulkan/vulkan.h>
 #include <variant>
 #include <optional>
-#include <map>
 #include <memory>
+#include "Descriptors.hpp"
 
 namespace vka {
 class DescriptorSetLayout;
-class DescriptorSet;
-
-struct DescriptorReference {
-  VkDescriptorSet set;
-  uint32_t bindingIndex;
-  uint32_t arrayIndex;
-};
-
-enum class BufferType {
-  Uniform,
-  DynamicUniform,
-  Storage,
-  // DynamicStorage
-};
-
-class BufferDescriptor {
-public:
-  void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
-  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-  static constexpr BufferType bufferType() { return BufferType::Uniform; }
-
-private:
-  bool valid = false;
-  VkDescriptorBufferInfo bufferInfo;
-};
-
-class StorageBufferDescriptor {
-public:
-  void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
-  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-  static constexpr BufferType bufferType() { return BufferType::Storage; }
-
-private:
-  bool valid = false;
-  VkDescriptorBufferInfo bufferInfo;
-};
-
-class DynamicBufferDescriptor {
-public:
-  void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
-  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-  static constexpr BufferType bufferType() {
-    return BufferType::DynamicUniform;
-  }
-
-private:
-  bool valid = false;
-  VkDescriptorBufferInfo bufferInfo;
-};
-
-class ImageDescriptor {
-public:
-  void operator()(VkImageView, VkImageLayout);
-  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-
-private:
-  bool valid = false;
-  VkDescriptorImageInfo imageInfo;
-};
-
-class ImageSamplerDescriptor {
-public:
-  void operator()(VkImageView, VkImageLayout, VkSampler = VK_NULL_HANDLE);
-  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-
-private:
-  bool valid = false;
-  VkDescriptorImageInfo imageInfo;
-};
-
-class SamplerDescriptor {
-public:
-  void operator()(VkSampler);
-  std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-
-private:
-  bool valid = false;
-  VkDescriptorImageInfo imageInfo;
-};
-
-using Descriptor = std::variant<
-    BufferDescriptor,
-    StorageBufferDescriptor,
-    DynamicBufferDescriptor,
-    ImageDescriptor,
-    SamplerDescriptor,
-    ImageSamplerDescriptor>;
 
 class DescriptorSet {
 public:
-  DescriptorSet(VkDescriptorSet, DescriptorSetLayout*);
+  DescriptorSet(VkDescriptorSet, DescriptorBindings);
   operator VkDescriptorSet();
   void validate(VkDevice device);
   template <typename T>
@@ -111,7 +24,7 @@ public:
 
 private:
   VkDescriptorSet set;
-  std::map<uint32_t, std::vector<Descriptor>> bindings;
+  DescriptorBindings bindings;
 };
 
 class DescriptorPool {
@@ -124,7 +37,7 @@ public:
   operator VkDescriptorPool() { return poolHandle; }
 
   std::shared_ptr<DescriptorSet> allocateDescriptorSet(
-      DescriptorSetLayout* layout);
+      DescriptorSetLayout* layout, DescriptorBindings);
   void reset();
 
 private:
