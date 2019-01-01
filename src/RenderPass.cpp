@@ -1,7 +1,7 @@
 #include "RenderPass.hpp"
-#include "Device.hpp"
+// #include "Device.hpp"
 #include <vulkan/vulkan.h>
-#include <spdlog/spdlog.h>
+#include "Logger.hpp"
 
 namespace vka {
 Subpass::Subpass(VkPipelineBindPoint bindPoint) : bindPoint(bindPoint){};

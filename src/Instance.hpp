@@ -52,7 +52,7 @@ static VkBool32 vulkanDebugCallback(
 template <typename PlatformT>
 class Instance {
 public:
-  Instance(InstanceCreateInfo instanceCreateInfo) {
+  explicit Instance(InstanceCreateInfo instanceCreateInfo) {
     MultiLogger::get()->info("Creating instance.");
 
     VkApplicationInfo appInfo{};

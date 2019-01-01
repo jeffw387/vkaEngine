@@ -1,7 +1,7 @@
 #include "Pipeline.hpp"
 #include <vulkan/vulkan.h>
 //#include <GLFW/glfw3.h>
-#include "Device.hpp"
+// #include "Device.hpp"
 
 namespace vka {
 PipelineCache::PipelineCache(VkDevice device, std::vector<char> initialData)

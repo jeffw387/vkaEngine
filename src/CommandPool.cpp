@@ -1,6 +1,6 @@
 #include "CommandPool.hpp"
 #include <range/v3/algorithm/for_each.hpp>
-#include "Device.hpp"
+// #include "Device.hpp"
 
 namespace vka {
 CommandBuffer::CommandBuffer(

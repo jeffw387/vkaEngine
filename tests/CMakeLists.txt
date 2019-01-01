@@ -3,8 +3,8 @@ set(BUILD_SHARED_LIBS OFF)
 add_executable(testmain "testmain.cpp" "Asset.cpp" "Asset.hpp")
 target_link_libraries(testmain PRIVATE vkaEngine)
 
-get_target_property(vkaEngineSources vkaEngine SOURCES)
-target_sources(testmain PRIVATE ${vkaEngineSources})
+# get_target_property(vkaEngineSources vkaEngine SOURCES)
+# target_sources(testmain PRIVATE ${vkaEngineSources})
 set_target_properties(testmain PROPERTIES
   CXX_STANDARD 17)
   

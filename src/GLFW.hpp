@@ -16,11 +16,9 @@ struct GLFWOwner {
     }
   }
 
-  ~GLFWOwner() {
-    glfwTerminate();
-  }
+  ~GLFWOwner() { glfwTerminate(); }
 };
-}
+}  // namespace detail
 
 class GLFW {
 public:
@@ -30,19 +28,25 @@ public:
   using CursorCallback = GLFWcursorposfun;
 
   template <typename T>
-  static T loadVulkanFunction(VkInstance instance, std::string_view functionName) {
+  static T loadVulkanFunction(
+      VkInstance instance,
+      std::string_view functionName) {
     init();
-    return reinterpret_cast<T>(glfwGetInstanceProcAddress(instance, functionName.data()));
+    return reinterpret_cast<T>(
+        glfwGetInstanceProcAddress(instance, functionName.data()));
   }
 
-  static WindowType* createWindow(int width, int height, std::string_view windowTitle);
+  static WindowType*
+  createWindow(int width, int height, std::string_view windowTitle);
 
   static VkSurfaceKHR createSurface(VkInstance instance, WindowType* window);
 
   static void setKeyCallback(WindowType* window, KeyCallback callback);
 
-  static void setMouseButtonCallback(WindowType* window, MouseButtonCallback callback);
-  
+  static void setMouseButtonCallback(
+      WindowType* window,
+      MouseButtonCallback callback);
+
   static void setCursorCallback(WindowType* window, CursorCallback callback);
 
   static bool pollOS(WindowType* window);
@@ -54,8 +58,9 @@ public:
     return gsl::span<const char*>{ptr, count};
   }
 
+  static void init();
+
 private:
   static std::unique_ptr<detail::GLFWOwner> glfwOwner;
-  static void init();
 };
-}
+}  // namespace platform

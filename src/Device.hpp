@@ -1,14 +1,14 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include <vk_mem_alloc.h>
+// #include <vk_mem_alloc.h>
 #include <memory>
 #include <vector>
 #include <map>
 #include <string>
 #include <functional>
 #include <outcome.hpp>
-#include <spdlog/spdlog.h>
+// #include <spdlog/spdlog.h>
 #include <glm/glm.hpp>
 #include "ShaderModule.hpp"
 #include "CommandPool.hpp"

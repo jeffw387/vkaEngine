@@ -7,108 +7,19 @@ project(vkaEngineProject
   LANGUAGES C CXX 
   VERSION ${EngineVersionMajor}.${EngineVersionMinor}.${EngineVersionPatch})
 
-set(BUILD_SHARED_LIBS OFF)
-  
-set(srcDir "${CMAKE_CURRENT_SOURCE_DIR}/src")
-
-configure_file("${srcDir}/version.hpp.in" 
-  "${srcDir}/version.hpp" @ONLY)
-
-list(APPEND vkaEngineSources 
-  "${srcDir}/Logger.cpp"
-  "${srcDir}/sync_helper.cpp"
-  "${srcDir}/VmaImplementation.cpp"
-  "${srcDir}/GLFW.cpp"
-  "${srcDir}/Text.cpp"
-  "${srcDir}/Camera.cpp"
-  "${srcDir}/Instance.cpp"
-  "${srcDir}/Surface.cpp"
-  "${srcDir}/Buffer.cpp"
-  "${srcDir}/Image.cpp"
-  "${srcDir}/Framebuffer.cpp"
-  "${srcDir}/RenderPass.cpp"
-  "${srcDir}/CommandPool.cpp"
-  "${srcDir}/DescriptorPool.cpp"
-  "${srcDir}/DescriptorSetLayout.cpp"
-  "${srcDir}/Swapchain.cpp"
-  "${srcDir}/ShaderModule.cpp"
-  "${srcDir}/PipelineLayout.cpp"
-  "${srcDir}/Pipeline.cpp"
-  "${srcDir}/Fence.cpp"
-  "${srcDir}/Semaphore.cpp"
-  "${srcDir}/spookyhash.cpp"
-  "${srcDir}/Device.cpp")
-  
-list(APPEND vkaEngineIncludes
-  "${srcDir}/version.hpp"
-  "${srcDir}/gsl-lite.hpp"
-  "${srcDir}/thsvs_simpler_vulkan_synchronization.h"
-  "${srcDir}/Text.hpp"
-  "${srcDir}/Logger.hpp"
-  "${srcDir}/ObjectPool.hpp"
-  "${srcDir}/BasicLoop.hpp"
-  "${srcDir}/IO.hpp"
-  "${srcDir}/Camera.hpp"
-  "${srcDir}/LevelData.hpp"
-  "${srcDir}/vulkan_vector.hpp"
-  "${srcDir}/RenderPass.hpp"
-  "${srcDir}/Instance.hpp"
-  "${srcDir}/Device.hpp"
-  "${srcDir}/Buffer.hpp"
-  "${srcDir}/Image.hpp"
-  "${srcDir}/Framebuffer.hpp"
-  "${srcDir}/CommandPool.hpp"
-  "${srcDir}/DescriptorPool.hpp"
-  "${srcDir}/DescriptorSetLayout.hpp"
-  "${srcDir}/ShaderModule.hpp"
-  "${srcDir}/Swapchain.hpp"
-  "${srcDir}/PipelineLayout.hpp"
-  "${srcDir}/Pipeline.hpp"
-  "${srcDir}/Fence.hpp"
-  "${srcDir}/Semaphore.hpp"
-  "${srcDir}/VkEnumStrings.hpp"
-  "${srcDir}/overloaded.hpp"
-  "${srcDir}/Input.hpp"
-  "${srcDir}/IntrusiveList.hpp"
-  "${srcDir}/FlatList.hpp"
-  "${srcDir}/QuadTree.hpp"
-  "${srcDir}/spookyhash.hpp"
-  "${srcDir}/Surface.hpp")
-add_library(vkaEngine)
-target_sources(vkaEngine PUBLIC ${vkaEngineIncludes} PRIVATE ${vkaEngineSources})
-target_include_directories(vkaEngine PUBLIC 
-  ${srcDir})
-
-set_property(TARGET vkaEngine PROPERTY CXX_STANDARD 17)
-set_property(TARGET vkaEngine PROPERTY CXX_STANDARD_REQUIRED ON)
-if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-  set_property(TARGET vkaEngine PROPERTY CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi -Wlifetime")
-endif()
-
-target_compile_definitions(vkaEngine 
-  PUBLIC 
-  NOMINMAX
-  GLFW_INCLUDE_NONE
-  GLM_FORCE_DEPTH_ZERO_TO_ONE
-  _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING
-  _CRT_SECURE_NO_WARNINGS)
-
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "force static build" FORCE)
+  
+set(src_dir "${CMAKE_CURRENT_SOURCE_DIR}/src")
+configure_file("${src_dir}/version.hpp.in" 
+  "${src_dir}/version.hpp" @ONLY)
 
-add_custom_command(
-  TARGET vkaEngine
-  POST_BUILD
-  COMMAND clang-format -i -style=file ${vkaEngineSources} ${vkaEngineIncludes})
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-  target_link_libraries(vkaEngine PUBLIC stdc++fs)
-endif()
-
+##
+## Dependencies
+##
 find_package(Threads)
 
 add_library(cpp-taskflow INTERFACE)
 target_include_directories(cpp-taskflow INTERFACE external/cpp-taskflow)
-target_link_libraries(vkaEngine PUBLIC cpp-taskflow)
 
 add_library(box2d)
 set(b2d ${CMAKE_CURRENT_SOURCE_DIR}/external/Box2D)
@@ -160,95 +71,178 @@ target_sources(box2d PRIVATE
   ${b2d}/Box2D/Dynamics/b2WorldCallbacks.cpp
   ${b2d}/Box2D/Rope/b2Rope.cpp)
 target_include_directories(box2d PUBLIC ${b2d})
-target_link_libraries(vkaEngine PUBLIC box2d)
 
 add_subdirectory(external/glslang)
-add_dependencies(vkaEngine glslangValidator)
 set(SPIRV_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/glslang/StandAlone)
 
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE external/stb)
-target_link_libraries(vkaEngine PUBLIC stb)
 
 add_subdirectory(external/msdfgen)
-target_link_libraries(vkaEngine PUBLIC lib_msdfgen)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
 add_library(outcome INTERFACE)
 target_include_directories(outcome INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/external/outcome/single-header")
-target_link_libraries(vkaEngine PUBLIC outcome)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3")
-target_link_libraries(vkaEngine PUBLIC range-v3)
 
 find_package(Vulkan REQUIRED)
-if(VULKAN_FOUND)
-  message("Vulkan found.")
-endif()
-message("vk include dirs: ${Vulkan_INCLUDE_DIRS}")
-message("vk libs: ${Vulkan_LIBRARIES}")
-target_include_directories(vkaEngine PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(vkaEngine PUBLIC ${Vulkan_LIBRARIES})
 
-add_library(VulkanMemoryAllocator INTERFACE)
+add_library(vulkan INTERFACE)
+target_include_directories(vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(vulkan INTERFACE ${Vulkan_LIBRARIES})
+
+add_library(VulkanMemoryAllocator)
 target_include_directories(VulkanMemoryAllocator 
-INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/external/VulkanMemoryAllocator/src")
-target_link_libraries(vkaEngine PUBLIC VulkanMemoryAllocator)
+PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/VulkanMemoryAllocator/src")
+target_sources(VulkanMemoryAllocator PRIVATE ${src_dir}/VmaImplementation.cpp)
+target_link_libraries(VulkanMemoryAllocator PUBLIC vulkan)
 
 add_subdirectory(external/glm)
-if(NOT TARGET glm)
-message(FATAL_ERROR "glm target not found")
-endif()
-target_link_libraries(vkaEngine PUBLIC glm)
 
 add_library(json_nlohmann INTERFACE)
 target_include_directories(
   json_nlohmann
   INTERFACE
   external/json/single_include)
-  target_link_libraries(vkaEngine PUBLIC json_nlohmann)
   
 add_subdirectory(external/glfw)
-if(NOT TARGET glfw)
-  message(FATAL_ERROR "glfw target not found")
-endif()
-target_link_libraries(vkaEngine PUBLIC glfw)
   
 add_subdirectory(external/spdlog)
 add_library(spdlog::spdlog ALIAS spdlog)
-target_link_libraries(vkaEngine PUBLIC spdlog::spdlog)
 
 add_library(tinygltf INTERFACE)
 target_include_directories(tinygltf INTERFACE external/tinygltf)
 target_link_libraries(tinygltf INTERFACE json_nlohmann)
-target_link_libraries(vkaEngine PUBLIC tinygltf)
 
 add_subdirectory(external/Catch2)
+
+##
+## End dependencies
+##
+
+##
+## Modules
+##
+add_library(vkaEngine INTERFACE)
+target_include_directories(vkaEngine INTERFACE ${src_dir})
+target_compile_definitions(vkaEngine INTERFACE
+  NOMINMAX
+  GLFW_INCLUDE_NONE
+  GLM_FORCE_DEPTH_ZERO_TO_ONE
+  _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING
+  _CRT_SECURE_NO_WARNINGS)
+
 add_custom_target(tests)
-function(create_test_target target_name source_file dependencies)
-  message("${target_name} dependencies: ${${dependencies}}")
-  add_executable(${target_name} ${source_file})
-  add_dependencies(tests ${target_name})
-  target_link_libraries(${target_name} ${${dependencies}})
+
+function(setup_target target_name)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED ON)
-  add_custom_command(
-    TARGET ${target_name}
-    POST_BUILD
-    COMMAND clang-format -i -style=file ${source_file})
+  if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    set_property(TARGET ${target_name} PROPERTY CMAKE_EXE_LINKER_FLAGS 
+      "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi -Wlifetime")
+  endif()
+  if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    target_link_libraries(${target_name} PUBLIC stdc++fs)
+  endif()
 endfunction()
-set(glfwtest_deps vkaEngine Catch2)
-create_test_target(GLFW.test ${srcDir}/GLFW.test.cpp glfwtest_deps)
-set(instance_deps vkaEngine Catch2)
-create_test_target(Instance.test ${srcDir}/Instance.test.cpp instance_deps)
-set(device_deps vkaEngine Catch2)
-create_test_target(Device.test ${srcDir}/Device.test.cpp device_deps)
-set(flatlist_deps Catch2)
-create_test_target(FlatList.test ${srcDir}/FlatList.test.cpp flatlist_deps)
-set(states_deps ${CMAKE_THREAD_LIBS_INIT} Catch2)
-create_test_target(States.test ${srcDir}/States.test.cpp states_deps)
-set(objectpool_deps Catch2)
-create_test_target(ObjectPool.test ${srcDir}/ObjectPool.test.cpp objectpool_deps)
+
+function(add_module module_name)
+  set(module_source ${src_dir}/${module_name}.cpp)
+  set(module_header ${src_dir}/${module_name}.hpp)
+  set(test_name ${module_name}.test)
+  set(test_source ${src_dir}/${test_name}.cpp)
+  if(EXISTS ${module_source})
+    add_library(${module_name})
+    target_sources(${module_name} PRIVATE ${module_source})
+    target_link_libraries(vkaEngine INTERFACE ${module_name})
+    add_custom_command(
+      TARGET ${module_name}
+      POST_BUILD
+      COMMAND clang-format -i -style=file ${module_source})
+    setup_target(${module_name})
+    if(EXISTS ${module_header})
+      add_custom_command(
+        TARGET ${module_name}
+        COMMAND clang-format -i -style=file ${module_header})
+    endif()
+  else()
+    add_library(${module_name} INTERFACE)
+  endif()
+  
+  if(EXISTS ${test_source})
+    message("test source: ${test_source}")
+    add_executable(${test_name} ${test_source})
+    target_link_libraries(${test_name} PRIVATE ${module_name} Catch2)
+    add_dependencies(tests ${test_name})
+    add_custom_command(
+      TARGET ${test_name}
+      POST_BUILD
+      COMMAND clang-format -i -style=file ${test_source})
+    setup_target(${test_name})
+  endif()
+
+endfunction()
+
+add_module(Logger)
+add_module(sync_helper)
+# add_module(VmaImplementation)
+add_module(GLFW)
+add_module(Text)
+add_module(Camera)
+add_module(Instance)
+add_module(Surface)
+add_module(Buffer)
+add_module(Image)
+add_module(Framebuffer)
+add_module(RenderPass)
+add_module(CommandPool)
+add_module(descriptor_pool)
+add_module(Swapchain)
+add_module(ShaderModule)
+add_module(PipelineLayout)
+add_module(Pipeline)
+add_module(Fence)
+add_module(Semaphore)
+add_module(spookyhash)
+add_module(Device)
+target_link_libraries(sync_helper PUBLIC vulkan)
+target_link_libraries(Logger PUBLIC spdlog::spdlog)
+target_link_libraries(GLFW PUBLIC vulkan glfw Logger)
+target_link_libraries(Instance PUBLIC vulkan Device Surface Logger)
+target_link_libraries(Surface PUBLIC vulkan glfw Logger)
+target_link_libraries(Device PUBLIC 
+  GLFW
+  vulkan
+  VulkanMemoryAllocator
+  outcome
+  Logger
+  glm
+  ShaderModule
+  CommandPool
+  RenderPass
+  PipelineLayout
+  Pipeline
+  Swapchain
+  Fence
+  Semaphore
+  Framebuffer
+  Image
+  Buffer)
+  target_link_libraries(descriptor_pool INTERFACE GLFW Instance Device outcome)
+  target_link_libraries(Buffer PUBLIC vulkan VulkanMemoryAllocator)
+  target_link_libraries(Image PUBLIC vulkan VulkanMemoryAllocator)
+  target_link_libraries(Swapchain PUBLIC vulkan outcome Logger)
+  target_link_libraries(ShaderModule PUBLIC vulkan)
+  target_link_libraries(Fence PUBLIC vulkan)
+  target_link_libraries(Semaphore PUBLIC vulkan)
+  target_link_libraries(Framebuffer PUBLIC vulkan Image range-v3)
+  target_link_libraries(RenderPass PUBLIC vulkan Logger)
+  target_link_libraries(PipelineLayout PUBLIC vulkan)
+  target_link_libraries(Pipeline PUBLIC vulkan Logger)
+  target_link_libraries(CommandPool PUBLIC vulkan range-v3 Buffer Image Logger RenderPass Framebuffer Pipeline PipelineLayout Fence sync_helper)
+
+add_dependencies(vkaEngine glslangValidator)
 
 add_subdirectory(tests)
