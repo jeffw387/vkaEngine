@@ -1,6 +1,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <memory>
+#include <expected.hpp>
 
 namespace vka {
 class instance {
@@ -20,7 +21,7 @@ private:
 
 class instance_builder {
 public:
-  auto build() {
+  tl::expected<std::unique_ptr<instance>, VkResult> build() {
     create_info.pApplicationInfo = &app_info;
     create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     create_info.ppEnabledExtensionNames = extensions.data();
@@ -28,8 +29,10 @@ public:
     create_info.ppEnabledLayerNames = layers.data();
     VkInstance result_instance = {};
     auto result = vkCreateInstance(&create_info, nullptr, &result_instance);
-    auto instance_unique = std::make_unique<instance>(result_instance);
-    return std::make_pair(std::move(instance_unique), std::move(result));
+    if(result != VK_SUCCESS) {
+      return tl::unexpected<VkResult>(result);
+    }
+    return std::make_unique<instance>(result_instance);
   }
 
   instance_builder& add_extension(const char* name) {
