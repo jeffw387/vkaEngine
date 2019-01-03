@@ -11,7 +11,7 @@ class DescriptorSetLayout;
 
 class DescriptorSet {
 public:
-  DescriptorSet(VkDescriptorSet, DescriptorBindings);
+  DescriptorSet(VkDescriptorSet, DescriptorSetLayout*);
   operator VkDescriptorSet();
   void validate(VkDevice device);
   template <typename T>
@@ -24,7 +24,7 @@ public:
 
 private:
   VkDescriptorSet set;
-  DescriptorBindings bindings;
+  std::map<uint32_t, std::vector<Descriptor>> bindings;
 };
 
 class DescriptorPool {
@@ -37,7 +37,7 @@ public:
   operator VkDescriptorPool() { return poolHandle; }
 
   std::shared_ptr<DescriptorSet> allocateDescriptorSet(
-      DescriptorSetLayout* layout, DescriptorBindings);
+      DescriptorSetLayout* layout);
   void reset();
 
 private:
