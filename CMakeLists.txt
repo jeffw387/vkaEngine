@@ -129,7 +129,6 @@ add_library(vkaEngine INTERFACE)
 target_include_directories(vkaEngine INTERFACE ${src_dir})
 target_compile_definitions(vkaEngine INTERFACE
   NOMINMAX
-  GLFW_INCLUDE_NONE
   GLM_FORCE_DEPTH_ZERO_TO_ONE
   _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING
   _CRT_SECURE_NO_WARNINGS)
@@ -184,10 +183,9 @@ function(add_module module_name)
   endif()
 
 endfunction()
-
+add_module(instance)
 add_module(Logger)
 add_module(sync_helper)
-# add_module(VmaImplementation)
 add_module(GLFW)
 add_module(Text)
 add_module(Camera)
@@ -210,6 +208,7 @@ add_module(Device)
 target_link_libraries(sync_helper PUBLIC vulkan)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)
 target_link_libraries(GLFW PUBLIC vulkan glfw Logger)
+target_link_libraries(instance INTERFACE GLFW)
 target_link_libraries(Instance PUBLIC vulkan Device Surface Logger)
 target_link_libraries(Surface PUBLIC vulkan glfw Logger)
 target_link_libraries(Device PUBLIC 
@@ -242,7 +241,7 @@ target_link_libraries(Device PUBLIC
   target_link_libraries(PipelineLayout PUBLIC vulkan)
   target_link_libraries(Pipeline PUBLIC vulkan Logger)
   target_link_libraries(CommandPool PUBLIC vulkan range-v3 Buffer Image Logger RenderPass Framebuffer Pipeline PipelineLayout Fence sync_helper)
-
+target_compile_definitions(GLFW PUBLIC GLFW_INCLUDE_VULKAN GLFW_INCLUDE_NONE)
 add_dependencies(vkaEngine glslangValidator)
 
 add_subdirectory(tests)
