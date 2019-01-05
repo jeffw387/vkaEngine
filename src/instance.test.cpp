@@ -24,6 +24,7 @@ TEST_CASE("Create surface") {
   }
   auto instance_result = builder.build();
   auto& instance = instance_result.value();
-  auto surface = platform::GLFW::createSurface(*instance, window);
-  REQUIRE(surface != VK_NULL_HANDLE);
+  auto surface = platform::GLFW::createSurface(*instance, window.value());
+  REQUIRE(surface);
+  REQUIRE(surface.value() != VK_NULL_HANDLE);
 }
