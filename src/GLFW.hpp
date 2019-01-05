@@ -2,6 +2,8 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <optional>
+#include <expected.hpp>
 #include "gsl-lite.hpp"
 #include "Logger.hpp"
 
@@ -19,6 +21,11 @@ struct GLFWOwner {
   ~GLFWOwner() { glfwTerminate(); }
 };
 }  // namespace detail
+struct WindowShouldClose {
+  bool should_close = {};
+
+  operator bool() { return should_close; }
+};
 
 class GLFW {
 public:
@@ -36,10 +43,12 @@ public:
         glfwGetInstanceProcAddress(instance, functionName.data()));
   }
 
-  static WindowType*
+  static std::optional<WindowType*>
   createWindow(int width, int height, std::string_view windowTitle);
 
-  static VkSurfaceKHR createSurface(VkInstance instance, WindowType* window);
+  static tl::expected<VkSurfaceKHR, VkResult> createSurface(
+      VkInstance instance,
+      WindowType* window);
 
   static void setKeyCallback(WindowType* window, KeyCallback callback);
 
@@ -49,7 +58,7 @@ public:
 
   static void setCursorCallback(WindowType* window, CursorCallback callback);
 
-  static bool pollOS(WindowType* window);
+  static WindowShouldClose pollOS(WindowType* window);
 
   static gsl::span<const char*> getRequiredInstanceExtensions() {
     init();

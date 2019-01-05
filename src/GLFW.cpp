@@ -8,19 +8,29 @@ void GLFW::init() {
   }
 }
 
-GLFW::WindowType*
+std::optional<GLFW::WindowType*>
 GLFW::createWindow(int width, int height, std::string_view windowTitle) {
   init();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  return glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
+  auto result =
+      glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
+  if (result != nullptr) {
+    return {result};
+  }
+  return {};
 }
 
-VkSurfaceKHR GLFW::createSurface(VkInstance instance, WindowType* window) {
+tl::expected<VkSurfaceKHR, VkResult> GLFW::createSurface(
+    VkInstance instance,
+    WindowType* window) {
   init();
-  VkSurfaceKHR result{};
-  auto surfaceResult =
-      glfwCreateWindowSurface(instance, window, nullptr, &result);
-  return result;
+  VkSurfaceKHR surface{};
+  auto surface_result =
+      glfwCreateWindowSurface(instance, window, nullptr, &surface);
+  if (surface_result != VK_SUCCESS) {
+    return tl::unexpected(surface_result);
+  }
+  return surface;
 }
 
 void GLFW::setKeyCallback(WindowType* window, GLFW::KeyCallback callback) {
@@ -39,9 +49,9 @@ void GLFW::setCursorCallback(
   glfwSetCursorPosCallback(window, callback);
 }
 
-bool GLFW::pollOS(GLFW::WindowType* window) {
+WindowShouldClose GLFW::pollOS(GLFW::WindowType* window) {
   init();
   glfwPollEvents();
-  return glfwWindowShouldClose(window);
+  return {glfwWindowShouldClose(window)};
 }
 }  // namespace platform
