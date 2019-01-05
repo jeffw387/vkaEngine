@@ -185,39 +185,34 @@ function(add_module module_name)
   endif()
 
 endfunction()
-add_module(instance)
-add_module(Logger)
-add_module(sync_helper)
-add_module(GLFW)
-add_module(Text)
-add_module(Camera)
-add_module(Instance)
-add_module(Surface)
-add_module(Buffer)
-add_module(Image)
-add_module(Framebuffer)
-add_module(RenderPass)
-add_module(CommandPool)
-add_module(descriptor_pool)
-add_module(Swapchain)
-add_module(ShaderModule)
-add_module(PipelineLayout)
-add_module(Pipeline)
-add_module(Fence)
-add_module(Semaphore)
-add_module(spookyhash)
-add_module(Device)
-target_link_libraries(sync_helper PUBLIC vulkan)
-target_link_libraries(Logger PUBLIC spdlog::spdlog)
-target_link_libraries(GLFW PUBLIC vulkan glfw Logger expected)
-target_link_libraries(instance INTERFACE GLFW expected)
-# target_link_libraries(Instance PUBLIC vulkan Device Surface Logger)
-target_link_libraries(surface PUBLIC vulkan Logger)
 
-target_link_libraries(descriptor_pool INTERFACE GLFW Instance Device outcome)
+add_module(instance)
+target_link_libraries(instance INTERFACE expected)
+
+add_module(Logger)
+target_link_libraries(Logger PUBLIC spdlog::spdlog)
+
+add_module(sync_helper)
+target_link_libraries(sync_helper PUBLIC vulkan)
+
+add_module(GLFW)
+target_link_libraries(GLFW PUBLIC vulkan glfw Logger expected)
 target_compile_definitions(GLFW PUBLIC 
   GLFW_INCLUDE_VULKAN
   GLFW_INCLUDE_NONE)
+  
+add_module(Text)
+
+add_module(Camera)
+
+add_module(surface)
+target_link_libraries(surface PUBLIC vulkan expected)
+
+add_module(descriptor_pool)
+target_link_libraries(descriptor_pool INTERFACE GLFW Instance Device outcome)
+
+add_module(spookyhash)
+
 add_dependencies(vkaEngine glslangValidator)
 
 add_subdirectory(tests)
