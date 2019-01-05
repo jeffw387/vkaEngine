@@ -6,7 +6,7 @@
 #include "FlatList.hpp"
 #include "Clock.hpp"
 
-namespace Input {
+namespace input {
 
 struct Action {
   std::string name;
@@ -57,20 +57,20 @@ private:
 using Bindings = std::unordered_multimap<Action, Signature>;
 using InverseBindings = std::unordered_map<Signature, Action>;
 using State = std::unordered_map<Action, bool>;
-}  // namespace Input
+}  // namespace input
 
 namespace std {
 template <>
-struct hash<Input::Signature> {
-  size_t operator()(Input::Signature value) const {
-    return SpookyHash::Hash64(&value, sizeof(Input::Signature), 0);
+struct hash<input::Signature> {
+  size_t operator()(input::Signature value) const {
+    return SpookyHash::Hash64(&value, sizeof(input::Signature), 0);
   }
 };
 
 template <>
-struct hash<Input::Action> {
-  size_t operator()(Input::Action value) const {
-    return SpookyHash::Hash64(&value, sizeof(Input::Action), 0);
+struct hash<input::Action> {
+  size_t operator()(input::Action value) const {
+    return SpookyHash::Hash64(&value, sizeof(input::Action), 0);
   }
 };
 }  // namespace std
