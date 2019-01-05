@@ -190,6 +190,9 @@ add_module(instance)
 target_link_libraries(instance INTERFACE expected vulkan)
 target_link_libraries(instance.test PRIVATE GLFW)
 
+add_module(device)
+target_link_libraries(device INTERFACE expected vulkan)
+
 add_module(Logger)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)
 
