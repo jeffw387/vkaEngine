@@ -27,6 +27,8 @@ struct WindowShouldClose {
   operator bool() { return should_close; }
 };
 
+struct WindowCreateFailure {};
+
 class GLFW {
 public:
   using WindowType = GLFWwindow;
@@ -43,8 +45,10 @@ public:
         glfwGetInstanceProcAddress(instance, functionName.data()));
   }
 
-  static std::optional<WindowType*>
+  static tl::expected<WindowType*, WindowCreateFailure>
   createWindow(int width, int height, std::string_view windowTitle);
+
+  static void destroyWindow(WindowType* window);
 
   static tl::expected<VkSurfaceKHR, VkResult> createSurface(
       VkInstance instance,

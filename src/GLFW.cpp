@@ -8,16 +8,20 @@ void GLFW::init() {
   }
 }
 
-std::optional<GLFW::WindowType*>
+tl::expected<GLFW::WindowType*, WindowCreateFailure>
 GLFW::createWindow(int width, int height, std::string_view windowTitle) {
   init();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   auto result =
       glfwCreateWindow(width, height, windowTitle.data(), nullptr, nullptr);
   if (result != nullptr) {
-    return {result};
+    return result;
   }
-  return {};
+  return tl::make_unexpected(WindowCreateFailure{});
+}
+
+void GLFW::destroyWindow(GLFW::WindowType* window) {
+  glfwDestroyWindow(window);
 }
 
 tl::expected<VkSurfaceKHR, VkResult> GLFW::createSurface(
