@@ -4,12 +4,12 @@
 
 TEST_CASE("Init/Create Window") {
   SECTION("No exception during window creation.") {
-    REQUIRE_NOTHROW(platform::GLFW::createWindow(100, 100, "test"));
+    REQUIRE(platform::GLFW::createWindow(100, 100, "test"));
   }
 
   SECTION("Valid window handle returned") {
     auto window = platform::GLFW::createWindow(100, 100, "test");
-    REQUIRE(window != nullptr);
+    REQUIRE(window.value() != nullptr);
   }
 }
 
