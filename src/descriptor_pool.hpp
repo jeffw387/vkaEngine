@@ -1,11 +1,11 @@
 #include <vulkan/vulkan.h>
 #include <vector>
-// #include "outcome.hpp"
+#include <memory>
+#include <expected.hpp>
 #include <tuple>
 #include "VkResult.hpp"
 
 namespace vka {
-// namespace outcome = OUTCOME_V2_NAMESPACE;
 class descriptor_pool {
 public:
   descriptor_pool(VkDevice device, VkDescriptorPool pool, bool individual_reset_allowed)
@@ -21,16 +21,16 @@ private:
 
 class descriptor_pool_builder {
 public:
-   auto build(VkDevice device) {
+   tl::expected<std::unique_ptr<descriptor_pool>, VkResult> build(VkDevice device) {
     VkDescriptorPool pool{};
     create_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
     create_info.pPoolSizes = pool_sizes.data();
     create_info.flags = individual_reset_allowed ? VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT : 0;
     auto result = vkCreateDescriptorPool(device, &create_info, nullptr, &pool);
-    
-    return std::tuple<descriptor_pool, VkResult>{
-      descriptor_pool{device, pool, individual_reset_allowed},
-      result};
+    if (result != VK_SUCCESS) {
+      return tl::make_unexpected(result);
+    }
+    return std::make_unique<descriptor_pool>(device, pool, individual_reset_allowed);
   }
 
   descriptor_pool_builder& max_sets(uint32_t count) {

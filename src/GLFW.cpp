@@ -52,6 +52,6 @@ void GLFW::setCursorCallback(
 WindowShouldClose GLFW::pollOS(GLFW::WindowType* window) {
   init();
   glfwPollEvents();
-  return {glfwWindowShouldClose(window)};
+  return {glfwWindowShouldClose(window) != 0};
 }
 }  // namespace platform
