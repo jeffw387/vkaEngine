@@ -209,41 +209,15 @@ add_module(spookyhash)
 add_module(Device)
 target_link_libraries(sync_helper PUBLIC vulkan)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)
-target_link_libraries(GLFW PUBLIC vulkan glfw Logger)
+target_link_libraries(GLFW PUBLIC vulkan glfw Logger expected)
 target_link_libraries(instance INTERFACE GLFW expected)
-target_link_libraries(Instance PUBLIC vulkan Device Surface Logger)
-target_link_libraries(Surface PUBLIC vulkan glfw Logger)
-target_link_libraries(Device PUBLIC 
-  GLFW
-  vulkan
-  VulkanMemoryAllocator
-  outcome
-  Logger
-  glm
-  ShaderModule
-  CommandPool
-  RenderPass
-  PipelineLayout
-  Pipeline
-  Swapchain
-  Fence
-  Semaphore
-  Framebuffer
-  Image
-  Buffer)
+# target_link_libraries(Instance PUBLIC vulkan Device Surface Logger)
+target_link_libraries(surface PUBLIC vulkan Logger)
+
 target_link_libraries(descriptor_pool INTERFACE GLFW Instance Device outcome)
-target_link_libraries(Buffer PUBLIC vulkan VulkanMemoryAllocator)
-target_link_libraries(Image PUBLIC vulkan VulkanMemoryAllocator)
-target_link_libraries(Swapchain PUBLIC vulkan outcome Logger)
-target_link_libraries(ShaderModule PUBLIC vulkan)
-target_link_libraries(Fence PUBLIC vulkan)
-target_link_libraries(Semaphore PUBLIC vulkan)
-target_link_libraries(Framebuffer PUBLIC vulkan Image range-v3)
-target_link_libraries(RenderPass PUBLIC vulkan Logger)
-target_link_libraries(PipelineLayout PUBLIC vulkan)
-target_link_libraries(Pipeline PUBLIC vulkan Logger)
-target_link_libraries(CommandPool PUBLIC vulkan range-v3 Buffer Image Logger RenderPass Framebuffer Pipeline PipelineLayout Fence sync_helper)
-target_compile_definitions(GLFW PUBLIC GLFW_INCLUDE_VULKAN GLFW_INCLUDE_NONE)
+target_compile_definitions(GLFW PUBLIC 
+  GLFW_INCLUDE_VULKAN
+  GLFW_INCLUDE_NONE)
 add_dependencies(vkaEngine glslangValidator)
 
 add_subdirectory(tests)
