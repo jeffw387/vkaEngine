@@ -4,7 +4,7 @@
 #include "GLFW.hpp"
 #include <memory>
 #include <vector>
-
+#include <expected.hpp>
 #include "Input.hpp"
 
 namespace vka {
@@ -13,6 +13,12 @@ struct SurfaceCreateInfo {
   int width;
   int height;
   const char* windowTitle;
+};
+
+class surface {};
+
+struct surface_builder {
+  tl::expected<std::unique_ptr<surface>, VkResult>
 };
 
 class SurfaceBase {
