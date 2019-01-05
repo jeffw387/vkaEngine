@@ -186,9 +186,9 @@ function(add_module module_name)
 
 endfunction()
 
-add_module(vka_instance)
-target_link_libraries(vka_instance INTERFACE expected vulkan)
-target_link_libraries(vka_instance.test PRIVATE GLFW)
+add_module(instance)
+target_link_libraries(instance INTERFACE expected vulkan)
+target_link_libraries(instance.test PRIVATE GLFW)
 
 add_module(Logger)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)
@@ -210,7 +210,7 @@ add_module(surface)
 target_link_libraries(surface PUBLIC vulkan expected)
 
 add_module(descriptor_pool)
-target_link_libraries(descriptor_pool INTERFACE vka_instance expected)
+target_link_libraries(descriptor_pool INTERFACE instance expected)
 target_link_libraries(descriptor_pool.test PRIVATE GLFW)
 
 add_module(spookyhash)
