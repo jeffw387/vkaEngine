@@ -135,7 +135,7 @@ target_compile_definitions(vkaEngine INTERFACE
   _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING
   _CRT_SECURE_NO_WARNINGS)
 
-add_custom_target(tests)
+add_custom_target(vka_tests)
 
 function(setup_target target_name)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
@@ -176,7 +176,7 @@ function(add_module module_name)
     message("test source: ${test_source}")
     add_executable(${test_name} ${test_source})
     target_link_libraries(${test_name} PRIVATE ${module_name} Catch2)
-    add_dependencies(tests ${test_name})
+    add_dependencies(vka_tests ${test_name})
     add_custom_command(
       TARGET ${test_name}
       POST_BUILD
@@ -186,8 +186,9 @@ function(add_module module_name)
 
 endfunction()
 
-add_module(instance)
-target_link_libraries(instance INTERFACE expected)
+add_module(vka_instance)
+target_link_libraries(vka_instance INTERFACE expected vulkan)
+target_link_libraries(vka_instance.test PRIVATE GLFW)
 
 add_module(Logger)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)

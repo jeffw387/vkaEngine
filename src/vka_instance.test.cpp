@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 #include <memory>
-#include "instance.hpp"
+#include "vka_instance.hpp"
 #include "GLFW.hpp"
 
 TEST_CASE("Create an instance") {
