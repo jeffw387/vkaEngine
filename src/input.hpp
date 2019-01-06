@@ -5,6 +5,7 @@
 #include "spookyhash.hpp"
 #include "FlatList.hpp"
 #include "Clock.hpp"
+#include "surface.hpp"
 
 namespace input {
 
@@ -21,7 +22,7 @@ struct signature {
 
 template <typename T>
 struct event {
-  signature signature;
+  signature eventSignature;
   vka::Clock::time_point eventTime;
 };
 
@@ -29,29 +30,56 @@ inline bool operator==(signature a, signature b) {
   return a.code == b.code && a.action == b.action;
 }
 
+struct window_should_close {
+  bool should_close = {};
+
+  operator bool() const noexcept { return should_close; }
+};
+
 struct key;
 struct mouse;
 using input_event = std::variant<event<key>, event<mouse>>;
+
+struct cursor_position {
+  double x = {};
+  double y = {};
+};
+
 class manager {
 public:
-  void enqueue(input_event inputEvent) {
-    m_inputQueue.push_last(inputEvent);
-  };
+  manager(vka::WindowType*);
   auto next_event_before(vka::Clock::time_point cutoff) {
-    if (auto eventOptional = m_inputQueue.first_if([=](auto inputEvent) {
-          return std::visit(
-              [=](const auto& inputVariant) {
-                return inputVariant.eventTime < cutoff;
-              },
-              inputEvent);
-        })) {
+    auto eventSelect = [=](auto inputEvent) {
+      return std::visit(
+          [=](const auto& inputVariant) {
+            return inputVariant.eventTime < cutoff;
+          },
+          inputEvent);
+    };
+
+    if (auto eventOptional = m_inputQueue.first_if(eventSelect)) {
       m_inputQueue.pop_first();
       return eventOptional;
     }
   }
 
+  window_should_close poll_events(vka::WindowType* window) {
+    platform::GLFW::pollOS(window);
+  }
+
+  void enqueue(input_event inputEvent) { m_inputQueue.push_last(inputEvent); };
+
+  void update_cursor_position(cursor_position position) {
+    m_position = position;
+  }
+
+  cursor_position current_cursor_position() const noexcept {
+    return m_position;
+  }
+
 private:
   FlatList<input_event, 256> m_inputQueue;
+  cursor_position m_position;
 };
 
 using bindings = std::unordered_multimap<action, signature>;
