@@ -186,12 +186,6 @@ function(add_module module_name)
 
 endfunction()
 
-add_module(instance)
-target_link_libraries(instance INTERFACE expected vulkan)
-target_link_libraries(instance.test PRIVATE GLFW)
-
-add_module(device)
-target_link_libraries(device INTERFACE expected vulkan)
 
 add_module(Logger)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)
@@ -202,9 +196,24 @@ target_link_libraries(sync_helper PUBLIC vulkan)
 add_module(GLFW)
 target_link_libraries(GLFW PUBLIC vulkan glfw Logger expected)
 target_compile_definitions(GLFW PUBLIC 
-  GLFW_INCLUDE_VULKAN
-  GLFW_INCLUDE_NONE)
-  
+GLFW_INCLUDE_VULKAN
+GLFW_INCLUDE_NONE)
+
+add_module(instance)
+target_link_libraries(instance INTERFACE expected vulkan)
+target_link_libraries(instance.test PRIVATE GLFW)
+
+add_module(physical_device)
+target_link_libraries(physical_device INTERFACE vulkan)
+target_link_libraries(physical_device.test PRIVATE instance)
+
+add_module(queue_family)
+target_link_libraries(queue_family INTERFACE vulkan)
+
+add_module(device)
+target_link_libraries(device INTERFACE expected vulkan)
+target_link_libraries(device.test PRIVATE instance GLFW)
+
 add_module(Text)
 
 add_module(Camera)
