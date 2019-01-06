@@ -62,6 +62,15 @@ public:
 
   static void setCursorCallback(WindowType* window, CursorCallback callback);
 
+  static void setUserPointer(WindowType* window, void* userPointer) {
+    glfwSetWindowUserPointer(window, userPointer);
+  }
+
+  template <typename T>
+  static T* getUserPointer(WindowType* window) {
+    return reinterpret_cast<T*>(glfwGetWindowUserPointer(window));
+  }
+
   static WindowShouldClose pollOS(WindowType* window);
 
   static gsl::span<const char*> getRequiredInstanceExtensions() {
