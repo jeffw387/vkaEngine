@@ -4,6 +4,7 @@
 #include <functional>
 #include <optional>
 #include <iterator>
+#include <cstddef>
 
 template <typename T, size_t S>
 struct flatlist_iterator {
