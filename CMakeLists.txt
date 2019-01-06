@@ -210,8 +210,9 @@ add_module(Text)
 add_module(Camera)
 
 add_module(surface)
-target_link_libraries(surface INTERFACE vulkan expected)
-target_link_libraries(surface.test PRIVATE instance GLFW)
+target_link_libraries(surface INTERFACE vulkan expected GLFW)
+target_link_libraries(surface.test PRIVATE instance)
+
 
 add_module(descriptor_pool)
 target_link_libraries(descriptor_pool INTERFACE instance expected)
