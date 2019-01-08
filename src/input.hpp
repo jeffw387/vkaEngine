@@ -30,12 +30,6 @@ inline bool operator==(signature a, signature b) {
   return a.code == b.code && a.action == b.action;
 }
 
-struct window_should_close {
-  bool should_close = {};
-
-  operator bool() const noexcept { return should_close; }
-};
-
 struct key;
 struct mouse;
 using input_event = std::variant<event<key>, event<mouse>>;
