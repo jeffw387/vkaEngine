@@ -8,7 +8,7 @@ TEST_CASE("Select first physical device") {
   auto instanceResult = instance_builder{}.build();
   REQUIRE(instanceResult);
   auto physicalDeviceResult =
-      physical_device_selector{}.build(**instanceResult);
+      physical_device_selector{}.select(**instanceResult);
   REQUIRE(physicalDeviceResult);
   REQUIRE(physicalDeviceResult.value());
   REQUIRE(**physicalDeviceResult != VK_NULL_HANDLE);

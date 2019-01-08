@@ -236,7 +236,7 @@ inline void to_vulkan_feature(
 }
 
 struct physical_device_selector {
-  tl::expected<std::optional<VkPhysicalDevice>, VkResult> build(VkInstance instance) {
+  tl::expected<std::optional<VkPhysicalDevice>, VkResult> select(VkInstance instance) {
     uint32_t count = {};
     auto count_result = vkEnumeratePhysicalDevices(instance, &count, nullptr);
     if (count_result != VK_SUCCESS) {
