@@ -55,6 +55,7 @@ public:
       m_inputQueue.pop_first();
       return eventOptional;
     }
+    return {};
   }
 
   platform::window_should_close poll_events(vka::WindowType* window) {
