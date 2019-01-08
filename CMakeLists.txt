@@ -149,6 +149,14 @@ function(setup_target target_name)
   endif()
 endfunction()
 
+
+function(clang_tidy target_name file_name)
+  add_custom_command(
+    TARGET ${target_name}
+    POST_BUILD
+    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix ${file_name})
+endfunction()
+
 function(add_module module_name)
   set(module_source ${src_dir}/${module_name}.cpp)
   set(module_header ${src_dir}/${module_name}.hpp)
