@@ -23,10 +23,10 @@ struct GLFWOwner {
   ~GLFWOwner() { glfwTerminate(); }
 };
 }  // namespace detail
-struct WindowShouldClose {
+struct window_should_close {
   bool should_close = {};
 
-  operator bool() { return should_close; }
+  operator bool() const noexcept { return should_close; }
 };
 
 struct WindowCreateFailure {};
@@ -73,7 +73,7 @@ public:
     return reinterpret_cast<T*>(glfwGetWindowUserPointer(window));
   }
 
-  static WindowShouldClose pollOS(WindowType* window);
+  static window_should_close pollOS(WindowType* window);
 
   static gsl::span<const char*> getRequiredInstanceExtensions() {
     init();

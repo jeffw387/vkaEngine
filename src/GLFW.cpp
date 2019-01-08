@@ -53,7 +53,7 @@ void GLFW::setCursorCallback(
   glfwSetCursorPosCallback(window, callback);
 }
 
-WindowShouldClose GLFW::pollOS(GLFW::WindowType* window) {
+window_should_close GLFW::pollOS(GLFW::WindowType* window) {
   init();
   glfwPollEvents();
   return {glfwWindowShouldClose(window) != 0};
