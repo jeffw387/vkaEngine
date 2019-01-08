@@ -2,10 +2,8 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-#include <optional>
 #include <expected.hpp>
 #include "gsl-lite.hpp"
-#include "Logger.hpp"
 
 namespace platform {
 
