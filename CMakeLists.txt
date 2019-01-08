@@ -149,6 +149,12 @@ function(setup_target target_name)
   endif()
 endfunction()
 
+function(clang_format target_name file_name)
+  add_custom_command(
+    TARGET ${target_name}
+    POST_BUILD
+    COMMAND clang-format -i -style=file ${file_name})
+endfunction()
 
 function(clang_tidy target_name file_name)
   add_custom_command(
@@ -166,12 +172,11 @@ function(add_module module_name)
     add_library(${module_name})
     target_sources(${module_name} PRIVATE ${module_source})
     target_link_libraries(vkaEngine INTERFACE ${module_name})
-    add_custom_command(
-      TARGET ${module_name}
-      POST_BUILD
-      COMMAND clang-format -i -style=file ${module_source})
+    clang_format(${module_name} ${module_source})
     setup_target(${module_name})
+
     if(EXISTS ${module_header})
+      clang_format(${module_name} ${module_header})
       add_custom_command(
         TARGET ${module_name}
         COMMAND clang-format -i -style=file ${module_header})
@@ -185,10 +190,7 @@ function(add_module module_name)
     add_executable(${test_name} ${test_source})
     target_link_libraries(${test_name} PRIVATE ${module_name} Catch2)
     add_dependencies(vka_tests ${test_name})
-    add_custom_command(
-      TARGET ${test_name}
-      POST_BUILD
-      COMMAND clang-format -i -style=file ${test_source})
+    clang_format(${test_name} ${test_source})
     setup_target(${test_name})
   endif()
 
@@ -220,7 +222,7 @@ target_link_libraries(queue_family INTERFACE vulkan)
 
 add_module(device)
 target_link_libraries(device INTERFACE expected vulkan)
-target_link_libraries(device.test PRIVATE instance GLFW)
+target_link_libraries(device.test PRIVATE instance queue_family physical_device)
 
 add_module(Text)
 
