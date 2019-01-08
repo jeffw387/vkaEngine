@@ -268,8 +268,9 @@ struct physical_device_selector {
     return {};
   }
 
-  void device_type(VkPhysicalDeviceType deviceType) {
+  physical_device_selector& device_type(VkPhysicalDeviceType deviceType) {
     m_deviceType = deviceType;
+    return *this;
   }
 
 private:
