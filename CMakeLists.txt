@@ -157,6 +157,8 @@ function(clang_format target_name file_name)
 endfunction()
 
 function(clang_tidy target_name file_name)
+  set(tidy_cmd "clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix ${file_name}")
+  message("tidy command: ${tidy_cmd}")
   add_custom_command(
     TARGET ${target_name}
     POST_BUILD
@@ -173,13 +175,12 @@ function(add_module module_name)
     target_sources(${module_name} PRIVATE ${module_source})
     target_link_libraries(vkaEngine INTERFACE ${module_name})
     clang_format(${module_name} ${module_source})
+    clang_tidy(${module_name} ${module_source})
     setup_target(${module_name})
 
     if(EXISTS ${module_header})
       clang_format(${module_name} ${module_header})
-      add_custom_command(
-        TARGET ${module_name}
-        COMMAND clang-format -i -style=file ${module_header})
+      clang_tidy(${module_name} ${module_header})
     endif()
   else()
     add_library(${module_name} INTERFACE)
@@ -191,6 +192,7 @@ function(add_module module_name)
     target_link_libraries(${test_name} PRIVATE ${module_name} Catch2)
     add_dependencies(vka_tests ${test_name})
     clang_format(${test_name} ${test_source})
+    clang_tidy(${test_name} ${test_source})
     setup_target(${test_name})
   endif()
 
