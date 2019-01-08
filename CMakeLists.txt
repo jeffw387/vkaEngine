@@ -180,7 +180,7 @@ function(add_module module_name)
 
     if(EXISTS ${module_header})
       clang_format(${module_name} ${module_header})
-      clang_tidy(${module_name} ${module_header})
+      # clang_tidy(${module_name} ${module_header})
     endif()
   else()
     add_library(${module_name} INTERFACE)
