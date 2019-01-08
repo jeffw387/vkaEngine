@@ -6,10 +6,19 @@
 #include "physical_device.hpp"
 
 namespace vka {
-
-
-
-class device {};
+struct device {
+  device(VkDevice device) : m_device(device) {}
+  ~device() {
+    vkDestroyDevice(m_device, nullptr);
+  }
+  device(const device&) = delete;
+  device(device&&) = default;
+  device& operator=(const device&) = delete;
+  device& operator=(device&&) = default;
+  operator VkDevice() const noexcept { return m_device; }
+private:
+  VkDevice m_device = {};
+};
 
 class device_builder {
 public:
