@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include "GLFW.hpp"
+#include "platform_glfw.hpp"
 #include <memory>
 #include <variant>
 #include <vector>
