@@ -205,15 +205,15 @@ target_link_libraries(Logger PUBLIC spdlog::spdlog)
 add_module(sync_helper)
 target_link_libraries(sync_helper PUBLIC vulkan)
 
-add_module(GLFW)
-target_link_libraries(GLFW PUBLIC vulkan glfw Logger expected)
-target_compile_definitions(GLFW PUBLIC 
-GLFW_INCLUDE_VULKAN
-GLFW_INCLUDE_NONE)
+add_module(platform_glfw)
+target_link_libraries(platform_glfw PUBLIC vulkan glfw Logger expected)
+target_compile_definitions(platform_glfw PUBLIC 
+platform_glfw_INCLUDE_VULKAN
+platform_glfw_INCLUDE_NONE)
 
 add_module(instance)
 target_link_libraries(instance INTERFACE expected vulkan)
-target_link_libraries(instance.test PRIVATE GLFW)
+target_link_libraries(instance.test PRIVATE platform_glfw)
 
 add_module(physical_device)
 target_link_libraries(physical_device INTERFACE vulkan)
@@ -231,15 +231,15 @@ add_module(Text)
 add_module(Camera)
 
 add_module(surface)
-target_link_libraries(surface INTERFACE vulkan expected GLFW)
+target_link_libraries(surface INTERFACE vulkan expected platform_glfw)
 target_link_libraries(surface.test PRIVATE instance)
 
 add_module(input)
-target_link_libraries(input PUBLIC vulkan surface GLFW)
+target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
 add_module(descriptor_pool)
 target_link_libraries(descriptor_pool INTERFACE instance expected)
-target_link_libraries(descriptor_pool.test PRIVATE GLFW)
+target_link_libraries(descriptor_pool.test PRIVATE platform_glfw)
 
 add_module(spookyhash)
 
