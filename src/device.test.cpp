@@ -2,14 +2,17 @@
 #include <catch2/catch.hpp>
 #include "device.hpp"
 #include "instance.hpp"
-#include "GLFW.hpp"
+#include "physical_device.hpp"
+#include "queue_family.hpp"
+// #include "platform_glfw.hpp"
 
 using namespace vka;
 TEST_CASE("Create a device") {
-  if (auto instance_result = instance_builder{}.build()) {
-    auto device_result = device_builder{}.build(**instance_result);
-    REQUIRE(device_result);
-  } else {
-    REQUIRE(false);
-  }
+  auto instanceResult = instance_builder{}.build();
+  auto physicalDeviceResult =
+      physical_device_selector{}.select(**instanceResult);
+  auto deviceResult = device_builder{}
+                          .physical_device(**physicalDeviceResult)
+                          .build(**instanceResult);
+  REQUIRE(deviceResult);
 }

@@ -9,7 +9,7 @@
 #include <expected.hpp>
 
 namespace vka {
-using WindowType = platform::GLFW::WindowType;
+using WindowType = platform::glfw::window_type;
 class surface {
 public:
   explicit surface(VkInstance instance, WindowType* window, VkSurfaceKHR surface_handle) 
@@ -18,7 +18,7 @@ public:
 
   ~surface() {
     vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-    platform::GLFW::destroyWindow(m_window);
+    platform::glfw::destroy_window(m_window);
   }
   
   operator VkSurfaceKHR() { return m_surface; }
@@ -31,13 +31,13 @@ private:
   VkSurfaceKHR m_surface;
 };
 
-using surface_error = std::variant<VkResult, platform::WindowCreateFailure>;
+using surface_error = std::variant<VkResult, platform::window_create_failure>;
 
 class surface_builder {
 public:
   tl::expected<std::unique_ptr<surface>, surface_error> build(VkInstance instance) {
-    if (auto window_result = platform::GLFW::createWindow(m_width, m_height, m_window_title)) {
-      if (auto surface_result = platform::GLFW::createSurface(instance, window_result.value())) {
+    if (auto window_result = platform::glfw::create_window(m_width, m_height, m_window_title)) {
+      if (auto surface_result = platform::glfw::create_surface(instance, window_result.value())) {
         return std::make_unique<surface>(instance, window_result.value(), surface_result.value());
       } 
       else {

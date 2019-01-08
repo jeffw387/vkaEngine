@@ -63,8 +63,8 @@ public:
     }
   }
 
-  window_should_close poll_events(vka::WindowType* window) {
-    platform::GLFW::pollOS(window);
+  platform::window_should_close poll_events(vka::WindowType* window) {
+    return platform::glfw::poll_os(window);
   }
 
   void enqueue(input_event inputEvent) { m_inputQueue.push_last(inputEvent); };
