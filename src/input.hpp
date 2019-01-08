@@ -42,7 +42,7 @@ struct cursor_position {
 class manager {
 public:
   manager(vka::WindowType*);
-  auto next_event_before(vka::Clock::time_point cutoff) {
+  std::optional<input_event> next_event_before(vka::Clock::time_point cutoff) {
     auto eventSelect = [=](auto inputEvent) {
       return std::visit(
           [=](const auto& inputVariant) {
