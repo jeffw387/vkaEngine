@@ -15,6 +15,10 @@ struct GLFWOwner {
       throw result;
     }
   }
+  GLFWOwner(const GLFWOwner&) = delete;
+  GLFWOwner(GLFWOwner&&) = default;
+  GLFWOwner& operator=(const GLFWOwner&) = delete;
+  GLFWOwner& operator=(GLFWOwner&&) = default;
 
   ~GLFWOwner() { glfwTerminate(); }
 };
