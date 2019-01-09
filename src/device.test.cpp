@@ -8,7 +8,9 @@
 
 using namespace vka;
 TEST_CASE("Create a device") {
-  auto instanceResult = instance_builder{}.build();
+  auto instanceResult = instance_builder{}
+                            .add_layer("VK_LAYER_LUNARG_standard_validation")
+                            .build();
   REQUIRE(instanceResult);
   auto physicalDeviceResult =
       physical_device_selector{}.select(**instanceResult);
