@@ -10,6 +10,16 @@ namespace vka {
 
 
 struct device {
+  device(VkDevice device) : m_device(device) {}
+  
+  ~device() {
+    vkDestroyDevice(m_device, nullptr);
+  }
+  
+  operator VkDevice() { return m_device; }
+private:
+  VkDevice m_device = {};
+};
 
 struct device_builder {
   tl::expected<std::unique_ptr<device>, VkResult> build(VkInstance instance) {
