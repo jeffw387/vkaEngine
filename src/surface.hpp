@@ -26,9 +26,9 @@ public:
   operator WindowType*() { return m_window; }
 
 private:
-  VkInstance m_instance;
-  WindowType* m_window;
-  VkSurfaceKHR m_surface;
+  VkInstance m_instance = {};
+  WindowType* m_window = {};
+  VkSurfaceKHR m_surface = {};
 };
 
 using surface_error = std::variant<VkResult, platform::window_create_failure>;
