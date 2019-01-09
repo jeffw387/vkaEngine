@@ -84,6 +84,10 @@ struct swapchain_builder {
     return *this;
   }
 
+  swapchain_builder& image_format(VkFormat format) {
+    m_format = format;
+    return *this;
+  }
 
 
 private:
