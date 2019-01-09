@@ -44,9 +44,7 @@ inline std::optional<uint32_t> queue_present_match(
 }
 
 struct queue_family_builder {
-  std::optional<queue_family> build(
-      VkPhysicalDevice physicalDevice,
-      VkSurfaceKHR surface) {
+  std::optional<queue_family> build(VkPhysicalDevice physicalDevice) {
     uint32_t count = {};
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, nullptr);
     std::vector<VkQueueFamilyProperties> properties = {};
@@ -58,7 +56,7 @@ struct queue_family_builder {
       const auto& prop = properties[i];
       auto flagsOptional = queue_flag_match(i, prop.queueFlags, m_queueFlags);
       auto presentOptional = queue_present_match(
-          flagsOptional, physicalDevice, surface, m_presentRequired);
+          flagsOptional, physicalDevice, m_surface, m_presentRequired);
       if (presentOptional) {
         m_family.familyIndex = *presentOptional;
         return m_family;
@@ -67,7 +65,11 @@ struct queue_family_builder {
     return {};
   }
 
-  queue_family_builder& present_support() { m_presentRequired = true; return *this; }
+  queue_family_builder& present_support(VkSurfaceKHR surface) {
+    m_presentRequired = true;
+    m_surface = surface;
+    return *this;
+  }
 
   queue_family_builder& graphics_support() {
     m_queueFlags |= VK_QUEUE_GRAPHICS_BIT;
@@ -90,6 +92,7 @@ struct queue_family_builder {
   }
 
 private:
+  VkSurfaceKHR m_surface = {};
   queue_family m_family = {};
   VkQueueFlags m_queueFlags = {};
   bool m_presentRequired = {};
