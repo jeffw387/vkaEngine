@@ -39,9 +39,12 @@ struct device_builder {
     return std::make_unique<vka::device>(VkDevice{});
   }
 
-  device_builder& add_queue_family() {
-    VkDeviceQueueCreateInfo info {};
-    // info.
+  device_builder& add_queue_family(const queue_family& queueFamily) {
+    VkDeviceQueueCreateInfo info{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
+    info.queueCount = static_cast<uint32_t>(queueFamily.queuePriorities.size());
+    info.pQueuePriorities = queueFamily.queuePriorities.data();
+    info.queueFamilyIndex = queueFamily.familyIndex;
+    queueInfos.push_back(std::move(info));
     return *this;
   }
 
