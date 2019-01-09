@@ -208,8 +208,8 @@ target_link_libraries(sync_helper PUBLIC vulkan)
 add_module(platform_glfw)
 target_link_libraries(platform_glfw PUBLIC vulkan glfw Logger expected)
 target_compile_definitions(platform_glfw PUBLIC 
-platform_glfw_INCLUDE_VULKAN
-platform_glfw_INCLUDE_NONE)
+  GLFW_INCLUDE_VULKAN
+  GLFW_INCLUDE_NONE)
 
 add_module(instance)
 target_link_libraries(instance INTERFACE expected vulkan)
