@@ -89,6 +89,10 @@ struct swapchain_builder {
     return *this;
   }
 
+  swapchain_builder& image_color_space(VkColorSpaceKHR colorSpace) {
+    m_colorSpace = colorSpace;
+    return *this;
+  }
 
 private:
   uint32_t m_imageCount = 3U;
