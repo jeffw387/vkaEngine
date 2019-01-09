@@ -4,31 +4,31 @@
 #include "instance.hpp"
 
 TEST_CASE("Create input manager") {
-  auto create_lambda = [] {
-    if (auto instance_result = vka::instance_builder{}.build()) {
-      auto instance = std::move(*instance_result);
-      if (auto surface_result = vka::surface_builder{}
-                                    .width(100)
-                                    .height(100)
-                                    .title("test title")
-                                    .build(*instance)) {
-        auto surface = std::move(*surface_result);
+  auto createLambda = [] {
+    if (auto instanceResult = vka::instance_builder{}.build()) {
+      auto instance = std::move(*instanceResult);
+      if (auto surfaceResult = vka::surface_builder{}
+                                   .width(100)
+                                   .height(100)
+                                   .title("test title")
+                                   .build(*instance)) {
+        auto surface = std::move(*surfaceResult);
         auto inputManager = input::manager{*surface};
       }
     }
   };
-  REQUIRE_NOTHROW(create_lambda());
+  REQUIRE_NOTHROW(createLambda());
 }
 
 TEST_CASE("Simulate key strokes, get events before arbitrary time") {
-  if (auto instance_result = vka::instance_builder{}.build()) {
-    auto instance = std::move(*instance_result);
-    if (auto surface_result = vka::surface_builder{}
-                                  .width(100)
-                                  .height(100)
-                                  .title("test title")
-                                  .build(*instance)) {
-      auto surface = std::move(*surface_result);
+  if (auto instanceResult = vka::instance_builder{}.build()) {
+    auto instance = std::move(*instanceResult);
+    if (auto surfaceResult = vka::surface_builder{}
+                                 .width(100)
+                                 .height(100)
+                                 .title("test title")
+                                 .build(*instance)) {
+      auto surface = std::move(*surfaceResult);
       auto inputManager = input::manager{*surface};
       for (int i = {}; i < 3; ++i) {
         inputManager.enqueue(input::event<input::key>{{GLFW_KEY_0, GLFW_PRESS},
@@ -36,18 +36,18 @@ TEST_CASE("Simulate key strokes, get events before arbitrary time") {
       }
 
       for (int i = {}; i < 3; ++i) {
-        auto event_optional = inputManager.next_event_before(vka::Clock::now());
-        REQUIRE(event_optional);
+        auto eventOptional = inputManager.next_event_before(vka::Clock::now());
+        REQUIRE(eventOptional);
         std::visit(
             [](auto event_variant) {
               REQUIRE(event_variant.eventSignature.code == GLFW_KEY_0);
               REQUIRE(event_variant.eventSignature.action == GLFW_PRESS);
             },
-            *event_optional);
+            *eventOptional);
       }
       SECTION("No events remain, optional should be empty") {
-        auto event_optional = inputManager.next_event_before(vka::Clock::now());
-        REQUIRE(!event_optional);
+        auto eventOptional = inputManager.next_event_before(vka::Clock::now());
+        REQUIRE(!eventOptional);
       }
     }
   }

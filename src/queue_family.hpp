@@ -12,7 +12,7 @@ inline std::optional<uint32_t> queue_flag_match(
     std::optional<uint32_t> index,
     VkQueueFlags supported,
     VkQueueFlags required) {
-  if (supported & required == required) {
+  if ((supported & required) == required) {
     return index;
   }
   return {};

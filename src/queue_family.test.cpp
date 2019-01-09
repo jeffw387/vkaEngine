@@ -2,5 +2,4 @@
 #include <catch2/catch.hpp>
 #include "queue_family.hpp"
 
-
 // TEST_CASE

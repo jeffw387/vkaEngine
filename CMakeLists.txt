@@ -149,6 +149,22 @@ function(setup_target target_name)
   endif()
 endfunction()
 
+function(clang_format target_name file_name)
+  add_custom_command(
+    TARGET ${target_name}
+    POST_BUILD
+    COMMAND clang-format -i -style=file ${file_name})
+endfunction()
+
+function(clang_tidy target_name file_name)
+  set(tidy_cmd "clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix ${file_name}")
+  message("tidy command: ${tidy_cmd}")
+  add_custom_command(
+    TARGET ${target_name}
+    POST_BUILD
+    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix -header-filter=${src_dir}/* ${file_name})
+endfunction()
+
 function(add_module module_name)
   set(module_source ${src_dir}/${module_name}.cpp)
   set(module_header ${src_dir}/${module_name}.hpp)
@@ -158,15 +174,13 @@ function(add_module module_name)
     add_library(${module_name})
     target_sources(${module_name} PRIVATE ${module_source})
     target_link_libraries(vkaEngine INTERFACE ${module_name})
-    add_custom_command(
-      TARGET ${module_name}
-      POST_BUILD
-      COMMAND clang-format -i -style=file ${module_source})
+    clang_format(${module_name} ${module_source})
+    clang_tidy(${module_name} ${module_source})
     setup_target(${module_name})
+
     if(EXISTS ${module_header})
-      add_custom_command(
-        TARGET ${module_name}
-        COMMAND clang-format -i -style=file ${module_header})
+      clang_format(${module_name} ${module_header})
+      # clang_tidy(${module_name} ${module_header})
     endif()
   else()
     add_library(${module_name} INTERFACE)
@@ -177,10 +191,8 @@ function(add_module module_name)
     add_executable(${test_name} ${test_source})
     target_link_libraries(${test_name} PRIVATE ${module_name} Catch2)
     add_dependencies(vka_tests ${test_name})
-    add_custom_command(
-      TARGET ${test_name}
-      POST_BUILD
-      COMMAND clang-format -i -style=file ${test_source})
+    clang_format(${test_name} ${test_source})
+    clang_tidy(${test_name} ${test_source})
     setup_target(${test_name})
   endif()
 
@@ -193,15 +205,15 @@ target_link_libraries(Logger PUBLIC spdlog::spdlog)
 add_module(sync_helper)
 target_link_libraries(sync_helper PUBLIC vulkan)
 
-add_module(GLFW)
-target_link_libraries(GLFW PUBLIC vulkan glfw Logger expected)
-target_compile_definitions(GLFW PUBLIC 
-GLFW_INCLUDE_VULKAN
-GLFW_INCLUDE_NONE)
+add_module(platform_glfw)
+target_link_libraries(platform_glfw PUBLIC vulkan glfw Logger expected)
+target_compile_definitions(platform_glfw PUBLIC 
+platform_glfw_INCLUDE_VULKAN
+platform_glfw_INCLUDE_NONE)
 
 add_module(instance)
 target_link_libraries(instance INTERFACE expected vulkan)
-target_link_libraries(instance.test PRIVATE GLFW)
+target_link_libraries(instance.test PRIVATE platform_glfw)
 
 add_module(physical_device)
 target_link_libraries(physical_device INTERFACE vulkan)
@@ -212,22 +224,22 @@ target_link_libraries(queue_family INTERFACE vulkan)
 
 add_module(device)
 target_link_libraries(device INTERFACE expected vulkan)
-target_link_libraries(device.test PRIVATE instance GLFW)
+target_link_libraries(device.test PRIVATE instance queue_family physical_device)
 
 add_module(Text)
 
 add_module(Camera)
 
 add_module(surface)
-target_link_libraries(surface INTERFACE vulkan expected GLFW)
+target_link_libraries(surface INTERFACE vulkan expected platform_glfw)
 target_link_libraries(surface.test PRIVATE instance)
 
 add_module(input)
-target_link_libraries(input PUBLIC vulkan surface GLFW)
+target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
 add_module(descriptor_pool)
 target_link_libraries(descriptor_pool INTERFACE instance expected)
-target_link_libraries(descriptor_pool.test PRIVATE GLFW)
+target_link_libraries(descriptor_pool.test PRIVATE platform_glfw)
 
 add_module(spookyhash)
 

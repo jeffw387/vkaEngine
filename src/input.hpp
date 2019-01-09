@@ -30,12 +30,6 @@ inline bool operator==(signature a, signature b) {
   return a.code == b.code && a.action == b.action;
 }
 
-struct window_should_close {
-  bool should_close = {};
-
-  operator bool() const noexcept { return should_close; }
-};
-
 struct key;
 struct mouse;
 using input_event = std::variant<event<key>, event<mouse>>;
@@ -48,7 +42,7 @@ struct cursor_position {
 class manager {
 public:
   manager(vka::WindowType*);
-  auto next_event_before(vka::Clock::time_point cutoff) {
+  std::optional<input_event> next_event_before(vka::Clock::time_point cutoff) {
     auto eventSelect = [=](auto inputEvent) {
       return std::visit(
           [=](const auto& inputVariant) {
@@ -61,10 +55,11 @@ public:
       m_inputQueue.pop_first();
       return eventOptional;
     }
+    return {};
   }
 
-  window_should_close poll_events(vka::WindowType* window) {
-    platform::GLFW::pollOS(window);
+  platform::window_should_close poll_events(vka::WindowType* window) {
+    return platform::glfw::poll_os(window);
   }
 
   void enqueue(input_event inputEvent) { m_inputQueue.push_last(inputEvent); };

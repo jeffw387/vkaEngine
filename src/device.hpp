@@ -7,17 +7,16 @@
 #include "queue_family.hpp"
 
 namespace vka {
-
-
-
 struct device {
   device(VkDevice device) : m_device(device) {}
-  
   ~device() {
     vkDestroyDevice(m_device, nullptr);
   }
-  
-  operator VkDevice() { return m_device; }
+  device(const device&) = delete;
+  device(device&&) = default;
+  device& operator=(const device&) = delete;
+  device& operator=(device&&) = default;
+  operator VkDevice() const noexcept { return m_device; }
 private:
   VkDevice m_device = {};
 };
@@ -35,23 +34,28 @@ struct device_builder {
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
+    return std::make_unique<vka::device>(VkDevice{});
   }
 
-  void add_queue_family() {
+  device_builder& add_queue_family() {
     VkDeviceQueueCreateInfo info {};
     // info.
+    return *this;
   }
 
-  void physical_device(VkPhysicalDevice physicalDevice) {
+  device_builder& physical_device(VkPhysicalDevice physicalDevice) {
     m_physicalDevice = physicalDevice;
+    return *this;
   }
 
-  void feature(device_features feature) {
+  device_builder& feature(device_features feature) {
     to_vulkan_feature(features, feature);
+    return *this;
   }
 
-  void extension(std::string_view name) {
+  device_builder& extension(std::string_view name) {
     extensions.push_back(name.data());
+    return *this;
   }
   
 private:

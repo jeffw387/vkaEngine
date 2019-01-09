@@ -2,14 +2,14 @@
 #include <catch2/catch.hpp>
 #include <memory>
 #include "instance.hpp"
-#include "GLFW.hpp"
+#include "platform_glfw.hpp"
 
 TEST_CASE("Create an instance") {
-  platform::GLFW::init();
-  std::unique_ptr<vka::instance> instance_ptr;
-  auto instance_result =
+  platform::glfw::init();
+  std::unique_ptr<vka::instance> instancePtr;
+  auto instanceResult =
       vka::instance_builder{}.set_api_version(1, 0, 0).build();
-  REQUIRE(instance_result);
-  instance_ptr = std::move(instance_result.value());
-  REQUIRE(instance_ptr->operator VkInstance() != VK_NULL_HANDLE);
+  REQUIRE(instanceResult);
+  instancePtr = std::move(instanceResult.value());
+  REQUIRE(instancePtr->operator VkInstance() != VK_NULL_HANDLE);
 }
