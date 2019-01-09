@@ -27,9 +27,9 @@ public:
     }
   }
 
-  void queue_family() {
+  void add_queue_family() {
     VkDeviceQueueCreateInfo info {};
-    info.
+    // info.
   }
 
   void physical_device(VkPhysicalDevice physicalDevice) {
