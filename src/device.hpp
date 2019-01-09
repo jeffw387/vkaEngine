@@ -30,7 +30,7 @@ struct device_builder {
         static_cast<uint32_t>(extensions.size());
     m_createInfo.ppEnabledExtensionNames = extensions.data();
     m_createInfo.pEnabledFeatures = &features;
-    
+
     auto result =
         vkCreateDevice(m_physicalDevice, &m_createInfo, nullptr, &device);
     if (result != VK_SUCCESS) {
@@ -62,7 +62,7 @@ struct device_builder {
     extensions.push_back(name.data());
     return *this;
   }
-  
+
 private:
   VkPhysicalDevice m_physicalDevice = {};
   std::vector<VkDeviceQueueCreateInfo> queueInfos = {};
