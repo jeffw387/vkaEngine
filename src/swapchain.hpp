@@ -107,6 +107,7 @@ struct swapchain_builder {
       .map([&extent = m_createInfo.imageExtent](auto value) { extent = value; })
       .map_error([](auto error) { return error; });
     m_createInfo.preTransform = transformSelect(physicalDevice, surface);
+    m_createInfo.compositeAlpha = compositeAlphaSelect(physicalDevice, surface);
     VkSwapchainKHR swapchain = {};
     auto result =
         vkCreateSwapchainKHR(device, &m_createInfo, nullptr, &swapchain);
