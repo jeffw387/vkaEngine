@@ -15,8 +15,13 @@ TEST_CASE("Create a device") {
   auto physicalDeviceResult =
       physical_device_selector{}.select(**instanceResult);
   REQUIRE(physicalDeviceResult);
+  auto graphicsQueueFamily =
+      queue_family_builder{}.graphics_support().queue(1.f).build(
+          **physicalDeviceResult);
+  REQUIRE(graphicsQueueFamily);
   auto deviceResult = device_builder{}
                           .physical_device(**physicalDeviceResult)
+                          .add_queue_family(*graphicsQueueFamily)
                           .build(**instanceResult);
   REQUIRE(deviceResult);
 }
