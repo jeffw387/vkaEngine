@@ -22,56 +22,56 @@ private:
 class instance_builder {
 public:
   tl::expected<std::unique_ptr<instance>, VkResult> build() {
-    create_info.pApplicationInfo = &app_info;
-    create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-    create_info.ppEnabledExtensionNames = extensions.data();
-    create_info.enabledLayerCount = static_cast<uint32_t>(layers.size());
-    create_info.ppEnabledLayerNames = layers.data();
-    VkInstance result_instance = {};
-    auto result = vkCreateInstance(&create_info, nullptr, &result_instance);
+    m_create_info.pApplicationInfo = &app_info;
+    m_create_info.enabledExtensionCount = static_cast<uint32_t>(m_extensions.size());
+    m_create_info.ppEnabledExtensionNames = m_extensions.data();
+    m_create_info.enabledLayerCount = static_cast<uint32_t>(m_layers.size());
+    m_create_info.ppEnabledLayerNames = m_layers.data();
+    VkInstance resultInstance = {};
+    auto result = vkCreateInstance(&create_info, nullptr, &resultInstance);
     if(result != VK_SUCCESS) {
       return tl::unexpected<VkResult>(result);
     }
-    return std::make_unique<instance>(result_instance);
+    return std::make_unique<instance>(resultInstance);
   }
 
   instance_builder& add_extension(const char* name) {
-    extensions.push_back(name);
+    m_extensions.push_back(name);
     return *this;
   }
 
   instance_builder& add_layer(const char* name) {
-    layers.push_back(name);
+    m_layers.push_back(name);
     return *this;
   }
 
   instance_builder& set_engine_name(const char* name) {
-    app_info.pEngineName = name;
+    m_app_info.pEngineName = name;
     return *this;
   }
 
   instance_builder& set_app_name(const char* name) {
-    app_info.pApplicationName = name;
+    m_app_info.pApplicationName = name;
     return *this;
   }
 
   instance_builder& set_api_version(int major, int minor, int patch) {
-    app_info.apiVersion = VK_MAKE_VERSION(major, minor, patch);
+    m_app_info.apiVersion = VK_MAKE_VERSION(major, minor, patch);
     return *this;
   }
 
   instance_builder& set_engine_version(int major, int minor, int patch) {
-    app_info.engineVersion = VK_MAKE_VERSION(major, minor, patch);
+    m_app_info.engineVersion = VK_MAKE_VERSION(major, minor, patch);
     return *this;}
     
   instance_builder& set_app_version(int major, int minor, int patch) {
-    app_info.applicationVersion = VK_MAKE_VERSION(major, minor, patch);
+    m_app_info.applicationVersion = VK_MAKE_VERSION(major, minor, patch);
     return *this;}
 
 private:
-  std::vector<const char*> extensions = {};
-  std::vector<const char*> layers = {};
-  VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
-  VkInstanceCreateInfo create_info = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
+  std::vector<const char*> m_extensions = {};
+  std::vector<const char*> m_layers = {};
+  VkApplicationInfo m_app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
+  VkInstanceCreateInfo m_create_info = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
 };
 }
