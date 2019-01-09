@@ -15,6 +15,10 @@ public:
   explicit surface(VkInstance instance, WindowType* window, VkSurfaceKHR surface_handle) 
     : m_instance(instance), m_window(window), m_surface(surface_handle) {
   }
+  surface(const surface&) = delete;
+  surface(surface&&) = default;
+  surface& operator=(const surface&) = delete;
+  surface& operator=(surface&&) = default;
 
   ~surface() {
     vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
