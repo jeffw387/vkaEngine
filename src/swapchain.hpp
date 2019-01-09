@@ -75,7 +75,8 @@ struct swapchain_builder {
         })
         .map_error([](auto error) { return error; });
     VkSwapchainKHR swapchain = {};
-    auto result = vkCreateSwapchainKHR(device, &m_createInfo, nullptr, &swapchain);
+    auto result =
+        vkCreateSwapchainKHR(device, &m_createInfo, nullptr, &swapchain);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
