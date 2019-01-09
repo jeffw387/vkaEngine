@@ -11,8 +11,7 @@ namespace vka {
 
 class device {};
 
-class device_builder {
-public:
+struct device_builder {
   tl::expected<std::unique_ptr<device>, VkResult> build(VkInstance instance) {
     VkDevice device = {};
     m_createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
