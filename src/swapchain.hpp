@@ -62,6 +62,11 @@ struct swapchain_builder {
       VkPhysicalDevice physicalDevice,
       VkSurfaceKHR surface,
       VkDevice device) {
+    presentModeValidate(physicalDevice, surface, m_presentMode)
+        .map([& destination = m_createInfo.presentMode](auto presentMode) {
+          destination = presentMode;
+        })
+        .map_error([](auto error) { return error; });
     VkSwapchainKHR swapchain = {};
     auto result = vkCreateSwapchainKHR(device, &m_createInfo, nullptr, &swapchain);
     if (result != VK_SUCCESS) {
