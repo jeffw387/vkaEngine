@@ -69,8 +69,8 @@ public:
     return *this;}
 
 private:
-  std::vector<const char*> extensions;
-  std::vector<const char*> layers;
+  std::vector<const char*> extensions = {};
+  std::vector<const char*> layers = {};
   VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
   VkInstanceCreateInfo create_info = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
 };
