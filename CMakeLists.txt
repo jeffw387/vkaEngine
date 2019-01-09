@@ -227,6 +227,8 @@ add_module(device)
 target_link_libraries(device INTERFACE expected vulkan)
 target_link_libraries(device.test PRIVATE instance queue_family physical_device)
 
+add_module(swapchain INTERFACE expected vulkan)
+
 add_module(Text)
 
 add_module(Camera)
