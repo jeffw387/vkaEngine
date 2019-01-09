@@ -37,25 +37,35 @@ auto presentModeValidate =
   }
 };
 
-auto surfaceFormatSelect = 
-    [](VkPhysicalDevice physicalDevice,
+auto surfaceFormatSelect = [](VkPhysicalDevice physicalDevice,
        VkSurfaceKHR surface,
        VkFormat format,
-       VkColorSpaceKHR colorSpace) -> tl::expected<VkSurfaceFormatKHR, VkResult> {
+                              VkColorSpaceKHR colorSpace)
+    -> tl::expected<VkSurfaceFormatKHR, VkResult> {
          uint32_t count = {};
-         auto countResult = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &count, nullptr);
+  auto countResult = vkGetPhysicalDeviceSurfaceFormatsKHR(
+      physicalDevice, surface, &count, nullptr);
          if (countResult != VK_SUCCESS) {
            return tl::make_unexpected(countResult);
          }
          std::vector<VkSurfaceFormatKHR> formats = {};
          formats.resize(count);
-         auto enumerateResult = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &count, formats.data());
+  auto enumerateResult = vkGetPhysicalDeviceSurfaceFormatsKHR(
+      physicalDevice, surface, &count, formats.data());
          if (enumerateResult != VK_SUCCESS) {
            return tl::make_unexpected(enumerateResult);
          }
 
-
+  auto preferred = VkSurfaceFormatKHR{format, colorSpace};
+  if (std::find(std::begin(formats), std::end(formats), preferred) !=
+      std::end(formats)) {
+    return preferred;
+  }
+  if (count > 0) {
+    return formats[0];
        }
+  return tl::make_unexpected(VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED);
+};
 
 struct swapchain_builder {
   tl::expected<std::unique_ptr<swapchain>, VkResult> build(
