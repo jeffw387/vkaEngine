@@ -22,13 +22,13 @@ private:
 class instance_builder {
 public:
   tl::expected<std::unique_ptr<instance>, VkResult> build() {
-    m_create_info.pApplicationInfo = &app_info;
+    m_create_info.pApplicationInfo = &m_app_info;
     m_create_info.enabledExtensionCount = static_cast<uint32_t>(m_extensions.size());
     m_create_info.ppEnabledExtensionNames = m_extensions.data();
     m_create_info.enabledLayerCount = static_cast<uint32_t>(m_layers.size());
     m_create_info.ppEnabledLayerNames = m_layers.data();
     VkInstance resultInstance = {};
-    auto result = vkCreateInstance(&create_info, nullptr, &resultInstance);
+    auto result = vkCreateInstance(&m_create_info, nullptr, &resultInstance);
     if(result != VK_SUCCESS) {
       return tl::unexpected<VkResult>(result);
     }
