@@ -76,6 +76,16 @@ auto imageExtentSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surfac
   return capabilities.currentExtent;
 };
 
+auto transformSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+  VkSurfaceCapabilitiesKHR capabilities = {};
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+  return capabilities.currentTransform;
+};
+
+auto compositeAlphaSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+  return VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+};
+
 struct swapchain_builder {
   tl::expected<std::unique_ptr<swapchain>, VkResult> build(
       VkPhysicalDevice physicalDevice,
