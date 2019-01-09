@@ -69,13 +69,25 @@ struct queue_family_builder {
 
   queue_family_builder& present_support() { m_presentRequired = true; return *this; }
 
-  queue_family_builder& graphics_support() { m_queueFlags |= VK_QUEUE_GRAPHICS_BIT; return *this; }
+  queue_family_builder& graphics_support() {
+    m_queueFlags |= VK_QUEUE_GRAPHICS_BIT;
+    return *this;
+  }
 
-  queue_family_builder& compute_support() { m_queueFlags |= VK_QUEUE_COMPUTE_BIT; return *this; }
+  queue_family_builder& compute_support() {
+    m_queueFlags |= VK_QUEUE_COMPUTE_BIT;
+    return *this;
+  }
 
-  queue_family_builder& transfer_support() { m_queueFlags |= VK_QUEUE_TRANSFER_BIT; return *this; }
+  queue_family_builder& transfer_support() {
+    m_queueFlags |= VK_QUEUE_TRANSFER_BIT;
+    return *this;
+  }
 
-  queue_family_builder& queue(float priority) { m_family.queuePriorities.push_back(priority); return *this; }
+  queue_family_builder& queue(float priority) {
+    m_family.queuePriorities.push_back(priority);
+    return *this;
+  }
 
 private:
   queue_family m_family = {};
