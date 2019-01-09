@@ -67,15 +67,15 @@ struct queue_family_builder {
     return {};
   }
 
-  void present_support() { m_presentRequired = true; }
+  queue_family_builder& present_support() { m_presentRequired = true; return *this; }
 
-  void graphics_support() { m_queueFlags |= VK_QUEUE_GRAPHICS_BIT; }
+  queue_family_builder& graphics_support() { m_queueFlags |= VK_QUEUE_GRAPHICS_BIT; return *this; }
 
-  void compute_support() { m_queueFlags |= VK_QUEUE_COMPUTE_BIT; }
+  queue_family_builder& compute_support() { m_queueFlags |= VK_QUEUE_COMPUTE_BIT; return *this; }
 
-  void transfer_support() { m_queueFlags |= VK_QUEUE_TRANSFER_BIT; }
+  queue_family_builder& transfer_support() { m_queueFlags |= VK_QUEUE_TRANSFER_BIT; return *this; }
 
-  void queue(float priority) { m_family.queuePriorities.push_back(priority); }
+  queue_family_builder& queue(float priority) { m_family.queuePriorities.push_back(priority); return *this; }
 
 private:
   queue_family m_family = {};
