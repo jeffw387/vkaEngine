@@ -162,7 +162,7 @@ function(clang_tidy target_name file_name)
   add_custom_command(
     TARGET ${target_name}
     POST_BUILD
-    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix -header-filter=${src_dir}/* ${file_name})
+    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix -header-filter=${src_dir}/*,-gsl_lite.hpp ${file_name})
 endfunction()
 
 function(add_module module_name)
