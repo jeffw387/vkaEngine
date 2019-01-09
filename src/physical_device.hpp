@@ -238,16 +238,16 @@ inline void to_vulkan_feature(
 struct physical_device_selector {
   tl::expected<std::optional<VkPhysicalDevice>, VkResult> select(VkInstance instance) {
     uint32_t count = {};
-    auto count_result = vkEnumeratePhysicalDevices(instance, &count, nullptr);
-    if (count_result != VK_SUCCESS) {
-      return tl::make_unexpected(count_result);
+    auto countResult = vkEnumeratePhysicalDevices(instance, &count, nullptr);
+    if (countResult != VK_SUCCESS) {
+      return tl::make_unexpected(countResult);
     }
     std::vector<VkPhysicalDevice> physicalDevices = {};
     physicalDevices.resize(count);
-    auto enumerate_result =
+    auto enumerateResult =
         vkEnumeratePhysicalDevices(instance, &count, physicalDevices.data());
-    if (enumerate_result != VK_SUCCESS) {
-      return tl::make_unexpected(enumerate_result);
+    if (enumerateResult != VK_SUCCESS) {
+      return tl::make_unexpected(enumerateResult);
     }
     std::vector<VkPhysicalDeviceProperties> properties = {};
     properties.resize(count);

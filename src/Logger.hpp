@@ -4,15 +4,15 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include <memory>
 
-static auto LogFileName = "vkaEngineLog.txt";
+static auto logFileName = "vkaEngineLog.txt";
 
-class MultiLogger {
+class multi_logger {
   static std::shared_ptr<spdlog::sinks::sink> fileSink;
   static std::shared_ptr<spdlog::sinks::sink> stdoutSink;
   static std::shared_ptr<spdlog::sinks::sink> stderrSink;
   static std::shared_ptr<spdlog::logger> multilogger;
 
-  MultiLogger() {}
+  multi_logger() = default;
 
 public:
   static std::shared_ptr<spdlog::logger> get();

@@ -56,11 +56,11 @@ struct queue_family_builder {
 
     for (uint32_t i = {}; i < count; ++i) {
       const auto& prop = properties[i];
-      auto flags_optional = queue_flag_match(i, prop.queueFlags, m_queueFlags);
-      auto present_optional = queue_present_match(
-          flags_optional, physicalDevice, surface, m_presentRequired);
-      if (present_optional) {
-        m_family.familyIndex = *present_optional;
+      auto flagsOptional = queue_flag_match(i, prop.queueFlags, m_queueFlags);
+      auto presentOptional = queue_present_match(
+          flagsOptional, physicalDevice, surface, m_presentRequired);
+      if (presentOptional) {
+        m_family.familyIndex = *presentOptional;
         return m_family;
       }
     }
