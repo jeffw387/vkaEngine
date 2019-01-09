@@ -28,8 +28,8 @@ TEST_CASE("Select a graphics/present queue") {
   REQUIRE(surfaceResult);
   auto queueFamilyResult = queue_family_builder{}
                                .graphics_support()
-                               .present_support()
+                               .present_support(**surfaceResult)
                                .queue(1.f)
-                               .build(**physicalDeviceResult, **surfaceResult);
+                               .build(**physicalDeviceResult);
   REQUIRE(queueFamilyResult);
 }
