@@ -9,7 +9,7 @@ namespace vka {
 
 
 
-class device {};
+struct device {
 
 struct device_builder {
   tl::expected<std::unique_ptr<device>, VkResult> build(VkInstance instance) {
