@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string_view>
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
