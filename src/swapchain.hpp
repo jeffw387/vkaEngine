@@ -67,6 +67,15 @@ auto surfaceFormatSelect = [](VkPhysicalDevice physicalDevice,
   return tl::make_unexpected(VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED);
 };
 
+auto imageExtentSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) -> tl::expected<VkExtent2D, VkResult> {
+  VkSurfaceCapabilitiesKHR capabilities = {};
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+  if (capabilities.currentExtent.width == 0 || capabilities.currentExtent.height == 0) {
+    return tl::make_unexpected(VkResult::VK_NOT_READY);
+  }
+  return capabilities.currentExtent;
+};
+
 struct swapchain_builder {
   tl::expected<std::unique_ptr<swapchain>, VkResult> build(
       VkPhysicalDevice physicalDevice,
