@@ -143,6 +143,7 @@ function(setup_target target_name)
   if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
     set_property(TARGET ${target_name} PROPERTY CMAKE_EXE_LINKER_FLAGS 
       "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi -Wlifetime")
+    set_property(TARGET ${target_name} PROPERTY CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
   endif()
   if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     target_link_libraries(${target_name} PUBLIC stdc++fs)
