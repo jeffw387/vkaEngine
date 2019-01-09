@@ -67,6 +67,13 @@ struct swapchain_builder {
           destination = presentMode;
         })
         .map_error([](auto error) { return error; });
+    surfaceFormatSelect(physicalDevice, surface, m_format, m_colorSpace)
+        .map([& format = m_createInfo.imageFormat,
+              &colorSpace = m_createInfo.imageColorSpace](auto surfaceFormat) {
+          format = surfaceFormat.format;
+          colorSpace = surfaceFormat.colorSpace;
+        })
+        .map_error([](auto error) { return error; });
     VkSwapchainKHR swapchain = {};
     auto result = vkCreateSwapchainKHR(device, &m_createInfo, nullptr, &swapchain);
     if (result != VK_SUCCESS) {
