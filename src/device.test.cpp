@@ -9,8 +9,10 @@
 using namespace vka;
 TEST_CASE("Create a device") {
   auto instanceResult = instance_builder{}.build();
+  REQUIRE(instanceResult);
   auto physicalDeviceResult =
       physical_device_selector{}.select(**instanceResult);
+  REQUIRE(physicalDeviceResult);
   auto deviceResult = device_builder{}
                           .physical_device(**physicalDeviceResult)
                           .build(**instanceResult);
