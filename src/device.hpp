@@ -8,7 +8,7 @@
 
 namespace vka {
 struct device {
-  device(VkDevice device) : m_device(device) {}
+  explicit device(VkDevice device) : m_device(device) {}
   ~device() {
     vkDestroyDevice(m_device, nullptr);
   }
