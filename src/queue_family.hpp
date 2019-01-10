@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include <optional>
+#include <tl/optional.hpp>
 
 namespace vka {
 struct queue_family {
@@ -10,8 +10,8 @@ struct queue_family {
   std::vector<float> queuePriorities;
 };
 
-inline std::optional<uint32_t> queue_flag_match(
-    std::optional<uint32_t> index,
+inline tl::optional<uint32_t> queue_flag_match(
+    tl::optional<uint32_t> index,
     VkQueueFlags supported,
     VkQueueFlags required) {
   if ((supported & required) == required) {
@@ -20,8 +20,8 @@ inline std::optional<uint32_t> queue_flag_match(
   return {};
 }
 
-inline std::optional<uint32_t> queue_present_match(
-    std::optional<uint32_t> index,
+inline tl::optional<uint32_t> queue_present_match(
+    tl::optional<uint32_t> index,
     VkPhysicalDevice physicalDevice,
     VkSurfaceKHR surface,
     VkBool32 required) {
@@ -44,7 +44,7 @@ inline std::optional<uint32_t> queue_present_match(
 }
 
 struct queue_family_builder {
-  std::optional<queue_family> build(VkPhysicalDevice physicalDevice) {
+  tl::optional<queue_family> build(VkPhysicalDevice physicalDevice) {
     uint32_t count = {};
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, nullptr);
     std::vector<VkQueueFamilyProperties> properties = {};
