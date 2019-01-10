@@ -4,9 +4,11 @@
 #include "physical_device.hpp"
 #include "instance.hpp"
 #include "move_into.hpp"
+#include "platform_glfw.hpp"
 
 using namespace vka;
 TEST_CASE("Select first physical device") {
+  platform::glfw::init();
   std::unique_ptr<instance> instancePtr = {};
   instance_builder{}
       .build()
