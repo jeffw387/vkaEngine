@@ -38,7 +38,7 @@ struct device_builder {
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
-    return std::make_unique<vka::device>(VkDevice{});
+    return std::make_unique<vka::device>(device);
   }
 
   device_builder& add_queue_family(const queue_family& queueFamily) {
