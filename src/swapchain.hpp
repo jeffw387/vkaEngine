@@ -81,22 +81,29 @@ auto surfaceFormatSelect = [](VkPhysicalDevice physicalDevice,
   return tl::make_unexpected(VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED);
 };
 
-auto imageExtentSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) -> tl::expected<VkExtent2D, VkResult> {
+auto imageExtentSelect =
+    [](VkPhysicalDevice physicalDevice,
+       VkSurfaceKHR surface) -> tl::expected<VkExtent2D, VkResult> {
   VkSurfaceCapabilitiesKHR capabilities = {};
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
-  if (capabilities.currentExtent.width == 0 || capabilities.currentExtent.height == 0) {
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+      physicalDevice, surface, &capabilities);
+  if (capabilities.currentExtent.width == 0 ||
+      capabilities.currentExtent.height == 0) {
     return tl::make_unexpected(VkResult::VK_NOT_READY);
   }
   return capabilities.currentExtent;
 };
 
-auto transformSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+auto transformSelect = [](VkPhysicalDevice physicalDevice,
+                          VkSurfaceKHR surface) {
   VkSurfaceCapabilitiesKHR capabilities = {};
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+      physicalDevice, surface, &capabilities);
   return capabilities.currentTransform;
 };
 
-auto compositeAlphaSelect = [](VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+auto compositeAlphaSelect = [](VkPhysicalDevice physicalDevice,
+                               VkSurfaceKHR surface) {
   return VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 };
 
@@ -118,7 +125,9 @@ struct swapchain_builder {
         })
         .map_error([](auto error) { return error; });
     imageExtentSelect(physicalDevice, surface)
-      .map([&extent = m_createInfo.imageExtent](auto value) { extent = value; })
+        .map([& extent = m_createInfo.imageExtent](auto value) {
+          extent = value;
+        })
       .map_error([](auto error) { return error; });
     m_createInfo.preTransform = transformSelect(physicalDevice, surface);
     m_createInfo.compositeAlpha = compositeAlphaSelect(physicalDevice, surface);
