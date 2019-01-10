@@ -158,12 +158,10 @@ function(clang_format target_name file_name)
 endfunction()
 
 function(clang_tidy target_name file_name)
-  set(tidy_cmd "clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix ${file_name}")
-  message("tidy command: ${tidy_cmd}")
   add_custom_command(
     TARGET ${target_name}
     POST_BUILD
-    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix -header-filter=${src_dir}/*,-gsl_lite.hpp ${file_name})
+    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix -header-filter=${src_dir}/*,-gsl_lite.hpp,-spookyhash.* ${file_name})
 endfunction()
 
 function(add_module module_name)
