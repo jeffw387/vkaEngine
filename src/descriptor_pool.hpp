@@ -3,7 +3,6 @@
 #include <memory>
 #include <expected.hpp>
 #include <tuple>
-// #include "VkResult.hpp"
 
 namespace vka {
 class descriptor_pool {
