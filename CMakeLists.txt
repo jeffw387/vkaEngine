@@ -120,6 +120,8 @@ target_link_libraries(tinygltf INTERFACE json_nlohmann)
 
 add_subdirectory(external/Catch2)
 
+add_subdirectory(external/optional)
+
 add_subdirectory(external/expected)
 
 ##
