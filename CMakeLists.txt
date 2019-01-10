@@ -92,6 +92,7 @@ find_package(Vulkan REQUIRED)
 add_library(vulkan INTERFACE)
 target_include_directories(vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vulkan INTERFACE ${Vulkan_LIBRARIES})
+message("Vulkan Libraries: ${Vulkan_LIBRARIES}")
 
 add_library(VulkanMemoryAllocator)
 target_include_directories(VulkanMemoryAllocator 
