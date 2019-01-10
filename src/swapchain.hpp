@@ -143,6 +143,7 @@ struct swapchain_builder {
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
+    return std::make_unique<vka::swapchain>(device, swapchain);
   }
 
   swapchain_builder& present_mode(VkPresentModeKHR presentMode) {
