@@ -218,7 +218,7 @@ target_link_libraries(instance.test PRIVATE platform_glfw)
 
 add_module(physical_device)
 target_link_libraries(physical_device INTERFACE vulkan tl_optional tl_expected)
-target_link_libraries(physical_device.test PRIVATE instance)
+target_link_libraries(physical_device.test PRIVATE instance platform_glfw)
 
 add_module(queue_family)
 target_link_libraries(queue_family INTERFACE vulkan tl_optional)
@@ -231,7 +231,6 @@ target_link_libraries(device.test PRIVATE instance queue_family physical_device)
 add_module(swapchain)
 target_link_libraries(swapchain INTERFACE tl_expected vulkan)
 target_link_libraries(swapchain.test PRIVATE instance queue_family physical_device device platform_glfw surface)
-
 
 # add_module(Text)
 
