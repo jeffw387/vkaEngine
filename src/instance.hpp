@@ -4,6 +4,8 @@
 #include <expected.hpp>
 
 namespace vka {
+static const char* standard_validation = "VK_LAYER_LUNARG_standard_validation";
+
 class instance {
 public:
   explicit instance(VkInstance instance) : m_instance(instance) {}
