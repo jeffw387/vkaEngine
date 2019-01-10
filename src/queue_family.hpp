@@ -43,8 +43,12 @@ inline tl::optional<uint32_t> queue_present_match(
   return {};
 }
 
+struct no_matching_queue_family {};
+
 struct queue_family_builder {
-  tl::optional<queue_family> build(VkPhysicalDevice physicalDevice) {
+  using result_type = tl::expected<queue_family, no_matching_queue_family>;
+  result_type build(VkPhysicalDevice physicalDevice) {
+    result_type result;
     uint32_t count = {};
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, nullptr);
     std::vector<VkQueueFamilyProperties> properties = {};
@@ -54,15 +58,17 @@ struct queue_family_builder {
 
     for (uint32_t i = {}; i < count; ++i) {
       const auto& prop = properties[i];
-      auto flagsOptional = queue_flag_match(i, prop.queueFlags, m_queueFlags);
-      auto presentOptional = queue_present_match(
-          flagsOptional, physicalDevice, m_surface, m_presentRequired);
-      if (presentOptional) {
-        m_family.familyIndex = *presentOptional;
-        return m_family;
-      }
+      queue_flag_match(i, prop.queueFlags, m_queueFlags)
+          .and_then([&](auto value) {
+            return queue_present_match(
+                value, physicalDevice, m_surface, m_presentRequired);
+          })
+          .map(move_into{m_family.familyIndex})
+          .or_else(move_value_into<result_type>{
+              tl::make_unexpected(no_matching_queue_family{}), result});
     }
-    return {};
+    result = m_family;
+    return result;
   }
 
   queue_family_builder& present_support(VkSurfaceKHR surface) {
