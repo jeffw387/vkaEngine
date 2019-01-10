@@ -230,9 +230,9 @@ target_link_libraries(swapchain INTERFACE expected vulkan)
 target_link_libraries(swapchain.test PRIVATE instance queue_family physical_device device platform_glfw surface)
 
 
-add_module(Text)
+# add_module(Text)
 
-add_module(Camera)
+# add_module(Camera)
 
 add_module(surface)
 target_link_libraries(surface INTERFACE vulkan expected platform_glfw)
@@ -245,7 +245,7 @@ add_module(descriptor_pool)
 target_link_libraries(descriptor_pool INTERFACE instance expected)
 target_link_libraries(descriptor_pool.test PRIVATE platform_glfw)
 
-add_module(spookyhash)
+# add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
 
