@@ -149,6 +149,7 @@ struct swapchain_builder {
 
 private:
   uint32_t m_imageCount = 3U;
+  uint32_t m_imageArrayLayers = 1U;
   VkPresentModeKHR m_presentMode = {};
   VkFormat m_format = VK_FORMAT_B8G8R8A8_UNORM;
   VkColorSpaceKHR m_colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
