@@ -27,17 +27,17 @@ TEST_CASE("Select a graphics/present queue") {
       .map_error([](auto error) { REQUIRE(false); });
   std::unique_ptr<surface> surfacePtr = {};
   surface_builder{}
-                           .width(100)
-                           .height(100)
-                           .title("test window")
+      .width(100)
+      .height(100)
+      .title("test window")
       .build(*instancePtr)
       .map(move_into{surfacePtr})
       .map_error([](auto error) { REQUIRE(false); });
   queue_family queueFamily = {};
   queue_family_builder{}
-                               .graphics_support()
+      .graphics_support()
       .present_support(*surfacePtr)
-                               .queue(1.f)
+      .queue(1.f)
       .build(physicalDevice)
       .map(move_into{queueFamily})
       .map_error([](auto error) { REQUIRE(false); });
