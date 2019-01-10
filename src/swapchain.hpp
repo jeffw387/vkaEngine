@@ -43,6 +43,7 @@ auto presentModeValidate =
       std::end(modes)) {
     return present;
   }
+  return tl::make_unexpected(VkResult::VK_ERROR_FEATURE_NOT_PRESENT);
 };
 
 auto surfaceFormatSelect = [](VkPhysicalDevice physicalDevice,
