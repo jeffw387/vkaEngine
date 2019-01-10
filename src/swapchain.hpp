@@ -66,8 +66,13 @@ auto surfaceFormatSelect = [](VkPhysicalDevice physicalDevice,
          }
 
   auto preferred = VkSurfaceFormatKHR{format, colorSpace};
-  if (std::find(std::begin(formats), std::end(formats), preferred) !=
-      std::end(formats)) {
+  if (std::find_if(
+          std::begin(formats),
+          std::end(formats),
+          [=](VkSurfaceFormatKHR testFormat) {
+            return (testFormat.format == preferred.format) &&
+                   (testFormat.colorSpace == preferred.colorSpace);
+          }) != std::end(formats)) {
     return preferred;
   }
   if (count > 0) {
