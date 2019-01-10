@@ -11,26 +11,29 @@ using namespace platform;
 using namespace vka;
 TEST_CASE("Create descriptor pool") {
   glfw::init();
+  std::unique_ptr<instance> instancePtr = {};
   auto instanceBuilder = instance_builder{}.add_layer(standard_validation);
   auto surfaceExtensions = platform::glfw::get_required_instance_extensions();
   for (auto extension : surfaceExtensions) {
     instanceBuilder.add_extension(extension);
   }
-  auto instanceResult = instanceBuilder.build();
-  REQUIRE(instanceResult);
-  auto physicalDeviceResult =
-      physical_device_selector{}.select(**instanceResult);
-  REQUIRE(physicalDeviceResult);
+  instanceBuilder.build()
+    .map([&d = instancePtr](auto value){ d = std::move(value); })
+    .map_error([](auto error){ REQUIRE(false); });
+  VkPhysicalDevice physicalDevice = {};
+  physical_device_selector{}.select(*instancePtr)
+    .map([&d = physicalDevice](auto value) { REQUIRE_NOTHROW(d = std::move(value.value())); })
+    .map_error([](auto error) { REQUIRE(false); });
 
-  auto queueFamilyResult =
+  queue_family graphicsPresentFamily = {};
       queue_family_builder{}.graphics_support().queue(1.f).build(
-          **physicalDeviceResult);
+          physicalDevice);
   REQUIRE(queueFamilyResult);
   auto deviceResult = device_builder{}
                           .add_queue_family(*queueFamilyResult)
-                          .physical_device(**physicalDeviceResult)
+                          .physical_device(physicalDevice)
                           .extension(swapchain_extension)
-                          .build(**instanceResult);
+                          .build(*instancePtr);
   REQUIRE(deviceResult);
   auto descriptorPoolResult =
       descriptor_pool_builder{}
