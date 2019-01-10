@@ -242,8 +242,8 @@ add_module(input)
 target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
 add_module(descriptor_pool)
-target_link_libraries(descriptor_pool INTERFACE instance expected)
-target_link_libraries(descriptor_pool.test PRIVATE platform_glfw)
+target_link_libraries(descriptor_pool INTERFACE vulkan expected)
+target_link_libraries(descriptor_pool.test PRIVATE platform_glfw physical_device instance device queue_family)
 
 # add_module(spookyhash)
 
