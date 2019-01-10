@@ -4,7 +4,6 @@
 #include "instance.hpp"
 #include "physical_device.hpp"
 #include "queue_family.hpp"
-// #include "platform_glfw.hpp"
 
 using namespace vka;
 TEST_CASE("Create a device") {
