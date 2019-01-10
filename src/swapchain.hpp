@@ -108,6 +108,7 @@ struct swapchain_builder {
       .map_error([](auto error) { return error; });
     m_createInfo.preTransform = transformSelect(physicalDevice, surface);
     m_createInfo.compositeAlpha = compositeAlphaSelect(physicalDevice, surface);
+    m_createInfo.surface = surface;
     VkSwapchainKHR swapchain = {};
     auto result =
         vkCreateSwapchainKHR(device, &m_createInfo, nullptr, &swapchain);
