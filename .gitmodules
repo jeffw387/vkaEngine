@@ -42,7 +42,7 @@
 	url = https://github.com/catchorg/Catch2.git
 [submodule "external/expected"]
 	path = external/expected
-	url = https://github.com/TartanLlama/expected.git
+	url = https://github.com/jeffw387/expected.git
 [submodule "external/optional"]
 	path = external/optional
-	url = https://github.com/TartanLlama/optional.git
+	url = https://github.com/jeffw387/optional.git
