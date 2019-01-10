@@ -9,6 +9,12 @@ namespace vka {
 struct swapchain {
   explicit swapchain(VkDevice device, VkSwapchainKHR swapchain)
       : m_device(device), m_swapchain(swapchain) {}
+  ~swapchain() { vkDestroySwapchainKHR(m_device, m_swapchain, nullptr); }
+  swapchain(const swapchain&) = delete;
+  swapchain(swapchain&&) = default;
+  swapchain& operator=(const swapchain&) = delete;
+  swapchain& operator=(swapchain&&) = default;
+  operator VkSwapchainKHR() const noexcept { return m_swapchain; }
 
 private:
   VkDevice m_device = {};
