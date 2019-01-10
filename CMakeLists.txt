@@ -249,6 +249,9 @@ add_module(descriptor_pool)
 target_link_libraries(descriptor_pool INTERFACE vulkan expected)
 target_link_libraries(descriptor_pool.test PRIVATE platform_glfw physical_device instance device queue_family)
 
+add_module(descriptor_set)
+target_link_libraries(descriptor_set INTERFACE vulkan expected)
+
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
