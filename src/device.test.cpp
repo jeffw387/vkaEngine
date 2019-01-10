@@ -22,4 +22,6 @@ TEST_CASE("Create a device") {
                           .add_queue_family(*graphicsQueueFamily)
                           .build(**instanceResult);
   REQUIRE(deviceResult);
+  REQUIRE(*deviceResult);
+  REQUIRE((**deviceResult).operator VkDevice() != VK_NULL_HANDLE);
 }
