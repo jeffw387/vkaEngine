@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <tl/optional.hpp>
 #include <tl/expected.hpp>
 
 namespace vka {
@@ -235,7 +236,7 @@ inline void to_vulkan_feature(
 }
 
 struct physical_device_selector {
-  tl::expected<std::optional<VkPhysicalDevice>, VkResult> select(VkInstance instance) {
+  tl::expected<tl::optional<VkPhysicalDevice>, VkResult> select(VkInstance instance) {
     uint32_t count = {};
     auto countResult = vkEnumeratePhysicalDevices(instance, &count, nullptr);
     if (countResult != VK_SUCCESS) {
@@ -273,7 +274,7 @@ struct physical_device_selector {
   }
 
 private:
-  std::optional<VkPhysicalDeviceType> m_deviceType;
+  tl::optional<VkPhysicalDeviceType> m_deviceType;
 };
 
 }  // namespace vka
