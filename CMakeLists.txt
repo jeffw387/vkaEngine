@@ -207,13 +207,13 @@ add_module(sync_helper)
 target_link_libraries(sync_helper PUBLIC vulkan)
 
 add_module(platform_glfw)
-target_link_libraries(platform_glfw PUBLIC vulkan glfw Logger expected)
+target_link_libraries(platform_glfw PUBLIC vulkan glfw Logger tl_expected)
 target_compile_definitions(platform_glfw PUBLIC 
   GLFW_INCLUDE_VULKAN
   GLFW_INCLUDE_NONE)
 
 add_module(instance)
-target_link_libraries(instance INTERFACE expected vulkan)
+target_link_libraries(instance INTERFACE tl_expected vulkan)
 target_link_libraries(instance.test PRIVATE platform_glfw)
 
 add_module(physical_device)
@@ -225,11 +225,11 @@ target_link_libraries(queue_family INTERFACE vulkan optional)
 target_link_libraries(queue_family.test PRIVATE surface instance physical_device platform_glfw)
 
 add_module(device)
-target_link_libraries(device INTERFACE expected vulkan)
+target_link_libraries(device INTERFACE tl_expected vulkan)
 target_link_libraries(device.test PRIVATE instance queue_family physical_device)
 
 add_module(swapchain)
-target_link_libraries(swapchain INTERFACE expected vulkan)
+target_link_libraries(swapchain INTERFACE tl_expected vulkan)
 target_link_libraries(swapchain.test PRIVATE instance queue_family physical_device device platform_glfw surface)
 
 
@@ -238,18 +238,18 @@ target_link_libraries(swapchain.test PRIVATE instance queue_family physical_devi
 # add_module(Camera)
 
 add_module(surface)
-target_link_libraries(surface INTERFACE vulkan expected platform_glfw)
+target_link_libraries(surface INTERFACE vulkan tl_expected platform_glfw)
 target_link_libraries(surface.test PRIVATE instance)
 
 add_module(input)
 target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
 add_module(descriptor_pool)
-target_link_libraries(descriptor_pool INTERFACE vulkan expected)
+target_link_libraries(descriptor_pool INTERFACE vulkan tl_expected)
 target_link_libraries(descriptor_pool.test PRIVATE platform_glfw physical_device instance device queue_family)
 
 add_module(descriptor_set)
-target_link_libraries(descriptor_set INTERFACE vulkan expected)
+target_link_libraries(descriptor_set INTERFACE vulkan tl_expected)
 
 # add_module(spookyhash)
 
