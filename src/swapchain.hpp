@@ -108,6 +108,8 @@ struct swapchain_builder {
       .map_error([](auto error) { return error; });
     m_createInfo.preTransform = transformSelect(physicalDevice, surface);
     m_createInfo.compositeAlpha = compositeAlphaSelect(physicalDevice, surface);
+    m_createInfo.imageArrayLayers = m_imageArrayLayers;
+    m_createInfo.minImageCount = m_imageCount;
     m_createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     m_createInfo.pQueueFamilyIndices = &m_queueFamilyIndex;
     m_createInfo.queueFamilyIndexCount = 1U;
