@@ -248,4 +248,4 @@ add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
 
-add_subdirectory(tests)
+# add_subdirectory(tests)
