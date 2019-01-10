@@ -109,6 +109,7 @@ target_include_directories(
   external/json/single_include)
   
 add_subdirectory(external/glfw)
+target_link_libraries(glfw PUBLIC vulkan)
   
 add_subdirectory(external/spdlog)
 add_library(spdlog::spdlog ALIAS spdlog)
