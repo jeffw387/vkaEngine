@@ -277,6 +277,14 @@ target_link_libraries(descriptor_set_layout.test PRIVATE
 
 add_module(descriptor_set)
 target_link_libraries(descriptor_set INTERFACE vulkan tl_expected descriptor_pool descriptor_set_layout)
+target_link_libraries(descriptor_set.test PRIVATE 
+  platform_glfw 
+  physical_device 
+  instance 
+  device 
+  queue_family
+  descriptor_pool
+  descriptor_set_layout)
 
 # add_module(spookyhash)
 
