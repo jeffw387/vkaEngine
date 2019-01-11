@@ -222,15 +222,29 @@ target_link_libraries(physical_device.test PRIVATE instance platform_glfw)
 
 add_module(queue_family)
 target_link_libraries(queue_family INTERFACE vulkan tl_optional)
-target_link_libraries(queue_family.test PRIVATE surface instance physical_device platform_glfw)
+target_link_libraries(queue_family.test PRIVATE 
+  surface 
+  instance 
+  physical_device 
+  platform_glfw)
 
 add_module(device)
 target_link_libraries(device INTERFACE tl_expected vulkan)
-target_link_libraries(device.test PRIVATE instance queue_family physical_device platform_glfw)
+target_link_libraries(device.test PRIVATE 
+  instance 
+  queue_family 
+  physical_device 
+  platform_glfw)
 
 add_module(swapchain)
 target_link_libraries(swapchain INTERFACE tl_expected vulkan)
-target_link_libraries(swapchain.test PRIVATE instance queue_family physical_device device platform_glfw surface)
+target_link_libraries(swapchain.test PRIVATE 
+  instance 
+  queue_family 
+  physical_device 
+  device 
+  platform_glfw 
+  surface)
 
 # add_module(Text)
 
@@ -245,10 +259,24 @@ target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
 add_module(descriptor_pool)
 target_link_libraries(descriptor_pool INTERFACE vulkan tl_expected)
-target_link_libraries(descriptor_pool.test PRIVATE platform_glfw physical_device instance device queue_family)
+target_link_libraries(descriptor_pool.test PRIVATE 
+  platform_glfw 
+  physical_device 
+  instance 
+  device 
+  queue_family)
+
+add_module(descriptor_set_layout)
+target_link_libraries(descriptor_set_layout INTERFACE vulkan tl_expected)
+target_link_libraries(descriptor_set_layout.test PRIVATE 
+  platform_glfw 
+  physical_device 
+  instance 
+  device 
+  queue_family)
 
 add_module(descriptor_set)
-target_link_libraries(descriptor_set INTERFACE vulkan tl_expected)
+target_link_libraries(descriptor_set INTERFACE vulkan tl_expected descriptor_pool)
 
 # add_module(spookyhash)
 
