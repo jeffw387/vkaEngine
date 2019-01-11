@@ -276,7 +276,7 @@ target_link_libraries(descriptor_set_layout.test PRIVATE
   queue_family)
 
 add_module(descriptor_set)
-target_link_libraries(descriptor_set INTERFACE vulkan tl_expected descriptor_pool)
+target_link_libraries(descriptor_set INTERFACE vulkan tl_expected descriptor_pool descriptor_set_layout)
 
 # add_module(spookyhash)
 
