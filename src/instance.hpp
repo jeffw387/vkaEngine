@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include <tl/expected.hpp>
+#include "gsl-lite.hpp"
 
 namespace vka {
 static const char* standard_validation = "VK_LAYER_LUNARG_standard_validation";
@@ -39,6 +40,11 @@ public:
 
   instance_builder& add_extension(const char* name) {
     m_extensions.push_back(name);
+    return *this;
+  }
+
+  instance_builder& add_extensions(gsl::span<const char*> names) {
+    m_extensions.insert(std::end(m_extensions), std::begin(names), std::end(names));
     return *this;
   }
 
