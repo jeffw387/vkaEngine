@@ -59,6 +59,7 @@ struct descriptor_set_allocator {
 
   descriptor_set_allocator& set_layout(descriptor_set_layout* layout) {
     m_layout = layout;
+    return *this;
   }
 private:
   descriptor_set_layout* m_layout;    
