@@ -7,43 +7,58 @@
 #include "device.hpp"
 #include "platform_glfw.hpp"
 #include "surface.hpp"
+#include "move_into.hpp"
 
 using namespace vka;
 TEST_CASE("Create a swapchain") {
-  auto instanceBuilder = instance_builder{}.add_layer(standard_validation);
-  auto surfaceExtensions = platform::glfw::get_required_instance_extensions();
-  for (auto extension : surfaceExtensions) {
-    instanceBuilder.add_extension(extension);
-  }
-  auto instanceResult = instanceBuilder.build();
-  REQUIRE(instanceResult);
-  auto physicalDeviceResult =
-      physical_device_selector{}.select(**instanceResult);
-  REQUIRE(physicalDeviceResult);
-  auto surfaceResult = surface_builder{}
-                           .width(100)
-                           .height(100)
-                           .title("test title")
-                           .build(**instanceResult);
-  REQUIRE(surfaceResult);
-  auto queueFamilyResult = queue_family_builder{}
-                               .graphics_support()
-                               .present_support(**surfaceResult)
-                               .queue(1.f)
-                               .build(**physicalDeviceResult);
-  REQUIRE(queueFamilyResult);
-  auto deviceResult = device_builder{}
-                          .add_queue_family(*queueFamilyResult)
-                          .physical_device(**physicalDeviceResult)
-                          .extension(swapchain_extension)
-                          .build(**instanceResult);
-  REQUIRE(deviceResult);
-  auto swapchainResult =
-      swapchain_builder{}
-          .present_mode(VK_PRESENT_MODE_FIFO_KHR)
-          .queue_family_index(queueFamilyResult->familyIndex)
-          .build(**physicalDeviceResult, **surfaceResult, **deviceResult);
-  REQUIRE(swapchainResult);
-  REQUIRE(*swapchainResult);
-  REQUIRE((**swapchainResult != VK_NULL_HANDLE));
+  platform::glfw::init();
+  std::unique_ptr<vka::instance> instancePtr = {};
+  vka::instance_builder{}
+      .add_extensions(platform::glfw::get_required_instance_extensions())
+      .add_layer(vka::standard_validation)
+      .build()
+      .map(move_into{instancePtr})
+      .map_error([](auto error) { REQUIRE(false); });
+
+  std::unique_ptr<vka::surface> surfacePtr = {};
+  vka::surface_builder{}
+      .width(100)
+      .height(100)
+      .title("test title")
+      .build(*instancePtr)
+      .map(move_into{surfacePtr})
+      .map_error([](auto error) { REQUIRE(false); });
+
+  VkPhysicalDevice physicalDevice = {};
+  physical_device_selector{}
+      .select(*instancePtr)
+      .map(move_into{physicalDevice})
+      .map_error([](auto error) { REQUIRE(false); });
+
+  queue_family queueFamily = {};
+  queue_family_builder{}
+      .graphics_support()
+      .present_support(*surfacePtr)
+      .queue(1.f)
+      .build(physicalDevice)
+      .map(move_into{queueFamily})
+      .map_error([](auto error) { REQUIRE(false); });
+
+  std::unique_ptr<device> devicePtr = {};
+  device_builder{}
+      .add_queue_family(queueFamily)
+      .physical_device(physicalDevice)
+      .extension(swapchain_extension)
+      .build(*instancePtr)
+      .map(move_into{devicePtr})
+      .map_error([](auto error) { REQUIRE(false); });
+      
+  std::unique_ptr<swapchain> swapchainPtr = {};
+  swapchain_builder{}
+      .present_mode(VK_PRESENT_MODE_FIFO_KHR)
+      .queue_family_index(queueFamily.familyIndex)
+      .build(physicalDevice, *surfacePtr, *devicePtr)
+      .map(move_into{swapchainPtr})
+      .map_error([](auto error) { REQUIRE(false); });
+  REQUIRE(swapchainPtr->operator VkSwapchainKHR() != VK_NULL_HANDLE);
 }
