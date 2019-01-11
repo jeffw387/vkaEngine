@@ -5,8 +5,8 @@
 #include "queue_family.hpp"
 #include "physical_device.hpp"
 #include "device.hpp"
-#include "platform_glfw.hpp"
 #include "surface.hpp"
+#include "platform_glfw.hpp"
 #include "move_into.hpp"
 
 using namespace vka;
@@ -52,7 +52,7 @@ TEST_CASE("Create a swapchain") {
       .build(*instancePtr)
       .map(move_into{devicePtr})
       .map_error([](auto error) { REQUIRE(false); });
-      
+
   std::unique_ptr<swapchain> swapchainPtr = {};
   swapchain_builder{}
       .present_mode(VK_PRESENT_MODE_FIFO_KHR)
