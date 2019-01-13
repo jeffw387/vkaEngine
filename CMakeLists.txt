@@ -302,6 +302,14 @@ target_link_libraries(command_pool.test PRIVATE
   device
   queue_family)
 
+add_module(command_buffer)
+target_link_libraries(command_buffer INTERFACE vulkan tl_expected command_pool)
+target_link_libraries(command_buffer.test PRIVATE
+  platform_glfw
+  physical_device
+  instance
+  device
+  queue_family)
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
