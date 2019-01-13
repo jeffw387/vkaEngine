@@ -312,6 +312,16 @@ target_link_libraries(render_pass.test PRIVATE
   queue_family
   device)
 
+add_module(pipeline_layout)
+target_link_libraries(pipeline_layout INTERFACE vulkan tl_expected)
+target_link_libraries(pipeline_layout.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device
+  descriptor_set_layout)
+
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
