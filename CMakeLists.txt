@@ -293,6 +293,15 @@ target_link_libraries(descriptor_set.test PRIVATE
   descriptor_pool
   descriptor_set_layout)
 
+add_module(command_pool)
+target_link_libraries(command_pool INTERFACE vulkan tl_expected)
+target_link_libraries(command_pool.test PRIVATE
+  platform_glfw
+  physical_device
+  instance
+  device
+  queue_family)
+
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
