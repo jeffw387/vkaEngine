@@ -257,20 +257,20 @@ target_link_libraries(surface.test PRIVATE instance)
 add_module(input)
 target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
-add_module(descriptor_pool)
-target_link_libraries(descriptor_pool INTERFACE vulkan tl_expected)
-target_link_libraries(descriptor_pool.test PRIVATE 
+add_module(descriptor_set_layout)
+target_link_libraries(descriptor_set_layout INTERFACE vulkan tl_expected)
+target_link_libraries(descriptor_set_layout.test PRIVATE 
   platform_glfw 
   physical_device 
   instance 
   device 
   queue_family)
 
-add_module(descriptor_set_layout)
-target_link_libraries(descriptor_set_layout INTERFACE vulkan tl_expected)
-target_link_libraries(descriptor_set_layout.test PRIVATE 
+add_module(descriptor_pool)
+target_link_libraries(descriptor_pool INTERFACE vulkan tl_expected descriptor_set_layout)
+target_link_libraries(descriptor_pool.test PRIVATE 
   platform_glfw 
-  physical_device 
+  physical_device
   instance 
   device 
   queue_family)
