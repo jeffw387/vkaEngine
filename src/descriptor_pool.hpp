@@ -4,6 +4,7 @@
 #include <memory>
 #include <tl/expected.hpp>
 #include <tuple>
+#include "descriptor_set_layout.hpp"
 
 namespace vka {
 class descriptor_pool {
@@ -13,7 +14,6 @@ public:
   operator VkDescriptorPool() { return m_pool; }
   ~descriptor_pool() { vkDestroyDescriptorPool(m_device, m_pool, nullptr); }
   bool individual_reset_allowed() const noexcept { return m_individualResetAllowed; }
-
 private:
   VkDevice m_device = {};
   VkDescriptorPool m_pool = {};
@@ -41,6 +41,19 @@ public:
 
   descriptor_pool_builder& add_type(VkDescriptorPoolSize pool_size) {
     m_poolSizes.push_back(std::move(pool_size));
+    return *this;
+  }
+
+  descriptor_pool_builder& add_type(VkDescriptorType type, uint32_t count) {
+    m_poolSizes.push_back({type, count});
+    return *this;
+  }
+
+  descriptor_pool_builder& add_layout(const descriptor_set_layout* layout, uint32_t maxSets) {
+    for (const auto& layoutBinding : layout->layout_bindings()) {
+      m_poolSizes.push_back({layoutBinding.descriptorType, layoutBinding.descriptorCount * maxSets});
+    }
+    m_createInfo.maxSets += maxSets;
     return *this;
   }
 
