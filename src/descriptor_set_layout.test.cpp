@@ -11,9 +11,9 @@
 using namespace vka;
 TEST_CASE("Create a layout") {
   platform::glfw::init();
-  std::unique_ptr<vka::instance> instancePtr = {};
-  vka::instance_builder{}
-      .add_layer(vka::standard_validation)
+  std::unique_ptr<instance> instancePtr = {};
+  instance_builder{}
+      .add_layer(standard_validation)
       .build()
       .map(move_into{instancePtr})
       .map_error([](auto error) { REQUIRE(false); });
