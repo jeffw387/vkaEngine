@@ -13,18 +13,13 @@ struct Dimensions {
   float farClip = {};
 };
 
-inline auto make_dimensions = [](float width, float height, float nearClip = -1.f, float farClip = 1.f) {
-  float halfWidth = width * 0.5f;
-  float halfHeight = height * 0.5f;
-  return Dimensions{
-    -halfWidth,
-    halfHeight,
-    halfWidth,
-    -halfHeight,
-    nearClip,
-    farClip
-  };
-};
+inline auto make_dimensions =
+    [](float width, float height, float nearClip = -1.f, float farClip = 1.f) {
+      float halfWidth = width * 0.5f;
+      float halfHeight = height * 0.5f;
+      return Dimensions{
+          -halfWidth, halfHeight, halfWidth, -halfHeight, nearClip, farClip};
+    };
 
 using Position = glm::vec3;
 
@@ -33,21 +28,21 @@ struct Matrices {
   glm::mat4 projection;
 };
 
-inline auto mat4_identity = [](){ return glm::mat4(1.f); };
+inline auto mat4_identity = []() { return glm::mat4(1.f); };
 inline auto make_view = [](Position position) {
   return glm::translate(mat4_identity(), position);
 };
 
-inline auto make_projection = [](Dimensions dimensions){
+inline auto make_projection = [](Dimensions dimensions) {
   return glm::ortho(
-    dimensions.left,
-    dimensions.right,
-    dimensions.bottom,
-    dimensions.top,
-    dimensions.nearClip,
-    dimensions.farClip);
+      dimensions.left,
+      dimensions.right,
+      dimensions.bottom,
+      dimensions.top,
+      dimensions.nearClip,
+      dimensions.farClip);
 };
-}
+}  // namespace Camera
 namespace vka {
 class OrthoCamera {
 public:

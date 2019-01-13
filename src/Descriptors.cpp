@@ -158,4 +158,4 @@ operator()(VkImageView view, VkImageLayout layout, VkSampler sampler) {
   imageInfo.sampler = sampler;
   valid = false;
 }
-}
+}  // namespace vka

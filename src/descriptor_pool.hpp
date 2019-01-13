@@ -9,11 +9,19 @@
 namespace vka {
 class descriptor_pool {
 public:
-  descriptor_pool(VkDevice device, VkDescriptorPool pool, bool individualResetAllowed)
-      : m_device(device), m_pool(pool), m_individualResetAllowed(individualResetAllowed) {}
+  descriptor_pool(
+      VkDevice device,
+      VkDescriptorPool pool,
+      bool individualResetAllowed)
+      : m_device(device),
+        m_pool(pool),
+        m_individualResetAllowed(individualResetAllowed) {}
   operator VkDescriptorPool() { return m_pool; }
   ~descriptor_pool() { vkDestroyDescriptorPool(m_device, m_pool, nullptr); }
-  bool individual_reset_allowed() const noexcept { return m_individualResetAllowed; }
+  bool individual_reset_allowed() const noexcept {
+    return m_individualResetAllowed;
+  }
+
 private:
   VkDevice m_device = {};
   VkDescriptorPool m_pool = {};
@@ -22,16 +30,20 @@ private:
 
 class descriptor_pool_builder {
 public:
-   tl::expected<std::unique_ptr<descriptor_pool>, VkResult> build(VkDevice device) {
+  tl::expected<std::unique_ptr<descriptor_pool>, VkResult> build(
+      VkDevice device) {
     VkDescriptorPool pool{};
     m_createInfo.poolSizeCount = static_cast<uint32_t>(m_poolSizes.size());
     m_createInfo.pPoolSizes = m_poolSizes.data();
-    m_createInfo.flags = m_individualResetAllowed ? VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT : 0;
+    m_createInfo.flags = m_individualResetAllowed
+                             ? VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
+                             : 0;
     auto result = vkCreateDescriptorPool(device, &m_createInfo, nullptr, &pool);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
-    return std::make_unique<descriptor_pool>(device, pool, m_individualResetAllowed);
+    return std::make_unique<descriptor_pool>(
+        device, pool, m_individualResetAllowed);
   }
 
   descriptor_pool_builder& max_sets(uint32_t count) {
@@ -49,9 +61,12 @@ public:
     return *this;
   }
 
-  descriptor_pool_builder& add_layout(const descriptor_set_layout* layout, uint32_t maxSets) {
+  descriptor_pool_builder& add_layout(
+      const descriptor_set_layout* layout,
+      uint32_t maxSets) {
     for (const auto& layoutBinding : layout->layout_bindings()) {
-      m_poolSizes.push_back({layoutBinding.descriptorType, layoutBinding.descriptorCount * maxSets});
+      m_poolSizes.push_back({layoutBinding.descriptorType,
+                             layoutBinding.descriptorCount * maxSets});
     }
     m_createInfo.maxSets += maxSets;
     return *this;

@@ -8,7 +8,7 @@
 
 namespace vka {
 static const char* swapchain_extension = "VK_KHR_swapchain";
-  
+
 struct device {
   explicit device(VkDevice device) : m_device(device) {}
   ~device() { vkDestroyDevice(m_device, nullptr); }

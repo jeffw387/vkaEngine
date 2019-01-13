@@ -240,7 +240,8 @@ struct no_device_found {};
 using physical_device_error = std::variant<no_device_found, VkResult>;
 
 struct physical_device_selector {
-  tl::expected<VkPhysicalDevice, physical_device_error> select(VkInstance instance) {
+  tl::expected<VkPhysicalDevice, physical_device_error> select(
+      VkInstance instance) {
     uint32_t count = {};
     auto countResult = vkEnumeratePhysicalDevices(instance, &count, nullptr);
     if (countResult != VK_SUCCESS) {
@@ -265,8 +266,7 @@ struct physical_device_selector {
           return physicalDevices[i];
         }
       }
-    }
-    else if (count > 0) {
+    } else if (count > 0) {
       return physicalDevices[0];
     }
     return tl::make_unexpected(no_device_found{});

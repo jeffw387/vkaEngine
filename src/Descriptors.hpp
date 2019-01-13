@@ -22,13 +22,13 @@ enum class DescriptorType {
   Sampler = VK_DESCRIPTOR_TYPE_SAMPLER
 };
 
-
-
 class BufferDescriptor {
 public:
   void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-  static constexpr DescriptorType descriptorType() { return DescriptorType::Uniform; }
+  static constexpr DescriptorType descriptorType() {
+    return DescriptorType::Uniform;
+  }
 
 private:
   bool valid = false;
@@ -39,7 +39,9 @@ class StorageBufferDescriptor {
 public:
   void operator()(VkBuffer newBuffer, VkDeviceSize newRange);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-  static constexpr DescriptorType descriptorType() { return DescriptorType::Storage; }
+  static constexpr DescriptorType descriptorType() {
+    return DescriptorType::Storage;
+  }
   VkShaderStageFlags shaderStage = {};
 
 private:
@@ -65,7 +67,7 @@ class ImageDescriptor {
 public:
   void operator()(VkImageView, VkImageLayout);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-static constexpr DescriptorType descriptorType() {
+  static constexpr DescriptorType descriptorType() {
     return DescriptorType::Image;
   }
   VkShaderStageFlags shaderStage = {};
@@ -79,7 +81,7 @@ class ImageSamplerDescriptor {
 public:
   void operator()(VkImageView, VkImageLayout, VkSampler = VK_NULL_HANDLE);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-static constexpr DescriptorType descriptorType() {
+  static constexpr DescriptorType descriptorType() {
     return DescriptorType::ImageSampler;
   }
   VkShaderStageFlags shaderStage = {};
@@ -93,7 +95,7 @@ class SamplerDescriptor {
 public:
   void operator()(VkSampler);
   std::optional<VkWriteDescriptorSet> writeDescriptor(DescriptorReference);
-static constexpr DescriptorType descriptorType() {
+  static constexpr DescriptorType descriptorType() {
     return DescriptorType::Sampler;
   }
   VkShaderStageFlags shaderStage = {};
@@ -112,10 +114,10 @@ using Descriptor = std::variant<
     ImageSamplerDescriptor>;
 
 struct DescriptorBinding {
-  
   uint32_t binding = {};
   VkShaderStageFlags stageFlags = {};
 };
-using DescriptorBindings = std::map<DescriptorBinding, std::vector<Descriptor*>>;
+using DescriptorBindings =
+    std::map<DescriptorBinding, std::vector<Descriptor*>>;
 
-}
+}  // namespace vka

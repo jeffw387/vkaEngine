@@ -9,9 +9,7 @@ struct State {
 
   T value() const { return data.value(); }
   T& value() { return data.value(); }
-  void sync() {
-    data.value() = future.get();
-  }
+  void sync() { data.value() = future.get(); }
 };
 
 template <typename T, size_t N>
@@ -26,9 +24,7 @@ class States {
   }
 
 public:
-  auto latest() {
-    return history.last();
-  }
+  auto latest() { return history.last(); }
 
   void add(std::shared_future<T> future) {
     if (history.size() == N) {
