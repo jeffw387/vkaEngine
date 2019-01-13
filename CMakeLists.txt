@@ -310,6 +310,16 @@ target_link_libraries(command_buffer.test PRIVATE
   instance
   device
   queue_family)
+
+add_module(render_pass)
+target_link_libraries(render_pass INTERFACE vulkan tl_expected tl_optional)
+target_link_libraries(render_pass.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
