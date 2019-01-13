@@ -139,6 +139,27 @@ target_compile_definitions(vkaEngine INTERFACE
   _CRT_SECURE_NO_WARNINGS)
 
 add_custom_target(vka_tests)
+add_custom_target(vka_tests_tidy)
+add_custom_target(vka_tests_format)
+add_custom_target(vka_tests_end)
+
+add_dependencies(vka_tests_tidy vka_tests)
+add_dependencies(vka_tests_format vka_tests_tidy)
+add_dependencies(vka_tests_end vka_tests_format)
+
+set (clang_format_cmd )
+add_custom_command(
+    TARGET vka_tests_format
+    POST_BUILD
+    USES_TERMINAL
+    VERBATIM
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ./clang-format-all.sh ${src_dir})
+
+add_custom_command(
+    TARGET vka_tests_tidy
+    POST_BUILD
+    COMMAND run-clang-tidy.py ${src_dir} -p ${CMAKE_CURRENT_BINARY_DIR} -fix -header-filter=${src_dir}/*,-gsl_lite.hpp,-spookyhash.*)
 
 function(setup_target target_name)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
@@ -151,20 +172,6 @@ function(setup_target target_name)
   if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     target_link_libraries(${target_name} PUBLIC stdc++fs)
   endif()
-endfunction()
-
-function(clang_format target_name file_name)
-  add_custom_command(
-    TARGET ${target_name}
-    POST_BUILD
-    COMMAND clang-format -i -style=file ${file_name})
-endfunction()
-
-function(clang_tidy target_name file_name)
-  add_custom_command(
-    TARGET ${target_name}
-    POST_BUILD
-    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR} -format-style=file -fix -header-filter=${src_dir}/*,-gsl_lite.hpp,-spookyhash.* ${file_name})
 endfunction()
 
 function(add_module module_name)
