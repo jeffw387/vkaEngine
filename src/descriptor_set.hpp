@@ -24,7 +24,9 @@ struct descriptor_set {
   descriptor_set& operator=(const descriptor_set&) = delete;
   descriptor_set& operator=(descriptor_set&&) = default;
   ~descriptor_set() {
+    if (m_allowIndividualReset) {
     vkFreeDescriptorSets(m_device, m_pool, 1, &m_set);
+  }
   }
   operator VkDescriptorSet() { return m_set; }
   descriptor_set_layout* set_layout() const noexcept { return m_layout; }
