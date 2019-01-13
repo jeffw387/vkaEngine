@@ -47,4 +47,13 @@ TEST_CASE("Create a layout") {
       .map(move_into{layoutPtr})
       .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(layoutPtr->operator VkDescriptorSetLayout() != VK_NULL_HANDLE);
+  auto bindings = layoutPtr->layout_bindings();
+  REQUIRE(bindings.size() == 1);
+  auto binding0 = bindings[0];
+  REQUIRE(binding0.binding == 0);
+  REQUIRE(binding0.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+  REQUIRE(binding0.descriptorCount == 1);
+  REQUIRE(
+      (binding0.stageFlags & VK_SHADER_STAGE_VERTEX_BIT) ==
+      VK_SHADER_STAGE_VERTEX_BIT);
 }
