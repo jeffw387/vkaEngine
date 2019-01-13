@@ -56,6 +56,7 @@ struct descriptor_set_layout_builder {
       VkShaderStageFlags stageFlags) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
     
@@ -69,6 +70,7 @@ struct descriptor_set_layout_builder {
       VkShaderStageFlags stageFlags) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
     
@@ -82,6 +84,7 @@ struct descriptor_set_layout_builder {
       VkShaderStageFlags stageFlags) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
     
@@ -95,6 +98,7 @@ struct descriptor_set_layout_builder {
       VkShaderStageFlags stageFlags) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
     
@@ -108,6 +112,7 @@ struct descriptor_set_layout_builder {
       VkShaderStageFlags stageFlags) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
     
@@ -122,9 +127,12 @@ struct descriptor_set_layout_builder {
       gsl::span<VkSampler> samplers) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
-    bindingDescription.pImmutableSamplers = samplers.data();
+    if (samplers.size() > 0) {
+      bindingDescription.pImmutableSamplers = samplers.data();
+    }
     
     m_bindings.push_back(std::move(bindingDescription));
     return *this;
@@ -137,9 +145,12 @@ struct descriptor_set_layout_builder {
       gsl::span<VkSampler> samplers) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
-    bindingDescription.pImmutableSamplers = samplers.data();
+    if (samplers.size() > 0) {
+      bindingDescription.pImmutableSamplers = samplers.data();
+    }
     
     m_bindings.push_back(std::move(bindingDescription));
     return *this;
@@ -151,6 +162,7 @@ struct descriptor_set_layout_builder {
       VkShaderStageFlags stageFlags) {
     VkDescriptorSetLayoutBinding bindingDescription = {};
     bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+    bindingDescription.descriptorCount = count;
     bindingDescription.binding = binding;
     bindingDescription.stageFlags = stageFlags;
     
