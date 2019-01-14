@@ -2,13 +2,14 @@
 #include <fstream>
 #include <vector>
 #include <experimental/filesystem>
-#include <outcome.hpp>
-#include <system_error>
+#include <tl/expected.hpp>
 #include <string>
 #include "gsl-lite.hpp"
-#include "Logger.hpp"
 
-enum class IOError {
+namespace IO {
+namespace fs = std::experimental::filesystem;
+
+enum class path_error {
   Success = 0,
   PathProblem,
   ReadProblem,
@@ -16,61 +17,10 @@ enum class IOError {
   UnknownProblem
 };
 
-namespace std {
-template <>
-struct is_error_code_enum<IOError> : std::true_type {};
-}  // namespace std
-
-namespace detail {
-class IOError_category : public std::error_category {
-public:
-  virtual const char* name() const noexcept override final {
-    return "IO error";
-  }
-  virtual std::string message(int c) const override final {
-    switch (static_cast<IOError>(c)) {
-      case IOError::Success:
-        return "Success";
-      case IOError::PathProblem:
-        return "Problem with the file path";
-      case IOError::ReadProblem:
-        return "Problem reading from the file";
-      case IOError::WriteProblem:
-        return "Problem writing to the file";
-      case IOError::UnknownProblem:
-      default:
-        return "Unknown IO error";
-    }
-  }
-
-  virtual std::error_condition default_error_condition(int c) const
-      noexcept override final {
-    switch (static_cast<IOError>(c)) {
-      case IOError::PathProblem:
-        return make_error_condition(std::errc::no_such_file_or_directory);
-      default:
-        return std::error_condition(c, *this);
-    }
-  }
-};
-}  // namespace detail
-
-extern inline const detail::IOError_category& IOError_category() {
-  static detail::IOError_category c;
-  return c;
-}
-
-inline std::error_code make_error_code(IOError e) {
-  return {static_cast<int>(e), IOError_category()};
-}
-
-namespace vka {
-namespace fs = std::experimental::filesystem;
-namespace outcome = OUTCOME_V2_NAMESPACE;
-inline outcome::result<std::vector<uint8_t>, IOError> loadBinaryFile(
+inline tl::expected<std::vector<uint8_t>, path_error> loadBinaryFile(
     fs::path filePath) {
   if (!fs::exists(filePath)) {
-    return IOError::PathProblem;
+    return tl::make_unexpected(path_error::PathProblem);
   }
   std::ifstream fileStream(
       filePath, std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
@@ -82,15 +32,17 @@ inline outcome::result<std::vector<uint8_t>, IOError> loadBinaryFile(
     fileStream.seekg(0, std::ios::beg);
     fileStream.read((char*)result.data(), streamLength);
     if (fileStream.bad() || fileStream.fail()) {
-      return IOError::ReadProblem;
+      return tl::make_unexpected(path_error::ReadProblem);
     }
     return result;
   }
-  return IOError::UnknownProblem;
+  return tl::make_unexpected(path_error::UnknownProblem);
 }
 
 template <typename T>
-inline IOError writeBinaryFile(fs::path filePath, gsl::span<T> data) {
+inline tl::expected<void, path_error> writeBinaryFile(
+    fs::path filePath,
+    gsl::span<T> data) {
   std::ofstream fileStream(
       filePath, std::ios_base::out | std::ios_base::binary);
   if (fileStream) {
@@ -98,10 +50,10 @@ inline IOError writeBinaryFile(fs::path filePath, gsl::span<T> data) {
     auto writeSize = data.length_bytes();
     fileStream.write((char*)data.data(), writeSize);
     if (fileStream.bad() || fileStream.fail()) {
-      return IOError::WriteProblem;
+      return tl::make_unexpected(path_error::WriteProblem);
     }
-    return IOError::Success;
+    return {};
   }
-  return IOError::PathProblem;
+  return tl::make_unexpected(path_error::PathProblem);
 }
-}  // namespace vka
+}  // namespace IO
