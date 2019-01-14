@@ -199,6 +199,8 @@ function(add_module module_name)
 
 endfunction()
 
+add_module(IO)
+target_link_libraries(IO INTERFACE tl_expected)
 
 add_module(Logger)
 target_link_libraries(Logger PUBLIC spdlog::spdlog)
