@@ -335,6 +335,9 @@ target_link_libraries(shader_module.test PRIVATE
   device)
 configure_file(${src_dir}/vert_shader.test.spv ${bin_dir}/vert_shader.test.spv COPYONLY)
 
+add_module(pipeline)
+target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
+
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)

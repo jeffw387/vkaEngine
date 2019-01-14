@@ -1,6 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <tl/expected.hpp>
+#include <tl/optional.hpp>
 #include <memory>
 #include <vector>
 #include <string_view>
@@ -109,10 +110,40 @@ struct graphics_pipeline_builder {
     stageCreateInfo.pSpecializationInfo = &m_shaderSpecializations.back();
     m_shaderStages.push_back(std::move(stageCreateInfo));
   }
+
+  template <typename T>
+  graphics_pipeline_builder& vertex_binding(uint32_t binding, VkVertexInputRate inputRate) {
+    m_vertexBindings.push_back()
+  }
 private:
   std::vector<std::vector<VkSpecializationMapEntry>> m_specializationMaps = {};
   std::vector<VkSpecializationInfo> m_shaderSpecializations = {};
   std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages = {};
+
+  std::vector<VkVertexInputBindingDescription> m_vertexBindings = {};
+  std::vector<VkVertexInputAttributeDescription> m_vertexAttributes = {};
+  VkPipelineVertexInputStateCreateInfo m_vertexInputInfo = {};
+
+  VkPipelineInputAssemblyStateCreateInfo m_inputAssemblyInfo = {};
+
+  tl::optional<VkPipelineTessellationStateCreateInfo> m_tesselationInfo = {};
+
+  std::vector<VkViewport> m_viewports = {};
+  std::vector<VkRect2D> m_scissors = {};
+  VkPipelineViewportStateCreateInfo m_viewportCreateInfo = {};
+
+  VkPipelineRasterizationStateCreateInfo m_rasterizationCreateInfo = {};
+
+  VkPipelineMultisampleStateCreateInfo m_multisampleCreateInfo = {};
+
+  VkPipelineDepthStencilStateCreateInfo m_depthStencilCreateInfo = {};
+
+  std::vector<VkPipelineColorBlendAttachmentState> m_colorAttachmentBlendStates = {};
+  VkPipelineColorBlendStateCreateInfo m_blendCreateInfo = {};
+
+  std::vector<VkDynamicState> m_dynamicStates = {};
+  VkPipelineDynamicStateCreateInfo m_dynamicStateCreateInfo = {};
+
   VkGraphicsPipelineCreateInfo m_createInfo = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
   VkPipelineCache m_cache = {};
 };
