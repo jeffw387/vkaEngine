@@ -325,6 +325,16 @@ target_link_libraries(pipeline_layout.test PRIVATE
   device
   descriptor_set_layout)
 
+add_module(shader_module)
+target_link_libraries(shader_module INTERFACE vulkan tl_expected IO)
+target_link_libraries(shader_module.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+configure_file(${src_dir}/vert_shader.test.spv ${bin_dir}/vert_shader.test.spv COPYONLY)
+
 # add_module(spookyhash)
 
 add_dependencies(vkaEngine glslangValidator)
