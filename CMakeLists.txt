@@ -10,6 +10,7 @@ project(vkaEngineProject
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "force static build" FORCE)
   
 set(src_dir "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
 configure_file("${src_dir}/version.hpp.in" 
   "${src_dir}/version.hpp" @ONLY)
 
