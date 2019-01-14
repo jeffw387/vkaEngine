@@ -10,9 +10,6 @@
 [submodule "external/spdlog"]
 	path = external/spdlog
 	url = https://github.com/jeffw387/spdlog.git
-[submodule "external/outcome"]
-	path = external/outcome
-	url = https://github.com/ned14/outcome.git
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
