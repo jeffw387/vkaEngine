@@ -348,6 +348,12 @@ configure_file(
   ${bin_dir}/frag_shader.test.spv 
   COPYONLY)
 
+add_module(buffer)
+add_module(image)
+add_module(image_view)
+add_module(fence)
+add_module(semaphore)
+
 add_module(pipeline)
 target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
 target_link_libraries(pipeline.test PRIVATE
