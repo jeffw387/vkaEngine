@@ -107,6 +107,8 @@ TEST_CASE("Create a default graphics pipeline") {
       .shader_stage(fragShaderStage)
       .viewport_scissor({}, {})
       .color_attachment(no_blend_attachment{})
+      .dynamic_state(VK_DYNAMIC_STATE_VIEWPORT)
+      .dynamic_state(VK_DYNAMIC_STATE_SCISSOR)
       .build(*devicePtr)
       .map(move_into{graphicsPipelinePtr})
       .map_error([](auto error) { REQUIRE(false); });
