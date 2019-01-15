@@ -58,16 +58,16 @@ TEST_CASE("Create a default graphics pipeline") {
       .build(*devicePtr)
       .map(move_into{pipelineLayoutPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  
+
   std::unique_ptr<shader_module> vertShaderPtr = {};
   shader_module_builder{}
       .build(*devicePtr, "vert_shader.test.spv")
       .map(move_into{vertShaderPtr})
       .map_error([](auto error) { REQUIRE(false); });
   auto vertShaderStage = shader_stage_builder{}
-    .shader_module(*vertShaderPtr, "main")
-    .vertex()
-    .build();
+                             .shader_module(*vertShaderPtr, "main")
+                             .vertex()
+                             .build();
 
   std::unique_ptr<shader_module> fragShaderPtr = {};
   shader_module_builder{}
@@ -75,40 +75,40 @@ TEST_CASE("Create a default graphics pipeline") {
       .map(move_into{fragShaderPtr})
       .map_error([](auto error) { REQUIRE(false); });
   auto fragShaderStage = shader_stage_builder{}
-    .shader_module(*fragShaderPtr, "main")
-    .fragment()
-    .build();
-  
+                             .shader_module(*fragShaderPtr, "main")
+                             .fragment()
+                             .build();
+
   std::unique_ptr<render_pass> renderPassPtr = {};
   render_pass_builder{}
-    .add_attachment(attachment_builder{}
-      .initial_layout(VK_IMAGE_LAYOUT_UNDEFINED)
-      .final_layout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-      .format(VK_FORMAT_B8G8R8A8_UNORM)
-      .samples(VK_SAMPLE_COUNT_1_BIT)
-      .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-      .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
-      .build())
-    .add_subpass(subpass_builder{}
-      .color_attachment(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-      .build())
-    .build(*devicePtr)
-    .map(move_into{renderPassPtr})
-    .map_error([](auto error) { REQUIRE(false); });
-  
+      .add_attachment(attachment_builder{}
+                          .initial_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+                          .final_layout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+                          .format(VK_FORMAT_B8G8R8A8_UNORM)
+                          .samples(VK_SAMPLE_COUNT_1_BIT)
+                          .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+                          .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
+                          .build())
+      .add_subpass(
+          subpass_builder{}
+              .color_attachment(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+              .build())
+      .build(*devicePtr)
+      .map(move_into{renderPassPtr})
+      .map_error([](auto error) { REQUIRE(false); });
+
   std::unique_ptr<pipeline> graphicsPipelinePtr = {};
   graphics_pipeline_builder{}
-    .render_pass(*renderPassPtr, 0)
-    .pipeline_layout(*pipelineLayoutPtr)
-    .polygon_mode(VkPolygonMode::VK_POLYGON_MODE_FILL)
-    .primitive_topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-    .shader_stage(vertShaderStage)
-    .shader_stage(fragShaderStage)
-    .viewport_scissor({}, {})
-    .color_attachment(no_blend_attachment{})
-    .build(*devicePtr)
-    .map(move_into{graphicsPipelinePtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .render_pass(*renderPassPtr, 0)
+      .pipeline_layout(*pipelineLayoutPtr)
+      .polygon_mode(VkPolygonMode::VK_POLYGON_MODE_FILL)
+      .primitive_topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+      .shader_stage(vertShaderStage)
+      .shader_stage(fragShaderStage)
+      .viewport_scissor({}, {})
+      .color_attachment(no_blend_attachment{})
+      .build(*devicePtr)
+      .map(move_into{graphicsPipelinePtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(graphicsPipelinePtr->operator VkPipeline() != VK_NULL_HANDLE);
-  
 }

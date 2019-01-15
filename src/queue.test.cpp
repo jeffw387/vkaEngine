@@ -39,12 +39,12 @@ TEST_CASE("Get queue from device") {
       .build(*instancePtr)
       .map(move_into{devicePtr})
       .map_error([](auto error) { REQUIRE(false); });
-  
+
   queue queueHandle;
   queue_builder{}
-    .queue_info(queueFamily, 0)
-    .build(*devicePtr)
-    .map(move_into{queueHandle})
-    .map_error([](auto error) {REQUIRE(false); });
+      .queue_info(queueFamily, 0)
+      .build(*devicePtr)
+      .map(move_into{queueHandle})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(queueHandle.operator VkQueue() != VK_NULL_HANDLE);
 }

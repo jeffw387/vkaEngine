@@ -99,7 +99,8 @@ struct subpass {
         static_cast<uint32_t>(m_colorAttachments.size());
     m_description.pColorAttachments = m_colorAttachments.data();
     m_description.pResolveAttachments = m_resolveAttachments.data();
-    m_description.pDepthStencilAttachment = (m_depthAttachment ? &*m_depthAttachment : nullptr);
+    m_description.pDepthStencilAttachment =
+        (m_depthAttachment ? &*m_depthAttachment : nullptr);
     m_description.preserveAttachmentCount =
         static_cast<uint32_t>(m_preserveAttachments.size());
     m_description.pPreserveAttachments = m_preserveAttachments.data();

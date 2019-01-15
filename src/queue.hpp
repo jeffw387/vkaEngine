@@ -6,9 +6,9 @@
 namespace vka {
 struct queue {
   queue() = default;
-  explicit queue(VkQueue queueHandle)
-  : m_queue(queueHandle) {}
+  explicit queue(VkQueue queueHandle) : m_queue(queueHandle) {}
   operator VkQueue() { return m_queue; }
+
 private:
   VkQueue m_queue = {};
 };
@@ -21,7 +21,8 @@ struct queue_builder {
       return tl::make_unexpected(queue_index_out_of_bounds{});
     }
     VkQueue queueHandle = {};
-    vkGetDeviceQueue(device, m_queueFamily.familyIndex, m_queueIndex, &queueHandle);
+    vkGetDeviceQueue(
+        device, m_queueFamily.familyIndex, m_queueIndex, &queueHandle);
     return queue(queueHandle);
   }
 
@@ -36,4 +37,4 @@ private:
   uint32_t m_queueIndex = {};
 };
 
-}
+}  // namespace vka

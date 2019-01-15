@@ -12,12 +12,16 @@ namespace vka {
 struct pipeline {
   pipeline(VkDevice device, VkPipeline pipelineHandle)
       : m_device(device), m_pipeline(pipelineHandle) {}
+
   pipeline(const pipeline&) = delete;
   pipeline(pipeline&&) = default;
   pipeline& operator=(const pipeline&) = delete;
   pipeline& operator=(pipeline&&) = default;
+
   ~pipeline() noexcept { vkDestroyPipeline(m_device, m_pipeline, nullptr); }
+  
   operator VkPipeline() const noexcept { return m_pipeline; }
+
 private:
   VkDevice m_device = {};
   VkPipeline m_pipeline = {};
@@ -121,16 +125,15 @@ struct graphics_pipeline_builder {
 
     m_rasterizationCreateInfo.lineWidth = 1.f;
 
-    m_blendCreateInfo.attachmentCount = 
-      static_cast<uint32_t>(m_colorAttachmentBlendStates.size());
-    m_blendCreateInfo.pAttachments = 
-      m_colorAttachmentBlendStates.data();
+    m_blendCreateInfo.attachmentCount =
+        static_cast<uint32_t>(m_colorAttachmentBlendStates.size());
+    m_blendCreateInfo.pAttachments = m_colorAttachmentBlendStates.data();
     for (int i = {}; i < 4; ++i) {
       m_blendCreateInfo.blendConstants[i] = 1.f;
     }
 
     m_dynamicStateCreateInfo.dynamicStateCount =
-      static_cast<uint32_t>(m_dynamicStates.size());
+        static_cast<uint32_t>(m_dynamicStates.size());
     m_dynamicStateCreateInfo.pDynamicStates = m_dynamicStates.data();
 
     m_createInfo.stageCount = static_cast<uint32_t>(m_shaderStages.size());
@@ -274,9 +277,11 @@ struct graphics_pipeline_builder {
     return *this;
   }
 
-  graphics_pipeline_builder& color_attachment(blend_attachment blendAttachment) {
+  graphics_pipeline_builder& color_attachment(
+      blend_attachment blendAttachment) {
     m_colorAttachmentBlendStates.push_back(std::visit(
-        [&](auto attachmentVariant) { return attachmentVariant.state; }, blendAttachment));
+        [&](auto attachmentVariant) { return attachmentVariant.state; },
+        blendAttachment));
     return *this;
   }
 
