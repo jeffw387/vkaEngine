@@ -218,6 +218,13 @@ add_module(physical_device)
 target_link_libraries(physical_device INTERFACE vulkan tl_optional tl_expected)
 target_link_libraries(physical_device.test PRIVATE instance platform_glfw)
 
+add_module(surface)
+target_link_libraries(surface INTERFACE vulkan tl_expected platform_glfw)
+target_link_libraries(surface.test PRIVATE instance)
+
+add_module(input)
+target_link_libraries(input PUBLIC vulkan surface platform_glfw)
+
 add_module(queue_family)
 target_link_libraries(queue_family INTERFACE vulkan tl_optional)
 target_link_libraries(queue_family.test PRIVATE 
@@ -247,13 +254,6 @@ target_link_libraries(swapchain.test PRIVATE
 # add_module(Text)
 
 # add_module(Camera)
-
-add_module(surface)
-target_link_libraries(surface INTERFACE vulkan tl_expected platform_glfw)
-target_link_libraries(surface.test PRIVATE instance)
-
-add_module(input)
-target_link_libraries(input PUBLIC vulkan surface platform_glfw)
 
 add_module(descriptor_set_layout)
 target_link_libraries(descriptor_set_layout INTERFACE vulkan tl_expected)
