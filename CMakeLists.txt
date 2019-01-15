@@ -104,6 +104,7 @@ target_include_directories(
   INTERFACE
   external/json/single_include)
   
+set(GLFW_VULKAN_STATIC OFF CACHE BOOL "Force dynamic loading of vulkan" FORCE)
 add_subdirectory(external/glfw)
   
 add_subdirectory(external/spdlog)
