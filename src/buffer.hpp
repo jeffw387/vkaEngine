@@ -54,7 +54,8 @@ private:
 struct buffer_builder {
   tl::expected<std::unique_ptr<buffer>, VkResult> build(
       VmaAllocator allocator) {
-    VkBufferCreateInfo bufferCreateInfo = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    VkBufferCreateInfo bufferCreateInfo = {
+        VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     bufferCreateInfo.usage = m_bufferUsage;
     bufferCreateInfo.size = m_bufferSize;
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -78,7 +79,7 @@ struct buffer_builder {
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
-    
+
     return std::make_unique<buffer>(allocator, allocation, bufferHandle);
   }
 

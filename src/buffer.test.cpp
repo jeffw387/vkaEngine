@@ -40,25 +40,25 @@ TEST_CASE("Create a 1024b vertex buffer (gpu-local)") {
       .build(*instancePtr)
       .map(move_into{devicePtr})
       .map_error([](auto error) { REQUIRE(false); });
-  
+
   VmaAllocatorCreateInfo allocatorInfo = {};
   allocatorInfo.physicalDevice = physicalDevice;
   allocatorInfo.device = *devicePtr;
-  
+
   VmaAllocator allocator = {};
   auto allocatorResult = vmaCreateAllocator(&allocatorInfo, &allocator);
   REQUIRE(allocatorResult == VK_SUCCESS);
-  
+
   std::unique_ptr<buffer> bufferPtr = {};
   buffer_builder{}
-    .size(1024)
-    .gpu_only()
-    .vertex_buffer()
-    .queue_family_index(queueFamily.familyIndex)
-    .transfer_destination()
-    .build(allocator)
-    .map(move_into{bufferPtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .size(1024)
+      .gpu_only()
+      .vertex_buffer()
+      .queue_family_index(queueFamily.familyIndex)
+      .transfer_destination()
+      .build(allocator)
+      .map(move_into{bufferPtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(bufferPtr->operator VkBuffer() != VK_NULL_HANDLE);
   REQUIRE(bufferPtr->operator VmaAllocation() != nullptr);
 }

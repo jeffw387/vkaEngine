@@ -19,7 +19,7 @@ struct pipeline {
   pipeline& operator=(pipeline&&) = default;
 
   ~pipeline() noexcept { vkDestroyPipeline(m_device, m_pipeline, nullptr); }
-  
+
   operator VkPipeline() const noexcept { return m_pipeline; }
 
 private:
