@@ -138,18 +138,13 @@ target_compile_definitions(vkaEngine INTERFACE
 add_custom_target(vka_tests)
 add_custom_target(vka_tests_tidy)
 add_custom_target(vka_tests_format)
-add_custom_target(vka_tests_end)
 
-add_dependencies(vka_tests_tidy vka_tests)
-add_dependencies(vka_tests_format vka_tests_tidy)
-add_dependencies(vka_tests_end vka_tests_format)
+# add_dependencies(vka_tests_tidy vka_tests)
+# add_dependencies(vka_tests_format vka_tests)
 
-set (clang_format_cmd )
 add_custom_command(
     TARGET vka_tests_format
     POST_BUILD
-    USES_TERMINAL
-    VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND ./clang-format-all.sh ${src_dir})
 
