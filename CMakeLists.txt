@@ -81,11 +81,6 @@ target_include_directories(stb INTERFACE external/stb)
 
 add_subdirectory(external/msdfgen)
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/outcome")
-add_library(outcome INTERFACE)
-target_include_directories(outcome INTERFACE
-  "${CMAKE_CURRENT_SOURCE_DIR}/external/outcome/single-header")
-
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/range-v3")
 
 find_package(Vulkan REQUIRED)
@@ -173,6 +168,7 @@ function(setup_target target_name)
   if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     target_link_libraries(${target_name} PUBLIC stdc++fs)
   endif()
+  target_link_libraries(${target_name} PUBLIC stdc++fs)
 endfunction()
 
 function(add_module module_name)
@@ -333,10 +329,27 @@ target_link_libraries(shader_module.test PRIVATE
   physical_device
   queue_family
   device)
-configure_file(${src_dir}/vert_shader.test.spv ${bin_dir}/vert_shader.test.spv COPYONLY)
+configure_file(
+  ${src_dir}/vert_shader.test.spv 
+  ${bin_dir}/vert_shader.test.spv 
+  COPYONLY)
+configure_file(
+  ${src_dir}/frag_shader.test.spv 
+  ${bin_dir}/frag_shader.test.spv 
+  COPYONLY)
 
 add_module(pipeline)
 target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
+target_link_libraries(pipeline.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device
+  descriptor_set_layout
+  pipeline_layout
+  shader_module
+  render_pass)
 
 # add_module(spookyhash)
 
