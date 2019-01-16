@@ -379,6 +379,18 @@ target_link_libraries(image.test PRIVATE
   device)
 
 add_module(image_view)
+target_link_libraries(image_view INTERFACE
+  vulkan
+  tl_expected
+  image)
+target_link_libraries(image_view.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device
+  image)
+
 add_module(fence)
 add_module(semaphore)
 
