@@ -1,4 +1,3 @@
-#define VMA_STATIC_VULKAN_FUNCTIONS
 #include "buffer.hpp"
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
@@ -7,6 +6,7 @@
 #include "physical_device.hpp"
 #include "queue_family.hpp"
 #include "device.hpp"
+#include "memory_allocator.hpp"
 #include "move_into.hpp"
 
 using namespace vka;
@@ -41,13 +41,13 @@ TEST_CASE("Create a 1024b vertex buffer (gpu-local)") {
       .map(move_into{devicePtr})
       .map_error([](auto error) { REQUIRE(false); });
 
-  VmaAllocatorCreateInfo allocatorInfo = {};
-  allocatorInfo.physicalDevice = physicalDevice;
-  allocatorInfo.device = *devicePtr;
-
-  VmaAllocator allocator = {};
-  auto allocatorResult = vmaCreateAllocator(&allocatorInfo, &allocator);
-  REQUIRE(allocatorResult == VK_SUCCESS);
+  std::unique_ptr<allocator> allocatorPtr = {};
+  allocator_builder{}
+    .physical_device(physicalDevice)
+    .device(*devicePtr)
+    .build()
+    .map(move_into{allocatorPtr})
+    .map_error([](auto error) { REQUIRE(false); });
 
   std::unique_ptr<buffer> bufferPtr = {};
   buffer_builder{}
@@ -56,7 +56,7 @@ TEST_CASE("Create a 1024b vertex buffer (gpu-local)") {
       .vertex_buffer()
       .queue_family_index(queueFamily.familyIndex)
       .transfer_destination()
-      .build(allocator)
+      .build(*allocatorPtr)
       .map(move_into{bufferPtr})
       .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(bufferPtr->operator VkBuffer() != VK_NULL_HANDLE);
