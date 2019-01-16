@@ -392,6 +392,16 @@ target_link_libraries(image_view.test PRIVATE
   image)
 
 add_module(fence)
+target_link_libraries(fence INTERFACE
+  vulkan
+  tl_expected)
+target_link_libraries(fence.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+  
 add_module(semaphore)
 add_module(framebuffer)
 
