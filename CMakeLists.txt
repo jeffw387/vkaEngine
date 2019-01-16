@@ -393,6 +393,7 @@ target_link_libraries(image_view.test PRIVATE
 
 add_module(fence)
 add_module(semaphore)
+add_module(framebuffer)
 
 add_module(pipeline)
 target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
