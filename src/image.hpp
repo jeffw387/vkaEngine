@@ -6,14 +6,27 @@
 #include <memory>
 
 namespace vka {
+enum class image_aspect {
+  color = VK_IMAGE_ASPECT_COLOR_BIT,
+  depth = VK_IMAGE_ASPECT_DEPTH_BIT
+};
+
 struct image {
   explicit image(
       VmaAllocator allocator,
       VmaAllocation allocation,
-      VkImage imageHandle)
+      VkImage imageHandle,
+      VkImageType imageType,
+      VkFormat imageFormat,
+      uint32_t arrayLayers,
+      image_aspect aspect)
       : m_allocator(allocator),
         m_allocation(allocation),
-        m_image(imageHandle) {}
+        m_image(imageHandle),
+        m_imageType(imageType),
+        m_imageFormat(imageFormat),
+        m_arrayLayers(arrayLayers),
+        m_aspect(aspect) {}
 
   image(const image&) = delete;
   image(image&&) = default;
@@ -25,10 +38,30 @@ struct image {
   operator VkImage() const noexcept { return m_image; }
   operator VmaAllocation() const noexcept { return m_allocation; }
 
+  VkImageType image_type() const noexcept {
+    return m_imageType;
+  }
+
+  VkFormat image_format() const noexcept {
+    return m_imageFormat;
+  }
+
+  uint32_t array_layers() const noexcept {
+    return m_arrayLayers;
+  }
+
+  image_aspect get_image_aspect() const noexcept {
+    return m_aspect;
+  }
+
 private:
   VmaAllocator m_allocator = {};
   VmaAllocation m_allocation = {};
   VkImage m_image = {};
+  VkImageType m_imageType = {};
+  VkFormat m_imageFormat = {};
+  uint32_t m_arrayLayers = {};
+  image_aspect m_aspect = {};
 };
 
 struct image_builder {
@@ -68,7 +101,14 @@ struct image_builder {
       return tl::make_unexpected(result);
     }
 
-    return std::make_unique<image>(allocator, allocation, imageHandle);
+    return std::make_unique<image>(
+      allocator, 
+      allocation, 
+      imageHandle, 
+      m_imageType, 
+      m_format,
+      m_arrayLayers,
+      m_aspect);
   }
 
   image_builder& format(VkFormat imageFormat) {
@@ -160,10 +200,12 @@ struct image_builder {
   }
   image_builder& color_attachment() {
     m_imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    m_aspect = image_aspect::color;
     return *this;
   }
   image_builder& depth_attachment() {
     m_imageUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    m_aspect = image_aspect::depth;
     return *this;
   }
   image_builder& transient() {
@@ -212,7 +254,6 @@ struct image_builder {
 
 private:
   VkFormat m_format = {};
-  VkImageAspectFlags m_imageAspect = {};
   VkImageType m_imageType = {};
   VkExtent3D m_imageExtent = {};
   VkImageTiling m_tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -224,5 +265,6 @@ private:
   VmaMemoryUsage m_memoryUsage = {};
   VmaPool m_memoryPool = {};
   uint32_t m_queueFamilyIndex = {};
+  image_aspect m_aspect = {};
 };
 }  // namespace vka
