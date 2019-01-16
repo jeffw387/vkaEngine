@@ -90,11 +90,11 @@ target_include_directories(vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(vulkan INTERFACE ${Vulkan_LIBRARIES})
 message("Vulkan Libraries: ${Vulkan_LIBRARIES}")
 
-add_library(VulkanMemoryAllocator)
-target_include_directories(VulkanMemoryAllocator 
-PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/VulkanMemoryAllocator/src")
-target_sources(VulkanMemoryAllocator PRIVATE ${src_dir}/VmaImplementation.cpp)
-target_link_libraries(VulkanMemoryAllocator PUBLIC vulkan)
+add_library(VulkanMemoryAllocator INTERFACE)
+target_include_directories(VulkanMemoryAllocator INTERFACE
+  external/VulkanMemoryAllocator/src)
+target_compile_definitions(VulkanMemoryAllocator INTERFACE
+  VMA_STATIC_VULKAN_FUNCTIONS)
 
 add_subdirectory(external/glm)
 
@@ -235,6 +235,18 @@ target_link_libraries(device.test PRIVATE
   queue_family 
   physical_device 
   platform_glfw)
+
+add_module(memory_allocator)
+target_link_libraries(memory_allocator PUBLIC
+  vulkan
+  tl_expected
+  VulkanMemoryAllocator)
+target_link_libraries(memory_allocator.test PRIVATE
+  platform_glfw
+  instance
+  queue_family
+  physical_device
+  device)
 
 add_module(queue)
 target_link_libraries(queue INTERFACE vulkan tl_expected queue_family)
