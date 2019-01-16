@@ -401,9 +401,10 @@ target_link_libraries(fence.test PRIVATE
   physical_device
   queue_family
   device)
-  
+
 add_module(semaphore)
 add_module(framebuffer)
+add_module(sampler)
 
 add_module(pipeline)
 target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
