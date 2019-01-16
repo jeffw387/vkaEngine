@@ -109,6 +109,12 @@ using blend_attachment =
 
 struct graphics_pipeline_builder {
   tl::expected<std::unique_ptr<pipeline>, VkResult> build(VkDevice device) {
+    for (size_t i{}; i < m_shaderStages.size(); ++i) {
+      m_shaderSpecializations[i].mapEntryCount = static_cast<uint32_t>(m_specializationMaps[i].size());
+      m_shaderSpecializations[i].pMapEntries = m_specializationMaps[i].data();
+      m_shaderStages[i].pSpecializationInfo = &m_shaderSpecializations[i];
+    }
+
     m_vertexInputInfo.vertexBindingDescriptionCount =
         static_cast<uint32_t>(m_vertexBindings.size());
     m_vertexInputInfo.pVertexBindingDescriptions = m_vertexBindings.data();
@@ -178,9 +184,6 @@ struct graphics_pipeline_builder {
     VkSpecializationInfo specInfo = {};
     specInfo.dataSize = stageData.dataSize;
     specInfo.pData = stageData.pData;
-    specInfo.mapEntryCount =
-        static_cast<uint32_t>(m_specializationMaps.back().size());
-    specInfo.pMapEntries = m_specializationMaps.back().data();
     m_shaderSpecializations.push_back(std::move(specInfo));
 
     VkPipelineShaderStageCreateInfo stageCreateInfo = {
@@ -188,7 +191,6 @@ struct graphics_pipeline_builder {
     stageCreateInfo.stage = stageData.shaderStage;
     stageCreateInfo.module = stageData.shaderModule;
     stageCreateInfo.pName = stageData.entryPoint.data();
-    stageCreateInfo.pSpecializationInfo = &m_shaderSpecializations.back();
     m_shaderStages.push_back(std::move(stageCreateInfo));
     return *this;
   }
