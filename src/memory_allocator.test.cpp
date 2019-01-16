@@ -42,10 +42,10 @@ TEST_CASE("Create an allocator") {
 
   std::unique_ptr<allocator> allocatorPtr = {};
   allocator_builder{}
-    .physical_device(physicalDevice)
-    .device(*devicePtr)
-    .build()
-    .map(move_into{allocatorPtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .physical_device(physicalDevice)
+      .device(*devicePtr)
+      .build()
+      .map(move_into{allocatorPtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(allocatorPtr->operator VmaAllocator() != nullptr);
 }

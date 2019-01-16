@@ -7,21 +7,18 @@
 
 namespace vka {
 struct image_view {
-  explicit image_view(VkDevice device, VkImageView imageView) 
-  : m_device(device), m_imageView(imageView) {}
-  
+  explicit image_view(VkDevice device, VkImageView imageView)
+      : m_device(device), m_imageView(imageView) {}
+
   image_view(const image_view&) = delete;
   image_view(image_view&&) = default;
   image_view& operator=(const image_view&) = delete;
   image_view& operator=(image_view&&) = default;
-  
-  ~image_view() noexcept {
-    vkDestroyImageView(m_device, m_imageView, nullptr);
-  }
 
-  operator VkImageView() const noexcept {
-    return m_imageView;
-  }
+  ~image_view() noexcept { vkDestroyImageView(m_device, m_imageView, nullptr); }
+
+  operator VkImageView() const noexcept { return m_imageView; }
+
 private:
   VkDevice m_device = {};
   VkImageView m_imageView = {};
@@ -31,22 +28,23 @@ struct image_type_not_supported {};
 
 auto convert = [](VkImageType type, bool arrayType) {
   switch (type) {
-      case VK_IMAGE_TYPE_1D:
+    case VK_IMAGE_TYPE_1D:
       return arrayType ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;
-      case VK_IMAGE_TYPE_2D:
+    case VK_IMAGE_TYPE_2D:
       return arrayType ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-      case VK_IMAGE_TYPE_3D:
+    case VK_IMAGE_TYPE_3D:
       return VK_IMAGE_VIEW_TYPE_3D;
-      default:
+    default:
       return VK_IMAGE_VIEW_TYPE_1D;
-    }
+  }
 };
 
 using image_view_expected = tl::expected<std::unique_ptr<image_view>, VkResult>;
 struct image_view_builder {
   image_view_expected build(VkDevice device) {
     image_view_expected expectedView = {};
-    VkImageViewCreateInfo createInfo = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+    VkImageViewCreateInfo createInfo = {
+        VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     createInfo.format = m_format;
     createInfo.image = m_image;
     createInfo.viewType = convert(m_imageType, m_arrayLayers > 1);
@@ -66,7 +64,8 @@ struct image_view_builder {
     m_arrayLayers = sourceImage.array_layers();
     m_imageType = sourceImage.image_type();
     m_format = sourceImage.image_format();
-    m_subrange.aspectMask = static_cast<VkImageAspectFlags>(sourceImage.get_image_aspect());
+    m_subrange.aspectMask =
+        static_cast<VkImageAspectFlags>(sourceImage.get_image_aspect());
     m_subrange.layerCount = VK_REMAINING_ARRAY_LAYERS;
     m_subrange.levelCount = VK_REMAINING_MIP_LEVELS;
     return *this;
@@ -79,4 +78,4 @@ private:
   VkFormat m_format = {};
   VkImageSubresourceRange m_subrange = {};
 };
-}
+}  // namespace vka

@@ -7,21 +7,17 @@
 
 namespace vka {
 struct allocator {
-  explicit allocator(VmaAllocator allocator)
-  : m_allocator(allocator) {}
-  
+  explicit allocator(VmaAllocator allocator) : m_allocator(allocator) {}
+
   allocator(const allocator&) = delete;
   allocator(allocator&&) = default;
   allocator& operator=(const allocator&) = delete;
   allocator& operator=(allocator&&) = default;
-  
-  ~allocator() noexcept {
-    vmaDestroyAllocator(m_allocator);
-  }
 
-  operator VmaAllocator() const noexcept {
-    return m_allocator;
-  }
+  ~allocator() noexcept { vmaDestroyAllocator(m_allocator); }
+
+  operator VmaAllocator() const noexcept { return m_allocator; }
+
 private:
   VmaAllocator m_allocator = {};
 };
@@ -56,6 +52,7 @@ struct allocator_builder {
     m_preferredBlockSize = size;
     return *this;
   }
+
 private:
   VkPhysicalDevice m_physicalDevice = {};
   VkDevice m_device = {};
@@ -65,4 +62,4 @@ private:
 // struct allocation_builder {
 //   VmaAllocationCreateInfo
 // };
-}
+}  // namespace vka

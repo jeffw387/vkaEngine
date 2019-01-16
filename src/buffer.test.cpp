@@ -43,11 +43,11 @@ TEST_CASE("Create a 1024b vertex buffer (gpu-local)") {
 
   std::unique_ptr<allocator> allocatorPtr = {};
   allocator_builder{}
-    .physical_device(physicalDevice)
-    .device(*devicePtr)
-    .build()
-    .map(move_into{allocatorPtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .physical_device(physicalDevice)
+      .device(*devicePtr)
+      .build()
+      .map(move_into{allocatorPtr})
+      .map_error([](auto error) { REQUIRE(false); });
 
   std::unique_ptr<buffer> bufferPtr = {};
   buffer_builder{}

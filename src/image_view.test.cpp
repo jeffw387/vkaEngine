@@ -11,7 +11,7 @@
 
 using namespace vka;
 TEST_CASE("Create an image view from an image") {
-    platform::glfw::init();
+  platform::glfw::init();
   std::unique_ptr<instance> instancePtr = {};
   instance_builder{}
       .add_layer(standard_validation)
@@ -43,30 +43,30 @@ TEST_CASE("Create an image view from an image") {
 
   std::unique_ptr<allocator> allocatorPtr = {};
   allocator_builder{}
-    .physical_device(physicalDevice)
-    .device(*devicePtr)
-    .build()
-    .map(move_into{allocatorPtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .physical_device(physicalDevice)
+      .device(*devicePtr)
+      .build()
+      .map(move_into{allocatorPtr})
+      .map_error([](auto error) { REQUIRE(false); });
 
   std::unique_ptr<image> imagePtr = {};
   image_builder{}
-    .gpu_only()
-    .format(VK_FORMAT_R32G32B32A32_SFLOAT)
-    .image_extent(100, 100)
-    .transfer_destination()
-    .sampled()
-    .type_2d()
-    .queue_family_index(queueFamily.familyIndex)
-    .build(*allocatorPtr)
-    .map(move_into{imagePtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .gpu_only()
+      .format(VK_FORMAT_R32G32B32A32_SFLOAT)
+      .image_extent(100, 100)
+      .transfer_destination()
+      .sampled()
+      .type_2d()
+      .queue_family_index(queueFamily.familyIndex)
+      .build(*allocatorPtr)
+      .map(move_into{imagePtr})
+      .map_error([](auto error) { REQUIRE(false); });
 
   std::unique_ptr<image_view> viewPtr = {};
   image_view_builder{}
-    .from_image(*imagePtr)
-    .build(*devicePtr)
-    .map(move_into{viewPtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .from_image(*imagePtr)
+      .build(*devicePtr)
+      .map(move_into{viewPtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(viewPtr->operator VkImageView() != VK_NULL_HANDLE);
 }

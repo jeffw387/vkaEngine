@@ -38,21 +38,13 @@ struct image {
   operator VkImage() const noexcept { return m_image; }
   operator VmaAllocation() const noexcept { return m_allocation; }
 
-  VkImageType image_type() const noexcept {
-    return m_imageType;
-  }
+  VkImageType image_type() const noexcept { return m_imageType; }
 
-  VkFormat image_format() const noexcept {
-    return m_imageFormat;
-  }
+  VkFormat image_format() const noexcept { return m_imageFormat; }
 
-  uint32_t array_layers() const noexcept {
-    return m_arrayLayers;
-  }
+  uint32_t array_layers() const noexcept { return m_arrayLayers; }
 
-  image_aspect get_image_aspect() const noexcept {
-    return m_aspect;
-  }
+  image_aspect get_image_aspect() const noexcept { return m_aspect; }
 
 private:
   VmaAllocator m_allocator = {};
@@ -102,13 +94,13 @@ struct image_builder {
     }
 
     return std::make_unique<image>(
-      allocator, 
-      allocation, 
-      imageHandle, 
-      m_imageType, 
-      m_format,
-      m_arrayLayers,
-      m_aspect);
+        allocator,
+        allocation,
+        imageHandle,
+        m_imageType,
+        m_format,
+        m_arrayLayers,
+        m_aspect);
   }
 
   image_builder& format(VkFormat imageFormat) {
@@ -129,7 +121,8 @@ struct image_builder {
     return *this;
   }
 
-  image_builder& image_extent(uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1) {
+  image_builder&
+  image_extent(uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1) {
     m_imageExtent = {width, height, depth};
     return *this;
   }
