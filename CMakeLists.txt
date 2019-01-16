@@ -355,7 +355,10 @@ configure_file(
   COPYONLY)
 
 add_module(buffer)
-target_link_libraries(buffer INTERFACE vulkan tl_expected VulkanMemoryAllocator)
+target_link_libraries(buffer INTERFACE
+  vulkan
+  tl_expected
+  memory_allocator)
 target_link_libraries(buffer.test PRIVATE
   platform_glfw
   instance
@@ -364,6 +367,17 @@ target_link_libraries(buffer.test PRIVATE
   device)
 
 add_module(image)
+target_link_libraries(image INTERFACE
+  vulkan
+  tl_expected
+  memory_allocator)
+target_link_libraries(image.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+
 add_module(image_view)
 add_module(fence)
 add_module(semaphore)
