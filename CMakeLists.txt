@@ -403,6 +403,14 @@ target_link_libraries(fence.test PRIVATE
   device)
 
 add_module(semaphore)
+target_link_libraries(semaphore INTERFACE vulkan tl_expected)
+target_link_libraries(semaphore.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+  
 add_module(framebuffer)
 add_module(sampler)
 
