@@ -7,6 +7,7 @@
 #include "queue_family.hpp"
 #include "device.hpp"
 #include "memory_allocator.hpp"
+#include "image.hpp"
 #include "move_into.hpp"
 
 using namespace vka;
