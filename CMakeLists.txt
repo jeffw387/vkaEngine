@@ -151,7 +151,7 @@ add_custom_command(
 add_custom_command(
     TARGET vka_tests_tidy
     POST_BUILD
-    COMMAND run-clang-tidy.py ${src_dir} -p ${CMAKE_CURRENT_BINARY_DIR} -fix -header-filter=${src_dir}/*,-gsl_lite.hpp,-spookyhash.*)
+    COMMAND run-clang-tidy ${src_dir} -p ${CMAKE_CURRENT_BINARY_DIR} -fix -header-filter=${src_dir}/*,-gsl_lite.hpp,-spookyhash.*)
 
 function(setup_target target_name)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 17)
