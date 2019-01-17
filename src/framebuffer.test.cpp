@@ -98,7 +98,7 @@ TEST_CASE("Create two images/views, create framebuffer and attach those views") 
       attachment_builder{}
         .initial_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
         .final_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        .format(VK_FORMAT_R8G8B8A8_SNORM)
+        .format(VK_FORMAT_R32G32B32A32_SFLOAT)
         .loadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
         .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
         .build())
@@ -106,7 +106,7 @@ TEST_CASE("Create two images/views, create framebuffer and attach those views") 
       attachment_builder{}
         .initial_layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
         .final_layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-        .format(VK_FORMAT_R8G8B8A8_SNORM)
+        .format(VK_FORMAT_R32G32B32A32_SFLOAT)
         .loadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
         .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
         .build())
@@ -121,5 +121,11 @@ TEST_CASE("Create two images/views, create framebuffer and attach those views") 
 
   std::unique_ptr<framebuffer> framebufferPtr = {};
   framebuffer_builder{}
-    .render_pass()
+    .render_pass(*renderPassPtr)
+    .dimensions(100, 100)
+    .attachments({*viewPtr0, *viewPtr1})
+    .build(*devicePtr)
+    .map(move_into{framebufferPtr})
+    .map_error([](auto error) { REQUIRE(false); });
+  REQUIRE(framebufferPtr->operator VkFramebuffer() != VK_NULL_HANDLE);
 }
