@@ -410,8 +410,19 @@ target_link_libraries(semaphore.test PRIVATE
   physical_device
   queue_family
   device)
-  
+
 add_module(framebuffer)
+target_link_libraries(framebuffer INTERFACE vulkan tl_expected image_view)
+target_link_libraries(framebuffer.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device
+  render_pass
+  image
+  image_view)
+
 add_module(sampler)
 
 add_module(pipeline)
