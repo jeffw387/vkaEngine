@@ -424,6 +424,15 @@ target_link_libraries(framebuffer.test PRIVATE
   image_view)
 
 add_module(sampler)
+target_link_libraries(sampler INTERFACE
+  vulkan
+  tl_expected)
+target_link_libraries(sampler.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
 
 add_module(pipeline)
 target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
