@@ -1,4 +1,4 @@
-#include "image_view.hpp"
+#include "semaphore.hpp"
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 #include "platform_glfw.hpp"
@@ -6,12 +6,10 @@
 #include "physical_device.hpp"
 #include "queue_family.hpp"
 #include "device.hpp"
-#include "memory_allocator.hpp"
-#include "image.hpp"
 #include "move_into.hpp"
 
 using namespace vka;
-TEST_CASE("Create an image view from an image") {
+TEST_CASE("Create a semaphore") {
   platform::glfw::init();
   std::unique_ptr<instance> instancePtr = {};
   instance_builder{}
@@ -41,33 +39,11 @@ TEST_CASE("Create an image view from an image") {
       .build(*instancePtr)
       .map(move_into{devicePtr})
       .map_error([](auto error) { REQUIRE(false); });
-
-  std::unique_ptr<allocator> allocatorPtr = {};
-  allocator_builder{}
-      .physical_device(physicalDevice)
-      .device(*devicePtr)
-      .build()
-      .map(move_into{allocatorPtr})
-      .map_error([](auto error) { REQUIRE(false); });
-
-  std::unique_ptr<image> imagePtr = {};
-  image_builder{}
-      .gpu_only()
-      .format(VK_FORMAT_R32G32B32A32_SFLOAT)
-      .image_extent(100, 100)
-      .transfer_destination()
-      .sampled()
-      .type_2d()
-      .queue_family_index(queueFamily.familyIndex)
-      .build(*allocatorPtr)
-      .map(move_into{imagePtr})
-      .map_error([](auto error) { REQUIRE(false); });
-
-  std::unique_ptr<image_view> viewPtr = {};
-  image_view_builder{}
-      .from_image(*imagePtr)
-      .build(*devicePtr)
-      .map(move_into{viewPtr})
-      .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(viewPtr->operator VkImageView() != VK_NULL_HANDLE);
+  
+  std::unique_ptr<semaphore> semaphorePtr = {};
+  semaphore_builder{}
+    .build(*devicePtr)
+    .map(move_into{semaphorePtr})
+    .map_error([](auto error) { REQUIRE(false); });
+  REQUIRE(semaphorePtr->operator VkSemaphore() != VK_NULL_HANDLE);
 }

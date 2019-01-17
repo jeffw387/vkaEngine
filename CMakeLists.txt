@@ -392,7 +392,38 @@ target_link_libraries(image_view.test PRIVATE
   image)
 
 add_module(fence)
+target_link_libraries(fence INTERFACE
+  vulkan
+  tl_expected)
+target_link_libraries(fence.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+
 add_module(semaphore)
+target_link_libraries(semaphore INTERFACE vulkan tl_expected)
+target_link_libraries(semaphore.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device)
+
+add_module(framebuffer)
+target_link_libraries(framebuffer INTERFACE vulkan tl_expected image_view)
+target_link_libraries(framebuffer.test PRIVATE
+  platform_glfw
+  instance
+  physical_device
+  queue_family
+  device
+  render_pass
+  image
+  image_view)
+
+add_module(sampler)
 
 add_module(pipeline)
 target_link_libraries(pipeline INTERFACE vulkan tl_expected tl_optional)
