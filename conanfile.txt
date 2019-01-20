@@ -7,3 +7,6 @@ stb/20180214@conan/stable
 jsonformoderncpp/3.5.0@vthiery/stable
 Catch2/2.5.0@catchorg/stable
 msdfgen/1.5@jeffw387/testing
+
+[generators]
+cmake
