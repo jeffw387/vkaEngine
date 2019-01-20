@@ -1,6 +1,7 @@
 #pragma once
 #include <variant>
 #include <map>
+#include <unordered_map>
 
 #include "spookyhash.hpp"
 #include "FlatList.hpp"
