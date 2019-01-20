@@ -42,3 +42,4 @@ vkaEngine-cppcheck-build-dir/
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/settings.json
+graph_info.json
