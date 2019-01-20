@@ -19,9 +19,12 @@ message("Conan compile definitions: ${CONAN_COMPILE_DEFINITIONS}")
 ##
 add_library(vkaEngine)
 target_link_libraries(vkaEngine PUBLIC ${CONAN_LIBS})
-# TODO: fix clang on linux filesystem linking
 if(NOT WIN32)
-  target_link_libraries(vkaEngine PUBLIC stdc++fs pthread vulkan)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(vkaEngine PUBLIC c++fs pthread vulkan)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries(vkaEngine PUBLIC stdc++fs pthread vulkan)
+  endif()
 endif()
 target_compile_definitions(vkaEngine PUBLIC GLFW_INCLUDE_NONE GLFW_INCLUDE_VULKAN)
 
