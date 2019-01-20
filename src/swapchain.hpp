@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <algorithm>
+#include <vector>
 #include <tl/expected.hpp>
 
 namespace vka {
