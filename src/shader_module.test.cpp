@@ -1,5 +1,5 @@
 #include "shader_module.hpp"
-#define CATCH_CONFIG_MAIN
+
 #include <catch2/catch.hpp>
 #include "device.hpp"
 #include "instance.hpp"
@@ -42,7 +42,7 @@ TEST_CASE("Create a shader module from test shader spv") {
 
   std::unique_ptr<shader_module> shaderPtr = {};
   shader_module_builder{}
-      .build(*devicePtr, "vert_shader.test.spv")
+      .build(*devicePtr, "../vert_shader.test.spv")
       .map(move_into{shaderPtr})
       .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(shaderPtr->operator VkShaderModule() != VK_NULL_HANDLE);

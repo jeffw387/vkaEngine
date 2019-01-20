@@ -1,5 +1,5 @@
 #include "swapchain.hpp"
-#define CATCH_CONFIG_MAIN
+
 #include <catch2/catch.hpp>
 #include "instance.hpp"
 #include "queue_family.hpp"

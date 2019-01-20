@@ -1,5 +1,5 @@
 #include "fence.hpp"
-#define CATCH_CONFIG_MAIN
+
 #include <catch2/catch.hpp>
 #include "platform_glfw.hpp"
 #include "instance.hpp"

@@ -1,5 +1,5 @@
 #include "pipeline.hpp"
-#define CATCH_CONFIG_MAIN
+
 #include <catch2/catch.hpp>
 #include "platform_glfw.hpp"
 #include "instance.hpp"
@@ -61,7 +61,7 @@ TEST_CASE("Create a default graphics pipeline") {
 
   std::unique_ptr<shader_module> vertShaderPtr = {};
   shader_module_builder{}
-      .build(*devicePtr, "vert_shader.test.spv")
+      .build(*devicePtr, "../vert_shader.test.spv")
       .map(move_into{vertShaderPtr})
       .map_error([](auto error) { REQUIRE(false); });
   auto vertShaderStage = shader_stage_builder{}
@@ -71,7 +71,7 @@ TEST_CASE("Create a default graphics pipeline") {
 
   std::unique_ptr<shader_module> fragShaderPtr = {};
   shader_module_builder{}
-      .build(*devicePtr, "frag_shader.test.spv")
+      .build(*devicePtr, "../frag_shader.test.spv")
       .map(move_into{fragShaderPtr})
       .map_error([](auto error) { REQUIRE(false); });
   auto fragShaderStage = shader_stage_builder{}
