@@ -25,7 +25,7 @@ if(NOT WIN32)
 endif()
 target_compile_definitions(vkaEngine PUBLIC GLFW_INCLUDE_NONE GLFW_INCLUDE_VULKAN)
 
-add_executable(vka_tests ${src_dir}/vkaCatch.hpp)
+add_executable(vka_tests ${src_dir}/vkaCatch.cpp)
 target_link_libraries(vka_tests PRIVATE vkaEngine)
 
 add_custom_target(vka_tests_tidy)
