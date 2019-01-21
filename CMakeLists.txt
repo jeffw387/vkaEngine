@@ -26,7 +26,6 @@ if(NOT WIN32)
     target_link_libraries(vkaEngine PUBLIC stdc++fs pthread vulkan)
   endif()
 endif()
-target_compile_definitions(vkaEngine PUBLIC GLFW_INCLUDE_NONE GLFW_INCLUDE_VULKAN)
 
 add_executable(vka_tests ${src_dir}/vkaCatch.cpp)
 target_link_libraries(vka_tests PRIVATE vkaEngine)
