@@ -16,7 +16,7 @@ struct command_buffer {
         m_commandBuffer(commandBuffer),
         m_canReset(canReset) {}
   command_buffer(const command_buffer&) = delete;
-  command_buffer(command_buffer&) = default;
+  command_buffer(command_buffer&&) = default;
   command_buffer& operator=(const command_buffer&) = delete;
   command_buffer& operator=(command_buffer&&) = default;
   ~command_buffer() {
