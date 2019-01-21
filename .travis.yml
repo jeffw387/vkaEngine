@@ -21,6 +21,7 @@ install:
   - sudo apt install ninja-build libvulkan-dev libvulkan1 vulkan-utils xorg-dev libglu1-mesa-dev
   - pip install conan --user
   - conan user
+  - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
   - mkdir build && cd build && conan install .. --build=missing && conan build ..
 dist: xenial
