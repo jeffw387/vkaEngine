@@ -26,7 +26,7 @@ private:
 
 struct image_type_not_supported {};
 
-auto convert = [](VkImageType type, bool arrayType) {
+inline auto convert = [](VkImageType type, bool arrayType) {
   switch (type) {
     case VK_IMAGE_TYPE_1D:
       return arrayType ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;
