@@ -14,7 +14,7 @@ class vkaEngineConan(ConanFile):
     generators = "cmake"
     exports_sources = "!build/*", "*"
     build_policy = "missing"
-    requires = "glfw/3.2.1@sesame/stable", "glm/0.9.9.1@g-truc/stable", "VulkanMemoryAllocator/2.0.0@sesame/stable", "spdlog/1.3.0@bincrafters/stable", "stb/20180214@conan/stable", "jsonformoderncpp/3.5.0@vthiery/stable", "Catch2/2.5.0@catchorg/stable", "tl_expected/0.2@jeffw387/testing", "tl_optional/0.5@jeffw387/testing"
+    requires = "vulkan-sdk/1.X.X@jeffw387/testing", "glfw/3.2.1@sesame/stable", "glm/0.9.9.1@g-truc/stable", "VulkanMemoryAllocator/2.0.0@sesame/stable", "spdlog/1.3.0@bincrafters/stable", "stb/20180214@conan/stable", "jsonformoderncpp/3.5.0@vthiery/stable", "Catch2/2.5.0@catchorg/stable", "tl_expected/0.2@jeffw387/testing", "tl_optional/0.5@jeffw387/testing"
         
     def build(self):
         cmake = CMake(self)
@@ -30,5 +30,5 @@ class vkaEngineConan(ConanFile):
         self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ["vkaEngine", "vulkan"]
+        self.cpp_info.libs = ["vkaEngine"]
         self.cpp_info.includedirs = ["src"]
