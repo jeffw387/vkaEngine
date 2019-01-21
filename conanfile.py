@@ -30,5 +30,5 @@ class vkaEngineConan(ConanFile):
         self.copy("*.a", dst="lib", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ["vkaEngine"]
+        self.cpp_info.libs = ["vkaEngine", "vulkan"]
         self.cpp_info.includedirs = ["src"]
