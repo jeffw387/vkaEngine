@@ -12,7 +12,7 @@ class vkaEngineConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
     generators = "cmake"
-    exports_sources = "!build/*", "*"
+    exports_sources = "!build/*", "!.vs", "!.vscode", "!.git", "*"
     build_policy = "missing"
     requires = "vulkan-sdk/1.X.X@jeffw387/testing", "glfw/3.2.1@sesame/stable", "glm/0.9.9.1@g-truc/stable", "VulkanMemoryAllocator/2.0.0@sesame/stable", "spdlog/1.3.0@bincrafters/stable", "stb/20180214@conan/stable", "jsonformoderncpp/3.5.0@vthiery/stable", "Catch2/2.5.0@catchorg/stable", "tl_expected/0.2@jeffw387/testing", "tl_optional/0.5@jeffw387/testing"
         
