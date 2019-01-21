@@ -19,7 +19,7 @@ install:
   - sudo add-apt-repository -y ppa:graphics-drivers/ppa
   - sudo apt-get update
   - sudo apt install ninja-build libvulkan-dev libvulkan1 vulkan-utils xorg-dev libglu1-mesa-dev
-  - pip install conan
+  - pip install conan --user
   - conan user
 script:
   - mkdir build && cd build && conan install .. && conan build ..
