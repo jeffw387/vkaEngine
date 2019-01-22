@@ -130,6 +130,7 @@ struct swapchain_builder {
           extent = value;
         })
         .map_error([](auto error) { return error; });
+    m_createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     m_createInfo.preTransform = transformSelect(physicalDevice, surface);
     m_createInfo.compositeAlpha = compositeAlphaSelect(physicalDevice, surface);
     m_createInfo.imageArrayLayers = m_imageArrayLayers;
