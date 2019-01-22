@@ -1,6 +1,0 @@
-User Side:
-Create Instance
-Add Device
-Add Surface
-Set Device extensions
-Set Device QueueTraits (this will guide queue selection)
