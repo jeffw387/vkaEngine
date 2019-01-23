@@ -58,8 +58,4 @@ private:
   VkDevice m_device = {};
   VkDeviceSize m_preferredBlockSize = {};
 };
-
-// struct allocation_builder {
-//   VmaAllocationCreateInfo
-// };
 }  // namespace vka
