@@ -76,6 +76,11 @@ struct image_view_builder {
     return *this;
   }
 
+  image_view_builder& image_format(VkFormat format) {
+    m_format = format;
+    return *this;
+  }
+
   image_view_builder& array_layers(uint32_t count) {
     m_arrayLayers = count;
     return *this;
