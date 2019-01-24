@@ -71,6 +71,28 @@ struct image_view_builder {
     return *this;
   }
 
+  image_view_builder& image_source(VkImage imageSource) {
+    m_image = imageSource;
+    return *this;
+  }
+
+  image_view_builder& array_layers(uint32_t count) {
+    m_arrayLayers = count;
+    return *this;
+  }
+
+  image_view_builder& image_type(VkImageType type) {
+    m_imageType = type;
+    return *this;
+  }
+
+  image_view_builder& image_aspect(VkImageAspectFlags aspect) {
+    m_subrange.aspectMask = aspect;
+    m_subrange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    m_subrange.levelCount = VK_REMAINING_MIP_LEVELS;
+    return *this;
+  }
+
 private:
   VkImage m_image = {};
   VkImageType m_imageType = {};
