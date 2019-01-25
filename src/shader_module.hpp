@@ -7,6 +7,7 @@
 #include <experimental/filesystem>
 #include "IO.hpp"
 #include "move_into.hpp"
+#include <spirv_cross.hpp>
 
 namespace fs = std::experimental::filesystem;
 namespace vka {
@@ -24,8 +25,9 @@ struct shader_module {
   operator VkShaderModule() const noexcept { return m_shaderModule; }
 
 private:
-  VkDevice m_device = {};
-  VkShaderModule m_shaderModule = {};
+  VkDevice m_device{};
+  VkShaderModule m_shaderModule{};
+  spirv_cross::ShaderResources m_resources{};
 };
 
 using shader_error = std::variant<VkResult, IO::path_error>;
@@ -35,10 +37,13 @@ struct shader_module_builder {
   auto build(VkDevice device, fs::path shaderPath) -> shader_expected {
     if (auto shaderBytesExpected = IO::loadBinaryFile(shaderPath)) {
       auto& shaderBytes = shaderBytesExpected.value();
+      auto shaderBytes32 = reinterpret_cast<const uint32_t*>(shaderBytes.data());
+      spirv_cross::Compiler compiler{shaderBytes32, shaderBytes.size() / 4};
+
       VkShaderModuleCreateInfo createInfo{
           VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
       createInfo.codeSize = shaderBytes.size();
-      createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderBytes.data());
+      createInfo.pCode = shaderBytes32;
 
       VkShaderModule shaderModule = {};
       auto shaderResult =
