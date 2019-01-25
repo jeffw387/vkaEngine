@@ -4,16 +4,21 @@
 #include <memory>
 #include <vector>
 #include <variant>
+#include <optional>
+#include <unordered_map>
 #include <experimental/filesystem>
 #include "IO.hpp"
 #include "move_into.hpp"
+#include <spirv.hpp>
 #include <spirv_cross.hpp>
 
 namespace fs = std::experimental::filesystem;
 namespace vka {
+
+
 struct shader_module {
-  shader_module(VkDevice device, VkShaderModule shaderModule)
-      : m_device(device), m_shaderModule(shaderModule) {}
+  shader_module(VkDevice device, VkShaderModule shaderModule, const uint32_t* dataPtr, size_t wordCount)
+      : m_device(device), m_shaderModule(shaderModule), m_compiler{dataPtr, wordCount} {}
   shader_module(const shader_module&) = delete;
   shader_module(shader_module&&) = default;
   shader_module& operator=(const shader_module&) = delete;
@@ -23,11 +28,29 @@ struct shader_module {
   }
 
   operator VkShaderModule() const noexcept { return m_shaderModule; }
-
+  auto& compiler() { return m_compiler; }
 private:
   VkDevice m_device{};
   VkShaderModule m_shaderModule{};
-  spirv_cross::ShaderResources m_resources{};
+  spirv_cross::Compiler m_compiler;
+};
+
+constexpr auto setsFromShader = [](shader_module& shader) -> std::vector<VkDescriptorSetLayoutCreateInfo> {
+  auto& comp = shader.compiler();
+  auto resources = comp.get_shader_resources();
+  auto specConstants = comp.get_specialization_constants();
+  std::vector<VkDescriptorSetLayoutCreateInfo> layouts;
+  std::unordered_map<uint32_t /*set*/, std::vector<VkDescriptorSetLayoutBinding>> bindings;
+  for (spirv_cross::Resource& uniformBuffer : resources.uniform_buffers) {
+    auto setID = comp.get_decoration(resource.id, spv::Decoration::DecorationDescriptorSet);
+    auto binding = comp.get_decoration(resource.id, spv::Decoration::DecorationBinding);
+    VkDescriptorSetLayoutBinding layoutBinding{};
+    layoutBinding.binding = binding;
+    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBinding.descriptorCount =;
+    bindings[setID].push_back(std::move(layoutBinding));
+  }
+  return {};
 };
 
 using shader_error = std::variant<VkResult, IO::path_error>;
@@ -38,7 +61,6 @@ struct shader_module_builder {
     if (auto shaderBytesExpected = IO::loadBinaryFile(shaderPath)) {
       auto& shaderBytes = shaderBytesExpected.value();
       auto shaderBytes32 = reinterpret_cast<const uint32_t*>(shaderBytes.data());
-      spirv_cross::Compiler compiler{shaderBytes32, shaderBytes.size() / 4};
 
       VkShaderModuleCreateInfo createInfo{
           VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
@@ -52,7 +74,7 @@ struct shader_module_builder {
         return tl::make_unexpected(shaderResult);
       }
 
-      return std::make_unique<shader_module>(device, shaderModule);
+      return std::make_unique<shader_module>(device, shaderModule, shaderBytes32, shaderBytes.size() / 4);
     } else {
       return tl::make_unexpected(shaderBytesExpected.error());
     }
