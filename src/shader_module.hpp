@@ -7,10 +7,11 @@
 #include <optional>
 #include <unordered_map>
 #include <experimental/filesystem>
-#include "IO.hpp"
+#include "io.hpp"
 #include "move_into.hpp"
 #include <spirv.hpp>
 #include <spirv_cross.hpp>
+#include <logger.hpp>
 
 namespace fs = std::experimental::filesystem;
 namespace vka {
@@ -35,21 +36,34 @@ private:
   spirv_cross::Compiler m_compiler;
 };
 
-constexpr auto setsFromShader = [](shader_module& shader) -> std::vector<VkDescriptorSetLayoutCreateInfo> {
+inline auto uniformBuffersFromShader = [](spirv_cross::Compiler comp&, spirv_cross::ShaderResources& resources) {
+  for (spirv_cross::Resource& uniformBuffer : resources.uniform_buffers) {
+    std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+    auto spirType = comp.get_type(uniformBuffer.base_type_id);
+    auto setID = comp.get_decoration(resource.id, spv::Decoration::DecorationDescriptorSet);
+    auto binding = comp.get_decoration(resource.id, spv::Decoration::DecorationBinding);
+      VkDescriptorSetLayoutBinding layoutBinding{};
+      layoutBinding.
+      layoutBinding.binding = binding;
+      layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      layoutBinding.descriptorCount = 1;
+      bindings[setID].push_back(std::move(layoutBinding));
+    if (comp.is_array(spirType)) {
+      multi_logger::get()->critical("Error: shader is using uniform buffer array (not supported)!")
+      multi_logger::get()->critical("Name: {}", comp.get_name(uniformBuffer.base_type_id));
+    }
+  }
+};
+
+inline auto setsFromShader = [](shader_module& shader) -> std::vector<VkDescriptorSetLayoutCreateInfo> {
   auto& comp = shader.compiler();
   auto resources = comp.get_shader_resources();
   auto specConstants = comp.get_specialization_constants();
   std::vector<VkDescriptorSetLayoutCreateInfo> layouts;
   std::unordered_map<uint32_t /*set*/, std::vector<VkDescriptorSetLayoutBinding>> bindings;
-  for (spirv_cross::Resource& uniformBuffer : resources.uniform_buffers) {
-    auto setID = comp.get_decoration(resource.id, spv::Decoration::DecorationDescriptorSet);
-    auto binding = comp.get_decoration(resource.id, spv::Decoration::DecorationBinding);
-    VkDescriptorSetLayoutBinding layoutBinding{};
-    layoutBinding.binding = binding;
-    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    layoutBinding.descriptorCount =;
-    bindings[setID].push_back(std::move(layoutBinding));
-  }
+
+  // Not supporting arrays of uniform buffers right now
+  
   return {};
 };
 

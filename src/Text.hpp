@@ -13,8 +13,8 @@
 #include <optional>
 #include <msdfgen.h>
 #include "gsl-lite.hpp"
-#include "IO.hpp"
-#include "Logger.hpp"
+#include "io.hpp"
+#include "logger.hpp"
 
 namespace Text {
 namespace fs = std::experimental::filesystem;

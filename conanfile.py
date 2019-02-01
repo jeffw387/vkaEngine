@@ -12,7 +12,8 @@ class vkaEngineConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
     generators = "cmake"
-    exports_sources = "!build/*", "!.vs", "!.vscode", "!.git", "*"
+    exports = "*/CMakeLists.txt", "!build"
+    exports_sources = "!build", "*.hpp", "*.cpp"
     build_policy = "missing"
     requires = ("vulkan-sdk/1.X.X@jeffw387/testing", 
         "spirv-cross/2019.01.18e@jeffw387/testing", 

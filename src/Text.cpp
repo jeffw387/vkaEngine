@@ -1,6 +1,6 @@
 #define STB_RECT_PACK_IMPLEMENTATION
 #define STB_TRUETYPE_IMPLEMENTATION
-#include "Text.hpp"
+#include "text.hpp"
 
 namespace Text {
 using namespace ranges;

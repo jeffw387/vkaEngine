@@ -1,4 +1,4 @@
-#include "ObjectPool.hpp"
+#include "object_pool.hpp"
 
 #include <catch2/catch.hpp>
 

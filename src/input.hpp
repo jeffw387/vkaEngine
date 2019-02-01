@@ -4,8 +4,8 @@
 #include <unordered_map>
 
 #include "spookyhash.hpp"
-#include "FlatList.hpp"
-#include "Clock.hpp"
+#include "flat_list.hpp"
+#include "clock.hpp"
 #include "surface.hpp"
 
 namespace input {

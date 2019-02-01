@@ -1,4 +1,4 @@
-#include "Logger.hpp"
+#include "logger.hpp"
 
 std::shared_ptr<spdlog::sinks::sink> multi_logger::fileSink = {};
 std::shared_ptr<spdlog::sinks::sink> multi_logger::stdoutSink = {};

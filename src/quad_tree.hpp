@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
-#include "IntrusiveList.hpp"
+#include "intrusive_list.hpp"
 
 namespace QT {
 struct Rect {

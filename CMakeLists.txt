@@ -8,11 +8,20 @@ project(vkaEngineProject
   VERSION ${EngineVersionMajor}.${EngineVersionMinor}.${EngineVersionPatch})
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
-include(${bin_dir}/conanbuildinfo.cmake)
-conan_basic_setup()
-message("Conan Include dirs: ${CONAN_INCLUDE_DIRS}")
-message("Conan cxx flags: ${CONAN_CXX_FLAGS}")
-message("Conan compile definitions: ${CONAN_COMPILE_DEFINITIONS}")
+
+# Download automatically, you can also just copy the conan.cmake file
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.13/conan.cmake"
+                 "${CMAKE_BINARY_DIR}/conan.cmake")
+endif()
+
+include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+conan_cmake_run(CONANFILE conanfile.py
+                BASIC_SETUP
+                PROFILE default
+                BUILD missing)
 
 ##
 ## Modules
@@ -27,7 +36,7 @@ if(NOT WIN32)
   endif()
 endif()
 
-add_executable(vka_tests ${src_dir}/vkaCatch.cpp)
+add_executable(vka_tests ${src_dir}/catch_main.cpp)
 target_link_libraries(vka_tests PRIVATE vkaEngine)
 
 add_custom_target(vka_tests_tidy)
@@ -58,8 +67,8 @@ function(add_module module_name)
 
 endfunction()
 
-add_module(IO)
-add_module(Logger)
+add_module(io)
+add_module(logger)
 add_module(sync_helper)
 add_module(platform_glfw)
 add_module(instance)
