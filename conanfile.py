@@ -1,6 +1,5 @@
 from conans import ConanFile, CMake
 
-
 class vkaEngineConan(ConanFile):
     name = "vkaEngine"
     version = "0.0.1"
@@ -15,7 +14,8 @@ class vkaEngineConan(ConanFile):
     exports = "*/CMakeLists.txt", "!build"
     exports_sources = "!build", "*.hpp", "*.cpp"
     build_policy = "missing"
-    requires = ("vulkan-sdk/1.X.X@jeffw387/testing", 
+    requires = (
+        "vulkan-sdk/1.X.X@jeffw387/testing", 
         "spirv-cross/2019.01.18e@jeffw387/testing", 
         "glfw/3.2.1@sesame/stable", 
         "glm/0.9.9.1@g-truc/stable", 
