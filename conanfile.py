@@ -2,7 +2,7 @@ from conans import ConanFile, CMake
 
 class vkaEngineConan(ConanFile):
     name = "vkaEngine"
-    version = "0.0.1"
+    version = "0.0.2"
     license = "MIT"
     author = "Jeff Wright jeffw387@gmail.com"
     url = "https://github.com/jeffw387/vkaEngine.git"
