@@ -96,11 +96,11 @@ add_module(semaphore)
 add_module(framebuffer)
 add_module(sampler)
 add_module(pipeline)
-configure_file(
-  ${src_dir}/vert_shader.test.spv 
-  ${bin_dir}/vert_shader.test.spv 
-  COPYONLY)
-configure_file(
-  ${src_dir}/frag_shader.test.spv 
-  ${bin_dir}/frag_shader.test.spv 
-  COPYONLY)
+# configure_file(
+#   ${src_dir}/vert_shader.test.spv 
+#   ${bin_dir}/vert_shader.test.spv 
+#   COPYONLY)
+# configure_file(
+#   ${src_dir}/frag_shader.test.spv 
+#   ${bin_dir}/frag_shader.test.spv 
+#   COPYONLY)
