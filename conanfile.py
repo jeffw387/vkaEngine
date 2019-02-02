@@ -11,7 +11,7 @@ class vkaEngineConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
     generators = "cmake"
-    exports = "*/CMakeLists.txt", "!build"
+    exports = "CMakeLists.txt", "!build"
     exports_sources = "!build", "*.hpp", "*.cpp"
     build_policy = "missing"
     requires = (
