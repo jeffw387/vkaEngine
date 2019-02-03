@@ -20,7 +20,8 @@ include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 conan_cmake_run(CONANFILE conanfile.py
                 BASIC_SETUP
-                PROFILE default
+                PROFILE_AUTO
+                SETTINGS cppstd=17
                 BUILD missing)
 
 ##
