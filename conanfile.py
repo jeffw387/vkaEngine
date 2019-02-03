@@ -16,7 +16,6 @@ class vkaEngineConan(ConanFile):
     build_policy = "missing"
     requires = (
         "vulkan-sdk/1.X.X@jeffw387/testing", 
-        "spirv-cross/2019.01.18e@jeffw387/testing", 
         "glfw/3.2.1@sesame/stable", 
         "glm/0.9.9.1@g-truc/stable", 
         "VulkanMemoryAllocator/2.2.0@jeffw387/testing", 
