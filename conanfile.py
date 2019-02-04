@@ -24,7 +24,8 @@ class vkaEngineConan(ConanFile):
         "jsonformoderncpp/3.5.0@vthiery/stable", 
         "Catch2/2.5.0@catchorg/stable", 
         "tl_expected/0.2@jeffw387/testing", 
-        "tl_optional/0.5@jeffw387/testing")
+        "tl_optional/0.5@jeffw387/testing",
+        "json-shader/latest@jeffw387/testing")
         
     def build(self):
         cmake = CMake(self)
