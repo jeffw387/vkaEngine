@@ -5,6 +5,7 @@
 #include <vector>
 #include <tl/expected.hpp>
 #include "gsl-lite.hpp"
+#include <make_shader.hpp>
 
 namespace vka {
 struct descriptor_set_layout {
