@@ -175,11 +175,70 @@ private:
   std::vector<VkDescriptorSetLayoutBinding> m_bindings = {};
 };
 
-inline auto make_set_layouts(std::vector<jshd::shader_data> shaders) {
-  std::map<uint32_t /*set #*/, descriptor_set_layout_builder> layout_builders;
+struct descriptor_set_layout_data {
+  VkDescriptorSetLayoutCreateInfo createInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+  std::map<uint32_t /*binding #*/, VkDescriptorSetLayoutBinding> bindings;
+};
+
+inline auto make_buffer_binding(VkShaderStageFlagBits stageBits, jshd::buffer_data buffer) {
+        VkDescriptorSetLayoutBinding bindingData{};
+        auto& [binding, type, count, stage, pSamplers] = bindingData;
+        binding = buffer.binding;
+        switch(buffer.bufferType) {
+          default:
+          case jshd::buffer_type::uniform:
+            if (buffer.dynamic) {
+              type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            } else {
+              type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            }
+            break;
+          case jshd::buffer_type::storage:
+            if (buffer.dynamic) {
+              type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+            } else {
+              type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            }
+            break;
+        }
+        count = 1;
+        stage |= stageBits;
+        return bindingData;
+}
+
+inline auto make_image_binding(VkShaderStageFlagBits stageBits, jshd::image_data image) {
+  VkDescriptorSetLayoutBinding bindingData{};
+  auto& [binding, type, count, stage, pSamplers] = bindingData;
+  binding = image.binding;
+  type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+  count = image.count;
+  stage |= stageBits;
+  return bindingData;
+}
+
+inline auto make_sampler_binding(VkShaderStageFlagBits stageBits, jshd::sampler_data sampler) {
+  VkDescriptorSetLayoutBinding bindingData{};
+  auto& [binding, type, count, stage, pSamplers] = bindingData;
+}
+
+inline auto make_set_layouts(std::vector<jshd::shader_data> shaders, VkDevice device) {
+  std::map<uint32_t /*set #*/, descriptor_set_layout_data> layoutData;
 
   std::vector<std::unique_ptr<descriptor_set_layout>> layouts;
-  for (auto shader)
+  for (jshd::shader_data shader : shaders) {
+    for (jshd::buffer_data buffer : shader.buffers) {
+      auto& [info, bindings] = layoutData[buffer.set];
+      bindings[buffer.binding] = make_buffer_binding(shader.stage, buffer);
+    }
+    for (jshd::image_data image : shader.images) {
+      auto& [info, bindings] = layoutData[image.set];
+      bindings[image.binding] = make_image_binding(shader.stage, image);
+    }
+    for (jshd::sampler_data sampler : shader.samplers) {
+      auto& [info, bindings] = layoutData[sampler.set];
+      bindings[sampler.binding] = make_sampler_binding(shader.stage, sampler);
+    }
+  }
   
 }
 }  // namespace vka
