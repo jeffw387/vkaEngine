@@ -174,4 +174,12 @@ struct descriptor_set_layout_builder {
 private:
   std::vector<VkDescriptorSetLayoutBinding> m_bindings = {};
 };
+
+inline auto make_set_layouts(std::vector<jshd::shader_data> shaders) {
+  std::map<uint32_t /*set #*/, descriptor_set_layout_builder> layout_builders;
+
+  std::vector<std::unique_ptr<descriptor_set_layout>> layouts;
+  for (auto shader)
+  
+}
 }  // namespace vka
