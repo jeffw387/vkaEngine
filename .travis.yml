@@ -11,6 +11,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - ubuntu-desktop/gnome-3-26
+            - ppa:graphics-drivers/ppa
           packages:
             - g++-7
             - ninja-build 
@@ -32,7 +34,7 @@ install:
   # - sudo add-apt-repository -y ppa:graphics-drivers/ppa
   # - sudo apt-get update
   # - sudo apt install 
-  # - pip install setuptools --user
+  - pip3 install setuptools --user
   - pip3 install conan --user
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
