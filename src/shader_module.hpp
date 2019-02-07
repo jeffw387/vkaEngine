@@ -47,12 +47,7 @@ struct shader_module_builder {
       createInfo.codeSize = shaderBytes.size();
       createInfo.pCode = shaderBytes32;
 
-      VkShaderModule shaderModule = {};
-      auto shaderResult =
-          vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
-      if (shaderResult != VK_SUCCESS) {
-        return tl::make_unexpected(shaderResult);
-      }
+using shader_error = std::variant<VkResult, io::path_error>;
 
       return std::make_unique<shader_module>(device, shaderModule);
     } else {

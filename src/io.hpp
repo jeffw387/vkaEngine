@@ -6,7 +6,7 @@
 #include <string>
 #include "gsl-lite.hpp"
 
-namespace IO {
+namespace io {
 namespace fs = std::experimental::filesystem;
 
 enum class path_error {
