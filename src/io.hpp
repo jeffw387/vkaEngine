@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <experimental/filesystem>
 #include <tl/expected.hpp>
@@ -22,19 +23,16 @@ inline tl::expected<std::vector<uint8_t>, path_error> read_binary_file(
   if (!fs::exists(filePath)) {
     return tl::make_unexpected(path_error::PathProblem);
   }
-  std::ifstream fileStream(
-      filePath, std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
+  std::fstream fileStream(
+      filePath, std::ios_base::binary | std::ios_base::in);
   size_t streamLength{};
-  std::vector<uint8_t> result;
   if (fileStream) {
-    streamLength = fileStream.tellg();
-    result.resize(streamLength);
-    fileStream.seekg(0, std::ios::beg);
-    fileStream.read((char*)result.data(), streamLength);
-    if (fileStream.bad() || fileStream.fail()) {
+    std::basic_stringstream<uint8_t> ss;
+    ss << fileStream.rdbuf();
+    if (!fileStream) {
       return tl::make_unexpected(path_error::ReadProblem);
     }
-    return result;
+    return ss.str();
   }
   return tl::make_unexpected(path_error::UnknownProblem);
 }
@@ -57,7 +55,10 @@ inline tl::expected<void, path_error> write_binary_file(
   return tl::make_unexpected(path_error::PathProblem);
 }
 
-// inline auto read_text_file read_text_file(fs::path filePath) {
-  
-// }
+inline auto read_text_file(fs::path filePath) {
+  std::ifstream f(filePath);
+  std::stringstream ss;
+  ss << f.rdbuf();
+  return ss.str();
+}
 }  // namespace IO

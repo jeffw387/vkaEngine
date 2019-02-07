@@ -11,7 +11,9 @@
 #include "move_into.hpp"
 #include "logger.hpp"
 #include <make_shader.hpp>
+#include <nlohmann/json.hpp>
 
+using nlohmann::json;
 namespace fs = std::experimental::filesystem;
 namespace vka {
 
@@ -43,6 +45,7 @@ using shader_error = std::variant<VkResult, io::path_error>;
 using shader_expected =
     tl::expected<shader_module_data, shader_error>;
 inline auto make_shader(VkDevice device, std::string_view name) {
-  // io::
+  auto j = json::parse(io::read_text_file(fs::path(name) + ".json"));
+  auto
 }
 }  // namespace vka
