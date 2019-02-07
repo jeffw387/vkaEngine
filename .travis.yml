@@ -2,7 +2,7 @@ language:
   - cpp
   - python
 dist: xenial
-python: 3.7
+python: "3.7"
 sudo: true
 matrix:
   include:
