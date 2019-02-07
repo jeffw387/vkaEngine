@@ -11,9 +11,7 @@
 
 namespace vka {
 struct descriptor_set_layout {
-  explicit descriptor_set_layout(
-      VkDevice device,
-      VkDescriptorSetLayout layout)
+  explicit descriptor_set_layout(VkDevice device, VkDescriptorSetLayout layout)
       : m_device(device), m_layout(layout) {}
   descriptor_set_layout(const descriptor_set_layout&) = delete;
   descriptor_set_layout(descriptor_set_layout&&) = default;
@@ -157,11 +155,10 @@ inline auto make_set_layouts(
       if (immutableSamplers) {
         samplers.reserve(elementCount);
         std::for_each(
-            std::begin(elements),
-            std::end(elements),
-            [&](auto& element) { samplers.push_back(*element.samplerPtr); });
-            bindings.push_back({
-                i, type, elementCount, stage, samplers.data()});
+            std::begin(elements), std::end(elements), [&](auto& element) {
+              samplers.push_back(*element.samplerPtr);
+            });
+        bindings.push_back({i, type, elementCount, stage, samplers.data()});
       } else {
         bindings.push_back({i, type, elementCount, stage, nullptr});
       }
@@ -171,11 +168,13 @@ inline auto make_set_layouts(
     createInfo.bindingCount = bindingCount;
     createInfo.pBindings = bindings.data();
     VkDescriptorSetLayout setLayout{};
-    auto layoutResult = vkCreateDescriptorSetLayout(device, &createInfo, nullptr, &setLayout);
+    auto layoutResult =
+        vkCreateDescriptorSetLayout(device, &createInfo, nullptr, &setLayout);
     if (layoutResult != VK_SUCCESS) {
       exit(layoutResult);
     }
-    set.setLayoutPtr = std::make_unique<descriptor_set_layout>(device, setLayout);
+    set.setLayoutPtr =
+        std::make_unique<descriptor_set_layout>(device, setLayout);
   }
   return setData;
 }
