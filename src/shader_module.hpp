@@ -14,7 +14,6 @@
 namespace fs = std::experimental::filesystem;
 namespace vka {
 
-
 struct shader_module {
   shader_module(VkDevice device, VkShaderModule shaderModule)
       : m_device(device), m_shaderModule(shaderModule) {}
@@ -27,6 +26,7 @@ struct shader_module {
   }
 
   operator VkShaderModule() const noexcept { return m_shaderModule; }
+
 private:
   VkDevice m_device{};
   VkShaderModule m_shaderModule{};
@@ -39,7 +39,8 @@ struct shader_module_builder {
   auto build(VkDevice device, fs::path shaderPath) -> shader_expected {
     if (auto shaderBytesExpected = IO::loadBinaryFile(shaderPath)) {
       auto& shaderBytes = shaderBytesExpected.value();
-      auto shaderBytes32 = reinterpret_cast<const uint32_t*>(shaderBytes.data());
+      auto shaderBytes32 =
+          reinterpret_cast<const uint32_t*>(shaderBytes.data());
 
       VkShaderModuleCreateInfo createInfo{
           VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};

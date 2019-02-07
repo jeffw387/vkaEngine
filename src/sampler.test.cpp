@@ -42,10 +42,10 @@ TEST_CASE("Create a sampler") {
 
   std::unique_ptr<sampler> samplerPtr = {};
   sampler_builder{}
-    .set_border_color(transparent_border{})
-    .set_border_type(float{})
-    .build(*devicePtr)
-    .map(move_into{samplerPtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .set_border_color(transparent_border{})
+      .set_border_type(float{})
+      .build(*devicePtr)
+      .map(move_into{samplerPtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(samplerPtr->operator VkSampler() != VK_NULL_HANDLE);
 }

@@ -7,18 +7,17 @@
 namespace vka {
 struct fence {
   explicit fence(VkDevice device, VkFence fence)
-  : m_device(device), m_fence(fence) {}
-  
+      : m_device(device), m_fence(fence) {}
+
   fence(const fence&) = delete;
   fence(fence&&) = default;
   fence& operator=(const fence&) = delete;
   fence& operator=(fence&&) = default;
-  
-  ~fence() noexcept {
-    vkDestroyFence(m_device, m_fence, nullptr);
-  }
+
+  ~fence() noexcept { vkDestroyFence(m_device, m_fence, nullptr); }
 
   operator VkFence() const noexcept { return m_fence; }
+
 private:
   VkDevice m_device = {};
   VkFence m_fence = {};
@@ -46,4 +45,4 @@ struct fence_builder {
 private:
   bool m_createSignaled = {};
 };
-}
+}  // namespace vka

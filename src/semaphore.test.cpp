@@ -39,11 +39,11 @@ TEST_CASE("Create a semaphore") {
       .build(*instancePtr)
       .map(move_into{devicePtr})
       .map_error([](auto error) { REQUIRE(false); });
-  
+
   std::unique_ptr<semaphore> semaphorePtr = {};
   semaphore_builder{}
-    .build(*devicePtr)
-    .map(move_into{semaphorePtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .build(*devicePtr)
+      .map(move_into{semaphorePtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(semaphorePtr->operator VkSemaphore() != VK_NULL_HANDLE);
 }

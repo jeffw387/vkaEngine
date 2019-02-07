@@ -7,18 +7,19 @@
 namespace vka {
 struct framebuffer {
   explicit framebuffer(VkDevice device, VkFramebuffer framebufferHandle)
-  : m_device(device), m_framebuffer(framebufferHandle) {}
-  
+      : m_device(device), m_framebuffer(framebufferHandle) {}
+
   framebuffer(const framebuffer&) = delete;
   framebuffer(framebuffer&&) = default;
   framebuffer& operator=(const framebuffer&) = delete;
   framebuffer& operator=(framebuffer&&) = default;
-  
+
   ~framebuffer() noexcept {
     vkDestroyFramebuffer(m_device, m_framebuffer, nullptr);
   }
 
   operator VkFramebuffer() const noexcept { return m_framebuffer; }
+
 private:
   VkDevice m_device = {};
   VkFramebuffer m_framebuffer = {};
@@ -26,7 +27,8 @@ private:
 
 struct framebuffer_builder {
   tl::expected<std::unique_ptr<framebuffer>, VkResult> build(VkDevice device) {
-    VkFramebufferCreateInfo createInfo = {VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO};
+    VkFramebufferCreateInfo createInfo = {
+        VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO};
     createInfo.renderPass = m_renderPass;
     createInfo.width = m_width;
     createInfo.height = m_height;
@@ -35,7 +37,8 @@ struct framebuffer_builder {
     createInfo.pAttachments = m_views.data();
 
     VkFramebuffer framebufferHandle = {};
-    auto result = vkCreateFramebuffer(device, &createInfo, nullptr, &framebufferHandle);
+    auto result =
+        vkCreateFramebuffer(device, &createInfo, nullptr, &framebufferHandle);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
@@ -48,7 +51,8 @@ struct framebuffer_builder {
     return *this;
   }
 
-  framebuffer_builder& dimensions(uint32_t width = 1, uint32_t height = 1, uint32_t layers = 1) {
+  framebuffer_builder&
+  dimensions(uint32_t width = 1, uint32_t height = 1, uint32_t layers = 1) {
     m_width = width;
     m_height = height;
     m_layers = layers;
@@ -59,7 +63,7 @@ struct framebuffer_builder {
     m_views = std::move(views);
     return *this;
   }
-  
+
 private:
   VkRenderPass m_renderPass = {};
   uint32_t m_width = {};
@@ -67,4 +71,4 @@ private:
   uint32_t m_layers = {};
   std::vector<VkImageView> m_views = {};
 };
-}
+}  // namespace vka

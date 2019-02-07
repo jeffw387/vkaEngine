@@ -42,9 +42,9 @@ TEST_CASE("Create a signaled fence") {
 
   std::unique_ptr<fence> fencePtr = {};
   fence_builder{}
-    .signaled()
-    .build(*devicePtr)
-    .map(move_into{fencePtr})
-    .map_error([](auto error) { REQUIRE(false); });
+      .signaled()
+      .build(*devicePtr)
+      .map(move_into{fencePtr})
+      .map_error([](auto error) { REQUIRE(false); });
   REQUIRE(fencePtr->operator VkFence() != VK_NULL_HANDLE);
 }
