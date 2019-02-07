@@ -3,17 +3,18 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <vector>
+#include <algorithm>
 #include <tl/expected.hpp>
-#include "gsl-lite.hpp"
 #include <make_shader.hpp>
+#include "gsl-lite.hpp"
+#include "sampler.hpp"
 
 namespace vka {
 struct descriptor_set_layout {
   explicit descriptor_set_layout(
       VkDevice device,
-      VkDescriptorSetLayout layout,
-      std::vector<VkDescriptorSetLayoutBinding> bindings)
-      : m_device(device), m_layout(layout), m_bindings(std::move(bindings)) {}
+      VkDescriptorSetLayout layout)
+      : m_device(device), m_layout(layout) {}
   descriptor_set_layout(const descriptor_set_layout&) = delete;
   descriptor_set_layout(descriptor_set_layout&&) = default;
   descriptor_set_layout& operator=(const descriptor_set_layout&) = delete;
@@ -22,223 +23,159 @@ struct descriptor_set_layout {
     vkDestroyDescriptorSetLayout(m_device, m_layout, nullptr);
   }
   operator VkDescriptorSetLayout() { return m_layout; }
-  const std::vector<VkDescriptorSetLayoutBinding>& layout_bindings() const
-      noexcept {
-    return m_bindings;
-  }
 
 private:
   VkDevice m_device = {};
   VkDescriptorSetLayout m_layout = {};
-  std::vector<VkDescriptorSetLayoutBinding> m_bindings = {};
 };
 
-struct descriptor_set_layout_builder {
-  tl::expected<std::unique_ptr<descriptor_set_layout>, VkResult> build(
-      VkDevice device) {
-    VkDescriptorSetLayoutCreateInfo createInfo = {
-        VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-    createInfo.bindingCount = static_cast<uint32_t>(m_bindings.size());
-    createInfo.pBindings = m_bindings.data();
-
-    VkDescriptorSetLayout layout = {};
-    auto result =
-        vkCreateDescriptorSetLayout(device, &createInfo, nullptr, &layout);
-    if (result != VK_SUCCESS) {
-      return tl::make_unexpected(result);
-    }
-    return std::make_unique<descriptor_set_layout>(device, layout, m_bindings);
-  }
-
-  descriptor_set_layout_builder& uniform_buffer(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder& uniform_buffer_dynamic(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType =
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder& storage_buffer(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder& storage_buffer_dynamic(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType =
-        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder&
-  image(uint32_t binding, uint32_t count, VkShaderStageFlags stageFlags) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder& sampler(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags,
-      gsl::span<VkSampler> samplers) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-    if (samplers.size() > 0) {
-      bindingDescription.pImmutableSamplers = samplers.data();
-    }
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder& combined_image_sampler(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags,
-      gsl::span<VkSampler> samplers) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType =
-        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-    if (samplers.size() > 0) {
-      bindingDescription.pImmutableSamplers = samplers.data();
-    }
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-  descriptor_set_layout_builder& input_attachment(
-      uint32_t binding,
-      uint32_t count,
-      VkShaderStageFlags stageFlags) {
-    VkDescriptorSetLayoutBinding bindingDescription = {};
-    bindingDescription.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-    bindingDescription.descriptorCount = count;
-    bindingDescription.binding = binding;
-    bindingDescription.stageFlags = stageFlags;
-
-    m_bindings.push_back(std::move(bindingDescription));
-    return *this;
-  }
-
-private:
-  std::vector<VkDescriptorSetLayoutBinding> m_bindings = {};
+struct element_data {
+  std::unique_ptr<sampler> samplerPtr;
 };
 
-struct descriptor_set_layout_data {
-  VkDescriptorSetLayoutCreateInfo createInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-  std::map<uint32_t /*binding #*/, VkDescriptorSetLayoutBinding> bindings;
+struct binding_data {
+  VkShaderStageFlags stageFlags;
+  VkDescriptorType type;
+  std::vector<element_data> elementData;
+  bool immutableSamplers;
 };
 
-inline auto make_buffer_binding(VkShaderStageFlagBits stageBits, jshd::buffer_data buffer) {
-        VkDescriptorSetLayoutBinding bindingData{};
-        auto& [binding, type, count, stage, pSamplers] = bindingData;
-        binding = buffer.binding;
-        switch(buffer.bufferType) {
-          default:
-          case jshd::buffer_type::uniform:
-            if (buffer.dynamic) {
-              type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            } else {
-              type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            }
-            break;
-          case jshd::buffer_type::storage:
-            if (buffer.dynamic) {
-              type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
-            } else {
-              type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            }
-            break;
-        }
-        count = 1;
-        stage |= stageBits;
-        return bindingData;
+struct set_data {
+  std::vector<binding_data> bindingData;
+  std::unique_ptr<descriptor_set_layout> setLayoutPtr;
+};
+
+template <typename T>
+inline void enlarge(T& v, size_t n) {
+  if (v.size() < n) {
+    v.resize(n);
+  }
 }
 
-inline auto make_image_binding(VkShaderStageFlagBits stageBits, jshd::image_data image) {
-  VkDescriptorSetLayoutBinding bindingData{};
-  auto& [binding, type, count, stage, pSamplers] = bindingData;
-  binding = image.binding;
-  type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-  count = image.count;
-  stage |= stageBits;
+inline auto make_buffer_binding(
+    VkShaderStageFlagBits stageBits,
+    jshd::buffer_data bufferData) {
+  binding_data bindingData{};
+  auto& [stageFlags, type, elementData, immSamp] = bindingData;
+  switch (bufferData.bufferType) {
+    default:
+    case jshd::buffer_type::uniform:
+      if (bufferData.dynamic) {
+        type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+      } else {
+        type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      }
+      break;
+    case jshd::buffer_type::storage:
+      if (bufferData.dynamic) {
+        type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+      } else {
+        type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      }
+      break;
+  }
+  elementData.resize(1);
+  stageFlags |= stageBits;
   return bindingData;
 }
 
-inline auto make_sampler_binding(VkShaderStageFlagBits stageBits, jshd::sampler_data sampler) {
-  VkDescriptorSetLayoutBinding bindingData{};
-  auto& [binding, type, count, stage, pSamplers] = bindingData;
+inline auto make_image_binding(
+    VkShaderStageFlagBits stageBits,
+    jshd::image_data imageData) {
+  binding_data bindingData{};
+  auto& [stageFlags, type, elementData, immSamp] = bindingData;
+  type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+  elementData.resize(imageData.count);
+  stageFlags |= stageBits;
+  return bindingData;
 }
 
-inline auto make_set_layouts(std::vector<jshd::shader_data> shaders, VkDevice device) {
-  std::map<uint32_t /*set #*/, descriptor_set_layout_data> layoutData;
-
-  std::vector<std::unique_ptr<descriptor_set_layout>> layouts;
-  for (jshd::shader_data shader : shaders) {
-    for (jshd::buffer_data buffer : shader.buffers) {
-      auto& [info, bindings] = layoutData[buffer.set];
-      bindings[buffer.binding] = make_buffer_binding(shader.stage, buffer);
-    }
-    for (jshd::image_data image : shader.images) {
-      auto& [info, bindings] = layoutData[image.set];
-      bindings[image.binding] = make_image_binding(shader.stage, image);
-    }
-    for (jshd::sampler_data sampler : shader.samplers) {
-      auto& [info, bindings] = layoutData[sampler.set];
-      bindings[sampler.binding] = make_sampler_binding(shader.stage, sampler);
+inline auto make_sampler_binding(
+    VkDevice device,
+    VkShaderStageFlagBits stageBits,
+    jshd::sampler_data samplerData) {
+  binding_data bindingData{};
+  auto& [stageFlags, type, elementData, immSamp] = bindingData;
+  auto& [set, bindingNumber, samplerName, immutable, createInfos] = samplerData;
+  if (immutable) {
+    auto count = createInfos.size();
+    elementData.resize(count);
+    for (int i{}; i < count; ++i) {
+      VkSampler vkSampler{};
+      auto samplerResult =
+          vkCreateSampler(device, &createInfos[i], nullptr, &vkSampler);
+      if (samplerResult != VK_SUCCESS) {
+        exit(samplerResult);
+      }
+      elementData[i].samplerPtr = std::make_unique<sampler>(device, vkSampler);
     }
   }
-  
+  return bindingData;
+}
+
+inline auto make_set_layouts(
+    VkDevice device,
+    std::vector<jshd::shader_data> shaders) {
+  std::vector<set_data> setData;
+
+  for (jshd::shader_data shaderData : shaders) {
+    for (jshd::buffer_data bufferData : shaderData.buffers) {
+      enlarge(setData, bufferData.set);
+      auto& [bindingData, setLayoutPtr] = setData[bufferData.set];
+      enlarge(bindingData, bufferData.binding);
+      bindingData[bufferData.binding] =
+          make_buffer_binding(shaderData.stage, bufferData);
+    }
+    for (jshd::image_data imageData : shaderData.images) {
+      enlarge(setData, imageData.set);
+      auto& [bindingData, setLayoutPtr] = setData[imageData.set];
+      enlarge(bindingData, imageData.binding);
+      bindingData[imageData.binding] =
+          make_image_binding(shaderData.stage, imageData);
+    }
+    for (jshd::sampler_data samplerData : shaderData.samplers) {
+      enlarge(setData, samplerData.set);
+      auto& [bindingData, setLayoutPtr] = setData[samplerData.set];
+      enlarge(bindingData, samplerData.binding);
+      bindingData[samplerData.binding] =
+          make_sampler_binding(device, shaderData.stage, samplerData);
+    }
+  }
+
+  for (auto& set : setData) {
+    auto bindingCount = static_cast<uint32_t>(set.bindingData.size());
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    std::vector<std::vector<VkSampler>> bindingSamplers;
+    bindings.reserve(bindingCount);
+    bindingSamplers.resize(bindingCount);
+    for (uint32_t i{}; i < bindingCount; ++i) {
+      const auto& [stage, type, elements, immutableSamplers] =
+          set.bindingData[i];
+      auto elementCount = static_cast<uint32_t>(elements.size());
+      auto& samplers = bindingSamplers[i];
+      if (immutableSamplers) {
+        samplers.reserve(elementCount);
+        std::for_each(
+            std::begin(elements),
+            std::end(elements),
+            [&](auto& element) { samplers.push_back(*element.samplerPtr); });
+            bindings.push_back({
+                i, type, elementCount, stage, samplers.data()});
+      } else {
+        bindings.push_back({i, type, elementCount, stage, nullptr});
+      }
+    }
+    VkDescriptorSetLayoutCreateInfo createInfo{
+        VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+    createInfo.bindingCount = bindingCount;
+    createInfo.pBindings = bindings.data();
+    VkDescriptorSetLayout setLayout{};
+    auto layoutResult = vkCreateDescriptorSetLayout(device, &createInfo, nullptr, &setLayout);
+    if (layoutResult != VK_SUCCESS) {
+      exit(layoutResult);
+    }
+    set.setLayoutPtr = std::make_unique<descriptor_set_layout>(device, setLayout);
+  }
+  return setData;
 }
 }  // namespace vka

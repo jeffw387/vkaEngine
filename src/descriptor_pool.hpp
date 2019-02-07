@@ -28,59 +28,5 @@ private:
   bool m_individualResetAllowed = {};
 };
 
-class descriptor_pool_builder {
-public:
-  tl::expected<std::unique_ptr<descriptor_pool>, VkResult> build(
-      VkDevice device) {
-    VkDescriptorPool pool{};
-    m_createInfo.poolSizeCount = static_cast<uint32_t>(m_poolSizes.size());
-    m_createInfo.pPoolSizes = m_poolSizes.data();
-    m_createInfo.flags = m_individualResetAllowed
-                             ? VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
-                             : 0;
-    auto result = vkCreateDescriptorPool(device, &m_createInfo, nullptr, &pool);
-    if (result != VK_SUCCESS) {
-      return tl::make_unexpected(result);
-    }
-    return std::make_unique<descriptor_pool>(
-        device, pool, m_individualResetAllowed);
-  }
 
-  descriptor_pool_builder& max_sets(uint32_t count) {
-    m_createInfo.maxSets = count;
-    return *this;
-  }
-
-  descriptor_pool_builder& add_type(VkDescriptorPoolSize pool_size) {
-    m_poolSizes.push_back(std::move(pool_size));
-    return *this;
-  }
-
-  descriptor_pool_builder& add_type(VkDescriptorType type, uint32_t count) {
-    m_poolSizes.push_back({type, count});
-    return *this;
-  }
-
-  descriptor_pool_builder& add_layout(
-      const descriptor_set_layout* layout,
-      uint32_t maxSets) {
-    for (const auto& layoutBinding : layout->layout_bindings()) {
-      m_poolSizes.push_back({layoutBinding.descriptorType,
-                             layoutBinding.descriptorCount * maxSets});
-    }
-    m_createInfo.maxSets += maxSets;
-    return *this;
-  }
-
-  descriptor_pool_builder& allow_individual_reset(bool is_allowed) {
-    m_individualResetAllowed = is_allowed;
-    return *this;
-  }
-
-private:
-  std::vector<VkDescriptorPoolSize> m_poolSizes = {};
-  bool m_individualResetAllowed = {};
-  VkDescriptorPoolCreateInfo m_createInfo = {
-      VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-};
 }  // namespace vka

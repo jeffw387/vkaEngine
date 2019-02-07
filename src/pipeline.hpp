@@ -110,7 +110,8 @@ using blend_attachment =
 struct graphics_pipeline_builder {
   tl::expected<std::unique_ptr<pipeline>, VkResult> build(VkDevice device) {
     for (size_t i{}; i < m_shaderStages.size(); ++i) {
-      m_shaderSpecializations[i].mapEntryCount = static_cast<uint32_t>(m_specializationMaps[i].size());
+      m_shaderSpecializations[i].mapEntryCount =
+          static_cast<uint32_t>(m_specializationMaps[i].size());
       m_shaderSpecializations[i].pMapEntries = m_specializationMaps[i].data();
       m_shaderStages[i].pSpecializationInfo = &m_shaderSpecializations[i];
     }
