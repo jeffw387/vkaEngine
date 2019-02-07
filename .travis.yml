@@ -1,8 +1,9 @@
 language: 
   - cpp
-  - python
 dist: xenial
-python: "3.7"
+python: 3.7
+virtualenv:
+  system_site_packages: true
 sudo: true
 matrix:
   include:
