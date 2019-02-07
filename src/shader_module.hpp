@@ -5,6 +5,7 @@
 #include <vector>
 #include <variant>
 #include <optional>
+#include <string_view>
 #include <unordered_map>
 #include <experimental/filesystem>
 #include "io.hpp"
@@ -45,7 +46,7 @@ using shader_error = std::variant<VkResult, io::path_error>;
 using shader_expected =
     tl::expected<shader_module_data, shader_error>;
 inline auto make_shader(VkDevice device, std::string_view name) {
-  auto j = json::parse(io::read_text_file(fs::path(name) + ".json"));
-  auto
+  auto j = json::parse(io::read_text_file(std::string(name) + ".json"));
+  // auto
 }
 }  // namespace vka
