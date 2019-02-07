@@ -122,21 +122,21 @@ inline auto make_set_layouts(
   for (jshd::shader_data shaderData : shaders) {
     for (jshd::buffer_data bufferData : shaderData.buffers) {
       enlarge(setData, bufferData.set);
-      auto& [bindingData, setLayoutPtr] = setData[bufferData.set];
+      auto& [bindingData, setLayoutPtr, m] = setData[bufferData.set];
       enlarge(bindingData, bufferData.binding);
       bindingData[bufferData.binding] =
           make_buffer_binding(shaderData.stage, bufferData);
     }
     for (jshd::image_data imageData : shaderData.images) {
       enlarge(setData, imageData.set);
-      auto& [bindingData, setLayoutPtr] = setData[imageData.set];
+      auto& [bindingData, setLayoutPtr, m] = setData[imageData.set];
       enlarge(bindingData, imageData.binding);
       bindingData[imageData.binding] =
           make_image_binding(shaderData.stage, imageData);
     }
     for (jshd::sampler_data samplerData : shaderData.samplers) {
       enlarge(setData, samplerData.set);
-      auto& [bindingData, setLayoutPtr] = setData[samplerData.set];
+      auto& [bindingData, setLayoutPtr, m] = setData[samplerData.set];
       enlarge(bindingData, samplerData.binding);
       bindingData[samplerData.binding] =
           make_sampler_binding(device, shaderData.stage, samplerData);
