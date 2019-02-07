@@ -11,8 +11,6 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - ubuntu-desktop/gnome-3-26
-            - ppa:graphics-drivers/ppa
           packages:
             - g++-7
             - ninja-build 
@@ -28,6 +26,7 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 install:
+  - python --version
   - pip install setuptools --user
   - pip install conan --user
   - pip install pathlib --user
