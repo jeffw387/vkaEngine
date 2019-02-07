@@ -43,6 +43,7 @@ struct binding_data {
 struct set_data {
   std::vector<binding_data> bindingData;
   std::unique_ptr<descriptor_set_layout> setLayoutPtr;
+  uint32_t maxSets{1};
 };
 
 template <typename T>
