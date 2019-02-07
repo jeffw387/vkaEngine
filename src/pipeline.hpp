@@ -338,4 +338,8 @@ private:
       VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
   VkPipelineCache m_cache = {};
 };
+
+inline auto make_pipeline(VkDevice device, std::vector<jshd::shader_data> shaderData) {
+  
+}
 }  // namespace vka

@@ -10,6 +10,7 @@
 #include "io.hpp"
 #include "move_into.hpp"
 #include "logger.hpp"
+#include <make_shader.hpp>
 
 namespace fs = std::experimental::filesystem;
 namespace vka {
@@ -32,27 +33,16 @@ private:
   VkShaderModule m_shaderModule{};
 };
 
-using shader_error = std::variant<VkResult, IO::path_error>;
-using shader_expected =
-    tl::expected<std::unique_ptr<shader_module>, shader_error>;
-struct shader_module_builder {
-  auto build(VkDevice device, fs::path shaderPath) -> shader_expected {
-    if (auto shaderBytesExpected = IO::loadBinaryFile(shaderPath)) {
-      auto& shaderBytes = shaderBytesExpected.value();
-      auto shaderBytes32 =
-          reinterpret_cast<const uint32_t*>(shaderBytes.data());
 
-      VkShaderModuleCreateInfo createInfo{
-          VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
-      createInfo.codeSize = shaderBytes.size();
-      createInfo.pCode = shaderBytes32;
+struct shader_module_data {
+  std::unique_ptr<shader_module> shaderPtr;
+  jshd::shader_data shaderData;
+};
 
 using shader_error = std::variant<VkResult, io::path_error>;
-
-      return std::make_unique<shader_module>(device, shaderModule);
-    } else {
-      return tl::make_unexpected(shaderBytesExpected.error());
-    }
-  }
-};
+using shader_expected =
+    tl::expected<shader_module_data, shader_error>;
+inline auto make_shader(VkDevice device, std::string_view name) {
+  
+}
 }  // namespace vka
