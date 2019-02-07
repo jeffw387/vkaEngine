@@ -28,5 +28,14 @@ private:
   bool m_individualResetAllowed = {};
 };
 
-
+inline auto make_pool(VkDevice device, std::vector<set_data> set_layouts) {
+  std::vector<VkDescriptorPoolSize> poolSizes;
+  for (const set_data& set : set_layouts) {
+    const auto& [bindings, l, maxSets] = set;
+    for (const auto& binding : bindings) {
+      const auto& [s, type, elements, i] = binding;
+      poolSizes.push_back({type, static_cast<uint32_t>(elements.size() * maxSets)});
+    }
+  }
+}
 }  // namespace vka
