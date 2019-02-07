@@ -43,6 +43,6 @@ using shader_error = std::variant<VkResult, io::path_error>;
 using shader_expected =
     tl::expected<shader_module_data, shader_error>;
 inline auto make_shader(VkDevice device, std::string_view name) {
-  
+  // io::
 }
 }  // namespace vka

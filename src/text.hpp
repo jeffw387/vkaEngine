@@ -302,7 +302,7 @@ MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize) {
 template <>
 Font<>::Font(fs::path fontPath, int bitmapSize, int padding)
     : bitmapSize(bitmapSize), padding(padding) {
-  if (auto loadResult = vka::loadBinaryFile({fontPath})) {
+  if (auto loadResult = io::read_binary_file({fontPath})) {
     fontBytes = std::move(loadResult.value());
     stbtt_InitFont(&fontInfo, fontBytes.data(), 0);
   }

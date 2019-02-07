@@ -17,7 +17,7 @@ enum class path_error {
   UnknownProblem
 };
 
-inline tl::expected<std::vector<uint8_t>, path_error> loadBinaryFile(
+inline tl::expected<std::vector<uint8_t>, path_error> read_binary_file(
     fs::path filePath) {
   if (!fs::exists(filePath)) {
     return tl::make_unexpected(path_error::PathProblem);
@@ -40,7 +40,7 @@ inline tl::expected<std::vector<uint8_t>, path_error> loadBinaryFile(
 }
 
 template <typename T>
-inline tl::expected<void, path_error> writeBinaryFile(
+inline tl::expected<void, path_error> write_binary_file(
     fs::path filePath,
     gsl::span<T> data) {
   std::ofstream fileStream(
@@ -56,4 +56,8 @@ inline tl::expected<void, path_error> writeBinaryFile(
   }
   return tl::make_unexpected(path_error::PathProblem);
 }
+
+// inline auto read_text_file read_text_file(fs::path filePath) {
+  
+// }
 }  // namespace IO
