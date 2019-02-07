@@ -21,7 +21,6 @@ matrix:
             - vulkan-utils 
             - xorg-dev 
             - libglu1-mesa-dev
-            - python3-pip
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
@@ -29,6 +28,7 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 install:
+  - pip3 install -r requirements.txt
   - pip3 install setuptools --user
   - pip3 install conan --user
   - conan user
