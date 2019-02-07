@@ -30,6 +30,7 @@ before_install:
 install:
   - pip install setuptools --user
   - pip install conan --user
+  - pip install pathlib --user
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
