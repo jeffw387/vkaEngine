@@ -7,6 +7,7 @@
 #include <string_view>
 #include <any>
 #include <variant>
+#include <make_shader.hpp>
 
 namespace vka {
 struct pipeline {

@@ -18,16 +18,17 @@ enum class path_error {
   UnknownProblem
 };
 
-inline tl::expected<std::vector<uint8_t>, path_error> read_binary_file(
+template <typename T = uint8_t>
+inline tl::expected<std::basic_string<T>, path_error> read_binary_file(
     fs::path filePath) {
   if (!fs::exists(filePath)) {
     return tl::make_unexpected(path_error::PathProblem);
   }
-  std::fstream fileStream(
+  std::basic_fstream<T> fileStream(
       filePath, std::ios_base::binary | std::ios_base::in);
   size_t streamLength{};
   if (fileStream) {
-    std::basic_stringstream<uint8_t> ss;
+    std::basic_stringstream<T> ss;
     ss << fileStream.rdbuf();
     if (!fileStream) {
       return tl::make_unexpected(path_error::ReadProblem);
