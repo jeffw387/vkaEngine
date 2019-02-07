@@ -28,15 +28,20 @@ private:
   bool m_individualResetAllowed = {};
 };
 
-inline auto make_pool(VkDevice device, std::vector<set_data> set_layouts, bool individualReset = false) {
+inline auto make_pool(
+    VkDevice device,
+    std::vector<set_data> set_layouts,
+    bool individualReset = false) {
   std::vector<VkDescriptorPoolSize> poolSizes;
-  VkDescriptorPoolCreateInfo createInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+  VkDescriptorPoolCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
   for (const set_data& set : set_layouts) {
     const auto& [bindings, l, maxSets] = set;
     createInfo.maxSets += maxSets;
     for (const auto& binding : bindings) {
       const auto& [s, type, elements, i] = binding;
-      poolSizes.push_back({type, static_cast<uint32_t>(elements.size() * maxSets)});
+      poolSizes.push_back(
+          {type, static_cast<uint32_t>(elements.size() * maxSets)});
     }
   }
   createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
