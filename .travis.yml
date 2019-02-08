@@ -6,12 +6,12 @@ python: 3.7
 matrix:
   include:
     - os: linux
-      addons:
-        apt:
-          sources:
+    - addons:
+      - apt:
+        - sources:
             - ubuntu-toolchain-r-test
             - deadsnakes
-          packages:
+        - packages:
             - g++-7
             - ninja-build 
             - libvulkan-dev 
@@ -21,7 +21,7 @@ matrix:
             - libglu1-mesa-dev
             - python3.7
             - python3-pip
-      env:
+    - env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && PY=python3.7 && PIP=pip3"
 
 before_install:
