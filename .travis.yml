@@ -27,6 +27,7 @@ before_install:
 install:
   # - eval "$(pyenv init -)"
   # - eval "$(pyenv virtualenv-init -)"
+  - pyenv --help
   - pyenv install 3.7.0a1
   - pyenv virtualenv 3.7.0a1 py370
   - pyenv activate py370
