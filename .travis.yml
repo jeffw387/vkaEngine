@@ -19,7 +19,7 @@ matrix:
             - xorg-dev 
             - libglu1-mesa-dev
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONAN_CMAKE_GENERATOR=Ninja"
 
 before_install:
   - eval "${MATRIX_EVAL}"
