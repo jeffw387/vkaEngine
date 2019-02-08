@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <tl/expected.hpp>
 #include <make_shader.hpp>
+#include "shader_module.hpp"
 #include "gsl-lite.hpp"
 #include "sampler.hpp"
 
@@ -114,10 +115,11 @@ inline auto make_sampler_binding(
 
 inline auto make_set_layouts(
     VkDevice device,
-    std::vector<jshd::shader_data> shaders) {
+    std::vector<shader_module_data> shaders) {
   std::vector<set_data> setData;
 
-  for (jshd::shader_data shaderData : shaders) {
+  for (shader_module_data& shaderModuleData : shaders) {
+    auto& [ptr, shaderData] = shaderModuleData;
     for (jshd::buffer_data bufferData : shaderData.buffers) {
       enlarge(setData, bufferData.set);
       auto& [bindingData, setLayoutPtr, m] = setData[bufferData.set];

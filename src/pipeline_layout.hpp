@@ -6,6 +6,7 @@
 #include <vector>
 #include <make_shader.hpp>
 #include "descriptor_set_layout.hpp"
+#include "shader_module.hpp"
 
 namespace vka {
 struct pipeline_layout {
@@ -27,7 +28,7 @@ private:
 
 inline auto make_pipeline_layout(
     VkDevice device,
-    std::vector<jshd::shader_data> shaderData,
+    std::vector<shader_module_data> shaderModuleData,
     std::vector<set_data> setData) {
   std::vector<VkDescriptorSetLayout> layouts;
   layouts.reserve(setData.size());
@@ -36,9 +37,9 @@ inline auto make_pipeline_layout(
   for (const set_data& set : setData) {
     layouts.push_back(*set.setLayoutPtr);
   }
-
-  for (const jshd::shader_data& shader : shaderData) {
-    for (const auto& push : shader.pushConstants) {
+  for (shader_module_data& shaderModule : shaderModuleData) {
+    auto& [ptr, shader] = shaderModule;
+    for (auto& push : shader.pushConstants) {
       // TODO: need range from shader for each push constant
       pushRanges.push_back(
           {VkShaderStageFlags{} | shader.stage,
