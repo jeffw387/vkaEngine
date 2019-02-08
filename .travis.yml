@@ -49,3 +49,5 @@ script:
   - conan profile new --detect default
   - conan profile update settings.cppstd=17 default
   - ./run-build.sh
+test:
+  - ./run-test.sh

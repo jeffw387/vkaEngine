@@ -31,10 +31,8 @@ conan_cmake_run(CONANFILE conanfile.py
 add_library(vkaEngine)
 target_link_libraries(vkaEngine PUBLIC ${CONAN_LIBS})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  # set_target_properties(vkaEngine PROPERTIES CMAKE_EXE_LINKER_FLAGS -fuse-ld=lld)
-  target_link_libraries(vkaEngine PUBLIC c++abi)
   if (NOT WIN32)
-    target_link_libraries(vkaEngine PUBLIC c++fs pthread)
+    target_link_libraries(vkaEngine PUBLIC c++abi c++fs pthread)
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if (NOT WIN32)
@@ -102,11 +100,3 @@ add_module(semaphore)
 add_module(framebuffer)
 add_module(sampler)
 add_module(pipeline)
-# configure_file(
-#   ${src_dir}/vert_shader.test.spv 
-#   ${bin_dir}/vert_shader.test.spv 
-#   COPYONLY)
-# configure_file(
-#   ${src_dir}/frag_shader.test.spv 
-#   ${bin_dir}/frag_shader.test.spv 
-#   COPYONLY)

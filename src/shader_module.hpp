@@ -45,8 +45,23 @@ struct shader_module_data {
 using shader_error = std::variant<VkResult, io::path_error>;
 using shader_expected =
     tl::expected<shader_module_data, shader_error>;
-inline auto make_shader(VkDevice device, std::string_view name) {
+inline auto make_shader(VkDevice device, std::string_view name) -> shader_expected {
+  shader_module_data result{};
   auto j = json::parse(io::read_text_file(std::string(name) + ".json"));
-  // auto
+  result.shaderData = jshd::shader_deserialize(j);
+  if (auto b = io::read_binary_file(fs::path(name.data()))) {
+    VkShaderModuleCreateInfo createInfo{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
+    createInfo.codeSize = static_cast<uint32_t>(b->size());
+    createInfo.pCode = reinterpret_cast<uint32_t*>(b->data());
+    VkShaderModule shaderModule{};
+    auto shaderResult = vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
+    if (shaderResult != VK_SUCCESS) {
+      return tl::make_unexpected(shaderResult);
+    }
+    result.shaderPtr = std::make_unique<shader_module>(device, shaderModule);
+  } else {
+    return tl::make_unexpected(b.error());
+  }
+  return result;
 }
 }  // namespace vka
