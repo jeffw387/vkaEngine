@@ -20,17 +20,18 @@ matrix:
             - xorg-dev 
             - libglu1-mesa-dev
             - python3.7
+            - python3-pip
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && PY=python3 && PIP=pip3"
 
 before_install:
   - eval "${MATRIX_EVAL}"
 
 install:
-  - python --version
-  - pip install setuptools --user
-  - pip install conan --user
-  - pip install pathlib --user
+  - python3 --version
+  - pip3 install setuptools --user
+  - pip3 install conan --user
+  - pip3 install pathlib --user
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
