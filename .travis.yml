@@ -26,12 +26,9 @@ before_install:
 
 install:
   # - curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-  - pyenv --version
-  - export PATH="$HOME/.pyenv/bin:$PATH"
-  - pyenv --version
+  # - export PATH="$HOME/.pyenv/bin:$PATH"
   - eval "$(pyenv init -)"
   - eval "$(pyenv virtualenv-init -)"
-  - pyenv --version
   - pyenv update
   - pyenv install 3.7.0
   - pip3 install setuptools --user --upgrade
