@@ -148,7 +148,7 @@ inline auto make_set_layouts(
     bindings.reserve(bindingCount);
     bindingSamplers.resize(bindingCount);
     for (uint32_t i{}; i < bindingCount; ++i) {
-      const auto& [stage, type, elements, immutableSamplers] =
+      auto& [stage, type, elements, immutableSamplers] =
           set.bindingData[i];
       auto elementCount = static_cast<uint32_t>(elements.size());
       auto& samplers = bindingSamplers[i];
