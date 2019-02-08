@@ -25,11 +25,8 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 install:
-  # - curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-  # - export PATH="$HOME/.pyenv/bin:$PATH"
-  - eval "$(pyenv init -)"
-  - eval "$(pyenv virtualenv-init -)"
-  - pyenv update
+  # - eval "$(pyenv init -)"
+  # - eval "$(pyenv virtualenv-init -)"
   - pyenv install 3.7.0
   - pip3 install setuptools --user --upgrade
   - pip3 install conan --user --upgrade
