@@ -28,12 +28,13 @@ install:
   # - eval "$(pyenv init -)"
   # - eval "$(pyenv virtualenv-init -)"
   - pyenv install 3.7.0a1
+  - pyenv virtualenv 3.7.0a1 py370
+  - pyenv activate py370
   - pip3 install setuptools --user --upgrade
   - pip3 install conan --user --upgrade
   - pip3 install pathlib --user --upgrade
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
-  - pyenv virtualenv 3.7.0a1 py370
-  - pyenv activate py370
+  # - pyenv activate py370
   - ./run-build.sh
