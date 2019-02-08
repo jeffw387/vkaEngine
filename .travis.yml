@@ -28,10 +28,13 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 install:
-  - python3 --version
-  - pip3 install setuptools --user
-  - pip3 install conan --user
-  - pip3 install pathlib --user
+  - python3.7 --version
+  - pip3 --version
+  - pip3 install --upgrade pip
+  - pip3 --version
+  - pip3 install setuptools --user --upgrade
+  - pip3 install conan --user --upgrade
+  - pip3 install pathlib --user --upgrade
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
