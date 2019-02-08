@@ -34,5 +34,6 @@ install:
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
+  - conan profile new --detect default
   - conan profile update settings.cppstd=17 default
   - ./run-build.sh
