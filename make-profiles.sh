@@ -1,7 +1,6 @@
 #!/bin/bash
 
 mkdir -p profiles
-rm profiles/*
 GCC_PR=./profiles/gccprofile
 CLANG_PR=./profiles/clangprofile
 conan profile new --detect $GCC_PR
