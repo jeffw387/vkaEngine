@@ -165,6 +165,17 @@ inline auto make_rasterization_state(
   return state;
 }
 
+struct multisample_state {
+  VkPipelineMultisampleStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
+};
+
+inline auto make_multisample_state(
+    VkSampleCountFlagBits rasterizationSamples = VK_SAMPLE_COUNT_16_BIT) {
+  multisample_state state{};
+  state.createInfo.rasterizationSamples = rasterizationSamples;
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
