@@ -82,7 +82,7 @@ struct blend_constants {
 };
 
 inline auto make_blend_state(
-    std::vector<VkPipelineColorBlendAttachmentState> attachments,
+    std::vector<VkPipelineColorBlendAttachmentState> attachments = {},
     blend_constants blendConstants = {}) {
   blend_state blendState;
   blendState.attachments = std::move(attachments);
