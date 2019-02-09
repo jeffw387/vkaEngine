@@ -46,10 +46,6 @@ install:
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
 script:
-  - conan profile new --detect default
-  - conan profile update settings.cppstd=17 default
-  - if ["$CXX" == "clang++"]; then conan profile update settings.compiler.libcxx = libc++; fi
-  - if ["$CXX" == "g++"]; then conan profile update settings.compiler.libcxx = libstdc++; fi
   - ./run-build.sh
 test:
   - ./run-test.sh
