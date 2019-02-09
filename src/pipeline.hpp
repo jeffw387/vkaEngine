@@ -176,6 +176,20 @@ inline auto make_multisample_state(
   state.createInfo.rasterizationSamples = rasterizationSamples;
 }
 
+struct vertex_state {
+  std::vector<VkVertexInputBindingDescription> bindings;
+  std::vector<VkVertexInputAttributeDescription> attributes;
+  VkPipelineVertexInputStateCreateInfo 
+    createInfo{VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
+};
+
+inline auto make_vertex_state(jshd::shader_data vertexShaderData) {
+  vertex_state state{};
+  for (jshd::input_data input : vertexShaderData.inputs) {
+    state.attributes.push_back({});
+  }
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   depth_stencil_state depthStencilState;
