@@ -48,6 +48,11 @@ install:
 script:
   - conan profile new --detect default
   - conan profile update settings.cppstd=17 default
+  - switch:
+    - case: $CXX == clang++
+      conan profile update settings.compiler.libcxx = libc++
+    - case: $CXX == g++
+      conan profile update settings.compiler.libcxx = libstdc++
   - ./run-build.sh
 test:
   - ./run-test.sh
