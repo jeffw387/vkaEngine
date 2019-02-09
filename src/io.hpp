@@ -18,7 +18,7 @@ enum class path_error {
   UnknownProblem
 };
 
-template <typename T = uint8_t>
+template <typename T = char>
 inline tl::expected<std::basic_string<T>, path_error> read_binary_file(
     fs::path filePath) {
   if (!fs::exists(filePath)) {
