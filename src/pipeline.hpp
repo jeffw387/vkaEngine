@@ -142,7 +142,7 @@ struct viewport_state {
 
 inline auto make_viewport_state(
     std::vector<VkViewport> viewports = {},
-    std::vector<VkRect2D> scissors) {
+    std::vector<VkRect2D> scissors = {}) {
   viewport_state state{};
   state.viewports = std::move(viewports);
   state.scissors = std::move(scissors);
