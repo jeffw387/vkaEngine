@@ -29,7 +29,7 @@ private:
   VkPipeline m_pipeline = {};
 };
 
-struct shader_stage_data {
+struct shader_stage_state {
   VkShaderStageFlagBits shaderStage = {};
   VkShaderModule shaderModule = {};
   std::string_view entryPoint = {};
