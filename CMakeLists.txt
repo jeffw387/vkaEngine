@@ -9,6 +9,7 @@ project(vkaEngineProject
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(BUILD_SHARED_LIBS OFF)
 
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
