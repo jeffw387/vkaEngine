@@ -65,7 +65,7 @@ using blend_attachment =
     std::variant<no_blend_attachment, alpha_over_attachment>;
 
 
-inline auto make_pipeline(VkDevice device, std::vector<jshd::shader_data> shaderData) {
-  
+inline auto make_graphics_pipeline(VkDevice device, std::vector<jshd::shader_data> shaderData) {
+  VkGraphicsPipelineCreateInfo createInfo{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 }
 }  // namespace vka
