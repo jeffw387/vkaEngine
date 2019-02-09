@@ -107,6 +107,18 @@ inline auto make_depth_stencil_state(
   return state;
 }
 
+struct dynamic_state {
+  std::vector<VkDynamicState> states;
+  VkPipelineDynamicStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
+};
+
+inline auto make_dynamic_state(std::vector<VkDynamicState> dynamicStates = {}) {
+  dynamic_state state{};
+  state.states = std::move(dynamicStates);
+  return state;
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
