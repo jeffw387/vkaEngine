@@ -97,5 +97,12 @@ struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
 };
+
+inline auto make_graphics_pipeline(
+    VkDevice device,
+    graphics_pipeline_create_info createInfo) {
+  VkGraphicsPipelineCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
+  // createInfo.
 }
 }  // namespace vka
