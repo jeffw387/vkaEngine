@@ -17,6 +17,17 @@ matrix:
             - libglu1-mesa-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONAN_CMAKE_GENERATOR=Ninja"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - ninja-build 
+            - xorg-dev 
+            - libglu1-mesa-dev
+      env:
         - MATRIX_EVAL="CC=clang && CXX=clang++ && CONAN_CMAKE_GENERATOR=Ninja"
 
 before_install:
