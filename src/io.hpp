@@ -62,4 +62,4 @@ inline auto read_text_file(fs::path filePath) {
   ss << f.rdbuf();
   return ss.str();
 }
-}  // namespace IO
+}  // namespace io

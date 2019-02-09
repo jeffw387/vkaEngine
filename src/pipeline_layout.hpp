@@ -50,13 +50,15 @@ inline auto make_pipeline_layout(
     }
   }
 
-  VkPipelineLayoutCreateInfo createInfo{VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+  VkPipelineLayoutCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
   createInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
   createInfo.pSetLayouts = layouts.data();
   createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushRanges.size());
   createInfo.pPushConstantRanges = pushRanges.data();
   VkPipelineLayout pipelineLayout{};
-  auto createResult = vkCreatePipelineLayout(device, &createInfo, nullptr, &pipelineLayout);
+  auto createResult =
+      vkCreatePipelineLayout(device, &createInfo, nullptr, &pipelineLayout);
   if (createResult != VK_SUCCESS) {
     exit(createResult);
   }
