@@ -133,6 +133,22 @@ inline auto make_input_assembly(
   return state;
 }
 
+struct viewport_state {
+  std::vector<VkViewport> viewports;
+  std::vector<VkRect2D> scissors;
+  VkPipelineViewportStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
+};
+
+inline auto make_viewport_state(
+    std::vector<VkViewport> viewports = {},
+    std::vector<VkRect2D> scissors) {
+  viewport_state state{};
+  state.viewports = std::move(viewports);
+  state.scissors = std::move(scissors);
+  return state;
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
