@@ -38,7 +38,6 @@ install:
   - sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
   - sudo apt update
   - sudo apt install lunarg-vulkan-sdk
-  - pyenv install 3.7.1
   - pyenv local 3.7.1
   - pip3 install setuptools --user --upgrade
   - pip3 install conan --user --upgrade
