@@ -178,14 +178,18 @@ inline auto make_multisample_state(
 
 struct graphics_pipeline_create_info {
   blend_state blendState;
+  depth_stencil_state depthStencilState;
+  dynamic_state dynamicState;
+  input_assembly_state inputAssemblyState;
+  viewport_state viewportState;
+  rasterization_state rasterizationState;
   std::vector<shader_module_data> shaders;
+  std::vector<shader_stage_state> shaderStageState;
+  VkGraphicsPipelineCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 };
 
 inline auto make_graphics_pipeline(
     VkDevice device,
-    graphics_pipeline_create_info createInfo) {
-  VkGraphicsPipelineCreateInfo createInfo{
-      VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
-  // createInfo.
-}
+    graphics_pipeline_create_info createInfo) {}
 }  // namespace vka
