@@ -51,5 +51,4 @@ script:
   - eval "${MATRIX_EVAL}"
   - ./make-profiles.sh
   - ./run-build.sh
-test:
   - ./run-test.sh
