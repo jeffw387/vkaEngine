@@ -119,6 +119,20 @@ inline auto make_dynamic_state(std::vector<VkDynamicState> dynamicStates = {}) {
   return state;
 }
 
+struct input_assembly_state {
+  VkPipelineInputAssemblyStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
+};
+
+inline auto make_input_assembly(
+    VkPrimitiveTopology topology,
+    bool primitiveRestartEnable = false) {
+  input_assembly_state state{};
+  state.createInfo.topology = topology;
+  state.createInfo.primitiveRestartEnable = primitiveRestartEnable;
+  return state;
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
