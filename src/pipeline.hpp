@@ -95,6 +95,7 @@ inline auto make_blend_state(
 
 struct graphics_pipeline_create_info {
   blend_state blendState;
+  std::vector<shader_module_data> shaders;
 };
 }
 }  // namespace vka
