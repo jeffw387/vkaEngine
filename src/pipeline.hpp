@@ -93,6 +93,20 @@ inline auto make_blend_state(
   return blendState;
 }
 
+struct depth_stencil_state {
+  VkPipelineDepthStencilStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
+};
+
+inline auto make_depth_stencil_state(
+    bool depthTestEnable,
+    bool depthWriteEnable) {
+  depth_stencil_state state{};
+  state.createInfo.depthTestEnable = depthTestEnable;
+  state.createInfo.depthWriteEnable = depthWriteEnable;
+  return state;
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
