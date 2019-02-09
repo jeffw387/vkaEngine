@@ -93,6 +93,8 @@ inline auto make_blend_state(
   return blendState;
 }
 
+struct graphics_pipeline_create_info {
   blend_state blendState;
+};
 }
 }  // namespace vka
