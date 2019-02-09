@@ -149,6 +149,22 @@ inline auto make_viewport_state(
   return state;
 }
 
+struct rasterization_state {
+  VkPipelineRasterizationStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
+};
+
+inline auto make_rasterization_state(
+    VkCullModeFlags cullMode = VK_CULL_MODE_NONE,
+    VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+    VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL) {
+  rasterization_state state{};
+  state.createInfo.cullMode = cullMode;
+  state.createInfo.frontFace = frontFace;
+  state.createInfo.polygonMode = polygonMode;
+  return state;
+}
+
 struct graphics_pipeline_create_info {
   blend_state blendState;
   std::vector<shader_module_data> shaders;
