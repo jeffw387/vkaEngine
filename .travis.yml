@@ -6,6 +6,7 @@ python: 3.7
 matrix:
   include:
     - os: linux
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -19,6 +20,7 @@ matrix:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/gccprofile"
         - 
     - os: linux
+      compiler: clang
       addons:
         apt:
           sources:
