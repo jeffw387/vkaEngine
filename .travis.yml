@@ -18,7 +18,7 @@ matrix:
             - libglu1-mesa-dev
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/gccprofile"
-        - 
+        - CONANPROFILE=./profiles/gccprofile
     - os: linux
       compiler: clang
       addons:
@@ -31,6 +31,7 @@ matrix:
             - libglu1-mesa-dev
       env:
         - MATRIX_EVAL="CC=clang && CXX=clang++ && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/clangprofile"
+        - CONANPROFILE=./profiles/clangprofile
 
 before_install:
   - eval "${MATRIX_EVAL}"
