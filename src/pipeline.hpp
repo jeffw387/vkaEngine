@@ -64,8 +64,35 @@ struct alpha_over_attachment {
 using blend_attachment =
     std::variant<no_blend_attachment, alpha_over_attachment>;
 
+inline auto make_blend_attachment(blend_attachment blendVariant) {
+  return std::visit([](auto blend) { return blend.state; }, blendVariant);
+}
 
-inline auto make_graphics_pipeline(VkDevice device, std::vector<jshd::shader_data> shaderData) {
-  VkGraphicsPipelineCreateInfo createInfo{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
+struct blend_state {
+  std::vector<VkPipelineColorBlendAttachmentState> attachments;
+  VkPipelineColorBlendStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
+};
+
+struct blend_constants {
+  float r{1.f};
+  float g{1.f};
+  float b{1.f};
+  float a{1.f};
+};
+
+inline auto make_blend_state(
+    std::vector<VkPipelineColorBlendAttachmentState> attachments,
+    blend_constants blendConstants = {}) {
+  blend_state blendState;
+  blendState.attachments = std::move(attachments);
+  blendState.createInfo.blendConstants[0] = blendConstants.r;
+  blendState.createInfo.blendConstants[1] = blendConstants.g;
+  blendState.createInfo.blendConstants[2] = blendConstants.b;
+  blendState.createInfo.blendConstants[3] = blendConstants.a;
+  return blendState;
+}
+
+  blend_state blendState;
 }
 }  // namespace vka
