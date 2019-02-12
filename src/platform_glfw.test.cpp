@@ -1,5 +1,5 @@
 #include "platform_glfw.hpp"
-
+#include "logger.hpp"
 #include <catch2/catch.hpp>
 
 TEST_CASE("Init/Create Window") {
@@ -20,6 +20,9 @@ TEST_CASE("Load global vulkan function") {
 }
 
 TEST_CASE("Get required vulkan instance extensions") {
+  auto vulkanSupport = glfwVulkanSupported();
+  REQUIRE(vulkanSupport);
+  
   auto extensions = platform::glfw::get_required_instance_extensions();
   REQUIRE(extensions.size() > 0);
 }
