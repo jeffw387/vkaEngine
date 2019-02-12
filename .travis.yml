@@ -16,6 +16,7 @@ matrix:
             - ninja-build 
             - xorg-dev 
             - libglu1-mesa-dev
+            - mesa-vulkan-drivers
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/gccprofile"
         - CONANPROFILE=./profiles/gccprofile
