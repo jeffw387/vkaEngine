@@ -31,7 +31,7 @@ matrix:
             - xorg-dev 
             - libglu1-mesa-dev
             - libc++abi-dev
-            - libc++abi
+            - libc++abi1
       env:
         - MATRIX_EVAL="CC=clang && CXX=clang++ && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/clangprofile"
         - CONANPROFILE=./profiles/clangprofile
