@@ -29,15 +29,6 @@ private:
   VkPipeline m_pipeline = {};
 };
 
-struct shader_stage_state {
-  VkShaderStageFlagBits shaderStage = {};
-  VkShaderModule shaderModule = {};
-  std::string_view entryPoint = {};
-  std::vector<VkSpecializationMapEntry> mapEntries = {};
-  const void* pData = {};
-  size_t dataSize = {};
-};
-
 struct no_blend_attachment {
   no_blend_attachment() {
     state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
@@ -67,6 +58,15 @@ using blend_attachment =
 inline auto make_blend_attachment(blend_attachment blendVariant) {
   return std::visit([](auto blend) { return blend.state; }, blendVariant);
 }
+
+struct shader_stage_state {
+  VkShaderStageFlagBits shaderStage = {};
+  VkShaderModule shaderModule = {};
+  std::string_view entryPoint = {};
+  std::vector<VkSpecializationMapEntry> mapEntries = {};
+  const void* pData = {};
+  size_t dataSize = {};
+};
 
 struct blend_state {
   std::vector<VkPipelineColorBlendAttachmentState> attachments;
