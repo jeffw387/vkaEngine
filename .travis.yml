@@ -46,6 +46,7 @@ install:
   - sudo ldconfig -v
   - sudo apt install lunarg-vulkan-sdk
   # - pyenv local 3.7.1
+  - sudo apt install python3.7
   - python3.7 -m venv py371
   - source ./py371/bin/activate
   - pip install setuptools --user --upgrade
