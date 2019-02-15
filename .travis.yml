@@ -45,10 +45,12 @@ install:
   - sudo apt update
   - sudo ldconfig -v
   - sudo apt install lunarg-vulkan-sdk
-  - pyenv local 3.7.1
-  - pip3 install setuptools --user --upgrade
-  - pip3 install conan --user --upgrade
-  - pip3 install pathlib --user --upgrade
+  # - pyenv local 3.7.1
+  - python3.7 -m venv py371
+  - source ./py371/bin/activate
+  - pip install setuptools --user --upgrade
+  - pip install conan --user --upgrade
+  - pip install pathlib --user --upgrade
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
   - ./make-profiles.sh
