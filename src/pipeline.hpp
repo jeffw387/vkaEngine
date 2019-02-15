@@ -7,7 +7,8 @@
 #include <string_view>
 #include <any>
 #include <variant>
-#include <make_shader.hpp>
+#include <make_fragment_shader.hpp>
+#include <make_vertex_shader.hpp>
 #include "shader_module.hpp"
 
 namespace vka {
@@ -183,9 +184,9 @@ struct vertex_state {
     createInfo{VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
 };
 
-inline auto make_vertex_state(jshd::shader_data vertexShaderData) {
+inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   vertex_state state{};
-  for (jshd::input_data input : vertexShaderData.inputs) {
+  for (jshd::vertex_input_data input : vertexShaderData.inputs) {
     state.attributes.push_back({});
   }
 }
@@ -197,7 +198,8 @@ struct graphics_pipeline_create_info {
   input_assembly_state inputAssemblyState;
   viewport_state viewportState;
   rasterization_state rasterizationState;
-  std::vector<shader_module_data> shaders;
+  shader_data<jshd::vertex_shader_data> vertexShader;
+  shader_data<jshd::fragment_shader_data> fragmentShader;
   std::vector<shader_stage_state> shaderStageState;
   VkGraphicsPipelineCreateInfo createInfo{
       VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};

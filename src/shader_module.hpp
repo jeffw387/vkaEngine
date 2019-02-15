@@ -7,11 +7,13 @@
 #include <optional>
 #include <string_view>
 #include <unordered_map>
+#include <type_traits>
 #include <experimental/filesystem>
 #include "io.hpp"
 #include "move_into.hpp"
 #include "logger.hpp"
-#include <make_shader.hpp>
+#include <make_fragment_shader.hpp>
+#include <make_vertex_shader.hpp>
 #include <nlohmann/json.hpp>
 
 using nlohmann::json;
@@ -36,18 +38,27 @@ private:
   VkShaderModule m_shaderModule{};
 };
 
-struct shader_module_data {
+template <typename T>
+struct shader_data {
   std::unique_ptr<shader_module> shaderPtr;
-  jshd::shader_data shaderData;
+  T shaderData;
 };
 
 using shader_error = std::variant<VkResult, io::path_error>;
-using shader_expected = tl::expected<shader_module_data, shader_error>;
+
+template <typename T>
+using shader_expected = tl::expected<shader_data<T>, shader_error>;
+
+template <typename T>
 inline auto make_shader(VkDevice device, std::string_view name)
-    -> shader_expected {
-  shader_module_data result{};
+    -> shader_expected<T> {
+  shader_data<T> result{};
   auto j = json::parse(io::read_text_file(std::string(name) + ".json"));
-  result.shaderData = jshd::shader_deserialize(j);
+  if constexpr (std::is_same_v<T, jshd::vertex_shader_data>) {
+    result.shaderData = jshd::vertex_shader_deserialize(j);
+  } else if constexpr (std::is_same_v<T, jshd::fragment_shader_data>) {
+    result.shaderData = jshd::fragment_shader_deserialize(j);
+  }
   if (auto b = io::read_binary_file(fs::path(name.data()))) {
     VkShaderModuleCreateInfo createInfo{
         VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};

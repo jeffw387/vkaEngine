@@ -5,7 +5,8 @@
 #include <vector>
 #include <algorithm>
 #include <tl/expected.hpp>
-#include <make_shader.hpp>
+#include <make_fragment_shader.hpp>
+#include <make_vertex_shader.hpp>
 #include "shader_module.hpp"
 #include "gsl-lite.hpp"
 #include "sampler.hpp"
@@ -113,35 +114,51 @@ inline auto make_sampler_binding(
   return bindingData;
 }
 
+template <typename T>
+constexpr auto get_shader_stage() -> VkShaderStageFlagBits {
+  if constexpr (std::is_same_v<T, jshd::vertex_shader_data>) {
+    return VK_SHADER_STAGE_VERTEX_BIT;
+  } else if constexpr (std::is_same_v<T, jshd::fragment_shader_data>) {
+    return VK_SHADER_STAGE_FRAGMENT_BIT;
+  } else {
+    return VK_SHADER_STAGE_ALL;
+  }
+}
+
 inline auto make_set_layouts(
     VkDevice device,
-    std::vector<shader_module_data> shaders) {
+    shader_data<jshd::vertex_shader_data> vertexShaderData,
+    shader_data<jshd::fragment_shader_data> fragmentShaderData) {
   std::vector<set_data> setData;
 
-  for (shader_module_data& shaderModuleData : shaders) {
+  auto parseShaderData = [&setData, device](auto& shaderModuleData) {
     auto& [ptr, shaderData] = shaderModuleData;
+    auto shaderStage = get_shader_stage<decltype(shaderData)>();
     for (jshd::buffer_data bufferData : shaderData.buffers) {
       enlarge(setData, bufferData.set);
       auto& [bindingData, setLayoutPtr, m] = setData[bufferData.set];
       enlarge(bindingData, bufferData.binding);
       bindingData[bufferData.binding] =
-          make_buffer_binding(shaderData.stage, bufferData);
+          make_buffer_binding(shaderStage, bufferData);
     }
     for (jshd::image_data imageData : shaderData.images) {
       enlarge(setData, imageData.set);
       auto& [bindingData, setLayoutPtr, m] = setData[imageData.set];
       enlarge(bindingData, imageData.binding);
       bindingData[imageData.binding] =
-          make_image_binding(shaderData.stage, imageData);
+          make_image_binding(shaderStage, imageData);
     }
     for (jshd::sampler_data samplerData : shaderData.samplers) {
       enlarge(setData, samplerData.set);
       auto& [bindingData, setLayoutPtr, m] = setData[samplerData.set];
       enlarge(bindingData, samplerData.binding);
       bindingData[samplerData.binding] =
-          make_sampler_binding(device, shaderData.stage, samplerData);
+          make_sampler_binding(device, shaderStage, samplerData);
     }
-  }
+  };
+  
+  parseShaderData(vertexShaderData);
+  parseShaderData(fragmentShaderData);
 
   for (auto& set : setData) {
     auto bindingCount = static_cast<uint32_t>(set.bindingData.size());

@@ -4,7 +4,8 @@
 #include <tl/expected.hpp>
 #include <memory>
 #include <vector>
-#include <make_shader.hpp>
+#include <make_fragment_shader.hpp>
+#include <make_vertex_shader.hpp>
 #include "descriptor_set_layout.hpp"
 #include "shader_module.hpp"
 
@@ -28,7 +29,8 @@ private:
 
 inline auto make_pipeline_layout(
     VkDevice device,
-    std::vector<shader_module_data> shaderModuleData,
+    shader_data<jshd::vertex_shader_data> vertexShaderData,
+    shader_data<jshd::fragment_shader_data> fragmentShaderData,
     std::vector<set_data> setData) {
   std::vector<VkDescriptorSetLayout> layouts;
   layouts.reserve(setData.size());
@@ -37,18 +39,22 @@ inline auto make_pipeline_layout(
   for (const set_data& set : setData) {
     layouts.push_back(*set.setLayoutPtr);
   }
-  for (shader_module_data& shaderModule : shaderModuleData) {
-    auto& [ptr, shader] = shaderModule;
-    for (auto& push : shader.pushConstants) {
+
+  auto getPushRanges = [&pushRanges](auto& shaderModuleData) {
+    auto& [ptr, shaderData] = shaderModuleData;
+    auto shaderStage = get_shader_stage<decltype(shaderData)>();
+    for (auto& push : shaderData.pushConstants) {
       // TODO: need range from shader for each push constant
       pushRanges.push_back(
-          {VkShaderStageFlags{} | shader.stage,
+          {VkShaderStageFlags{} | shaderStage,
            push.offset,
            std::visit(
                [](auto v) { return static_cast<uint32_t>(sizeof(v)); },
                push.glslType)});
     }
-  }
+  };
+  getPushRanges(vertexShaderData);
+  getPushRanges(fragmentShaderData);
 
   VkPipelineLayoutCreateInfo createInfo{
       VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
