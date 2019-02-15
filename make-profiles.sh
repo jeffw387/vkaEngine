@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mkdir -p build
 cd build
 mkdir -p profiles
 GCC_PR=./profiles/gccprofile

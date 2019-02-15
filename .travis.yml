@@ -51,9 +51,9 @@ install:
   - pip3 install pathlib --user --upgrade
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
+  - ./make-profiles.sh
   - ./run-install.sh
 script:
   - eval "${MATRIX_EVAL}"
-  - ./make-profiles.sh
   - ./run-build.sh
   - ./run-test.sh
