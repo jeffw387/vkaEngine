@@ -209,6 +209,12 @@ struct graphics_pipeline_create_info {
       VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 };
 
+inline void validate_blend_state(blend_state& blendState) {
+  blendState.createInfo.attachmentCount =
+      static_cast<uint32_t>(blendState.attachments.size());
+  blendState.createInfo.pAttachments = blendState.attachments.data();
+}
+
 
 template <typename T>
 inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
