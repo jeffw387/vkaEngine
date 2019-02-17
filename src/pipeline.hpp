@@ -244,6 +244,7 @@ inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
 struct graphics_pipeline_state {
   VkRenderPass renderPass;
   uint32_t subpass;
+  VkPipelineCache cache;
   blend_state blendState;
   depth_stencil_state depthStencilState;
   dynamic_state dynamicState;
@@ -294,6 +295,7 @@ inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
 inline void validate_pipeline_state(graphics_pipeline_state& pipelineState) {
   auto& [renderPass,
          subpass,
+         cache,
          blendState,
          depthStencilState,
          dynamicState,
