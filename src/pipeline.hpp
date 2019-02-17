@@ -207,6 +207,21 @@ inline auto update_binding = [](VkVertexInputBindingDescription& b,
   stride = std::max(stride, offsetPlusExtent);
 };
 
+struct glsl_type_format_visitor {
+  VkFormat operator()(glm::float32 f) { return VK_FORMAT_R32_SFLOAT; }
+
+  VkFormat operator()(glm::vec2 v) { return VK_FORMAT_R32G32_SFLOAT; }
+
+  VkFormat operator()(glm::vec3 v) { return VK_FORMAT_R32G32B32_SFLOAT; }
+
+  VkFormat operator()(glm::vec4 v) { return VK_FORMAT_R32G32B32A32_SFLOAT; }
+
+  template <typename T>
+  VkFormat operator()(T defaultType) {
+    return VK_FORMAT_UNDEFINED;
+  }
+};
+
 inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   vertex_state state{};
   for (jshd::vertex_input_data input : vertexShaderData.inputs) {
