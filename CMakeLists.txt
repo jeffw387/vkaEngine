@@ -72,6 +72,7 @@ function(add_module module_name)
 
 endfunction()
 
+add_module(variant_helper)
 add_module(io)
 add_module(logger)
 add_module(sync_helper)
