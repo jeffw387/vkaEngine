@@ -215,6 +215,12 @@ inline void validate_blend_state(blend_state& blendState) {
   blendState.createInfo.pAttachments = blendState.attachments.data();
 }
 
+inline void validate_dynamic_state(dynamic_state& dynamicState) {
+  dynamicState.createInfo.dynamicStateCount =
+      static_cast<uint32_t>(dynamicState.states.size());
+  dynamicState.createInfo.pDynamicStates = dynamicState.states.data();
+}
+
 
 template <typename T>
 inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
