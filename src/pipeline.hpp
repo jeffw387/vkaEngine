@@ -193,6 +193,15 @@ inline auto enlarge(std::vector<T>& v, size_t n) {
   }
 }
 
+inline auto update_binding = [](VkVertexInputBindingDescription& b,
+                                jshd::vertex_input_data input) {
+  auto& [binding, stride, inputRate] = b;
+  auto offset = input.offset;
+  auto extent =
+      static_cast<uint32_t>(std::visit(variant_size, input.inputType));
+  auto offsetPlusExtent = offset + extent;
+  binding = input.binding;
+  stride = std::max(stride, offsetPlusExtent);
 };
 
 inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
