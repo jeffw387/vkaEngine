@@ -41,7 +41,6 @@ before_install:
 
 install:
   - sudo find /. -name "libc++.so*"
-  - printenv LD_LIBRARY_PATH
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/clang-7.0.0/lib
   - wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
   - sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-xenial.list http://packages.lunarg.com/vulkan/lunarg-vulkan-xenial.list
