@@ -307,6 +307,12 @@ inline void validate_pipeline_state(graphics_pipeline_state& pipelineState) {
          fragmentShader,
          vertexState,
          createInfo] = pipelineState;
+  validate_blend_state(blendState);
+  validate_dynamic_state(dynamicState);
+  validate_viewport_state(viewportState);
+  validate_shader_stage(vertexShader);
+  validate_shader_stage(fragmentShader);
+
   createInfo.renderPass = renderPass;
   createInfo.subpass = subpass;
   createInfo.pColorBlendState = &blendState.createInfo;
