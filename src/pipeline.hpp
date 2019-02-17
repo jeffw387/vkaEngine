@@ -320,5 +320,22 @@ inline void validate_pipeline_state(graphics_pipeline_state& pipelineState) {
   createInfo.pStages = stages.data();
   createInfo.pVertexInputState = &vertexState.createInfo;
 }
+
+inline auto make_pipeline(
+    VkDevice device,
+    graphics_pipeline_state pipelineState) {
   validate_pipeline_state(pipelineState);
+  VkPipeline pipelineHandle;
+  auto pipelineResult = vkCreateGraphicsPipelines(
+      device,
+      pipelineState.cache,
+      1,
+      &pipelineState.createInfo,
+      nullptr,
+      &pipelineHandle);
+  if (pipelineResult != VK_SUCCESS) {
+    exit(pipelineResult);
+  }
+  return std::make_unique<pipeline>(device, pipelineHandle);
+}
 }  // namespace vka
