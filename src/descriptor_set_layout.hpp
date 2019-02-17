@@ -156,7 +156,7 @@ inline auto make_set_layouts(
           make_sampler_binding(device, shaderStage, samplerData);
     }
   };
-  
+
   parseShaderData(vertexShaderData);
   parseShaderData(fragmentShaderData);
 
