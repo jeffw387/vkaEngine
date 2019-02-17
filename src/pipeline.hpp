@@ -253,6 +253,7 @@ struct graphics_pipeline_state {
   rasterization_state rasterizationState;
   shader_stage_state<jshd::vertex_shader_data> vertexShader;
   shader_stage_state<jshd::fragment_shader_data> fragmentShader;
+  vertex_state vertexState;
   VkGraphicsPipelineCreateInfo createInfo{
       VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 };
