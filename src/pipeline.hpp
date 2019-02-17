@@ -185,6 +185,9 @@ inline auto make_multisample_state(
 struct vertex_state {
   std::vector<VkVertexInputBindingDescription> bindings;
   std::vector<VkVertexInputAttributeDescription> attributes;
+  VkPipelineVertexInputStateCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
+};
 
 template <typename T>
 inline auto enlarge(std::vector<T>& v, size_t n) {
