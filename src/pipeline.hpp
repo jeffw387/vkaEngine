@@ -7,6 +7,7 @@
 #include <string_view>
 #include <algorithm>
 #include <variant>
+#include "variant_helper.hpp"
 #include <make_fragment_shader.hpp>
 #include <make_vertex_shader.hpp>
 #include "shader_module.hpp"
