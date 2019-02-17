@@ -58,4 +58,4 @@ install:
 script:
   - eval "${MATRIX_EVAL}"
   - ./run-build.sh
-  - ./run-test.sh
+  # - ./run-test.sh
