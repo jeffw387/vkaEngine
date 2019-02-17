@@ -222,6 +222,15 @@ struct glsl_type_format_visitor {
   }
 };
 
+inline auto set_attribute = [](VkVertexInputAttributeDescription& a,
+                               jshd::vertex_input_data input) {
+  auto& [location, binding, format, offset] = a;
+  location = input.location;
+  binding = input.binding;
+  format = std::visit(glsl_type_format_visitor{}, input.inputType);
+  offset = input.offset;
+};
+
 inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   vertex_state state{};
   for (jshd::vertex_input_data input : vertexShaderData.inputs) {
