@@ -234,7 +234,10 @@ inline auto set_attribute = [](VkVertexInputAttributeDescription& a,
 inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   vertex_state state{};
   for (jshd::vertex_input_data input : vertexShaderData.inputs) {
-    state.attributes.push_back({});
+    enlarge(state.bindings, input.binding);
+    update_binding(state.bindings[input.binding], input);
+    enlarge(state.attributes, input.location);
+    set_attribute(state.attributes[input.location], input);
   }
 }
 
