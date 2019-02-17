@@ -241,6 +241,7 @@ inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   }
 }
 
+struct graphics_pipeline_state {
   VkRenderPass renderPass;
   uint32_t subpass;
   blend_state blendState;
@@ -292,5 +293,5 @@ inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
 
 inline auto make_graphics_pipeline(
     VkDevice device,
-    graphics_pipeline_create_info createInfo) {}
+    graphics_pipeline_state pipelineState) {
 }  // namespace vka
