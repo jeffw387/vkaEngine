@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 #include <string_view>
-#include <any>
+#include <algorithm>
 #include <variant>
 #include <make_fragment_shader.hpp>
 #include <make_vertex_shader.hpp>
