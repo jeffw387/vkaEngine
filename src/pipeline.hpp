@@ -291,9 +291,7 @@ inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
   createInfo.module = *shaderData.shaderPtr;
 }
 
-inline auto make_graphics_pipeline(
-    VkDevice device,
-    graphics_pipeline_state pipelineState) {
+inline void validate_pipeline_state(graphics_pipeline_state& pipelineState) {
   auto& [renderPass,
          subpass,
          blendState,
@@ -306,4 +304,18 @@ inline auto make_graphics_pipeline(
          fragmentShader,
          vertexState,
          createInfo] = pipelineState;
+  createInfo.renderPass = renderPass;
+  createInfo.subpass = subpass;
+  createInfo.pColorBlendState = &blendState.createInfo;
+  createInfo.pDepthStencilState = &depthStencilState.createInfo;
+  createInfo.pDynamicState = &dynamicState.createInfo;
+  createInfo.pInputAssemblyState = &inputAssemblyState.createInfo;
+  createInfo.pViewportState = &viewportState.createInfo;
+  createInfo.pRasterizationState = &rasterizationState.createInfo;
+  std::vector<VkPipelineShaderStageCreateInfo> stages;
+  createInfo.stageCount = static_cast<uint32_t>(stages.size());
+  createInfo.pStages = stages.data();
+  createInfo.pVertexInputState = &vertexState.createInfo;
+}
+  validate_pipeline_state(pipelineState);
 }  // namespace vka
