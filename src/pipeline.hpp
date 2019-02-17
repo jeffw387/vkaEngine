@@ -61,9 +61,13 @@ inline auto make_blend_attachment(blend_attachment blendVariant) {
   return std::visit([](auto blend) { return blend.state; }, blendVariant);
 }
 
+template <typename T>
 struct shader_stage_state {
+  VkPipelineShaderStageCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
+  VkSpecializationInfo specInfo{};
   VkShaderStageFlagBits shaderStage = {};
-  VkShaderModule shaderModule = {};
+  T shaderData = {};
   std::string_view entryPoint = {};
   std::vector<VkSpecializationMapEntry> mapEntries = {};
   const void* pData = {};
@@ -199,12 +203,26 @@ struct graphics_pipeline_create_info {
   input_assembly_state inputAssemblyState;
   viewport_state viewportState;
   rasterization_state rasterizationState;
-  shader_data<jshd::vertex_shader_data> vertexShader;
-  shader_data<jshd::fragment_shader_data> fragmentShader;
-  std::vector<shader_stage_state> shaderStageState;
+  shader_stage_state<jshd::vertex_shader_data> vertexShader;
+  shader_stage_state<jshd::fragment_shader_data> fragmentShader;
   VkGraphicsPipelineCreateInfo createInfo{
       VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 };
+
+
+template <typename T>
+inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
+  auto& [createInfo, specInfo, stage, shaderData, entryPoint, mapEntries, pData,
+         dataSize] = shaderStageState;
+  specInfo.dataSize = dataSize;
+  specInfo.pData = pData;
+  specInfo.mapEntryCount = static_cast<uint32_t>(mapEntries.size());
+  specInfo.pMapEntries = mapEntries.data();
+  createInfo.pSpecializationInfo = &specInfo;
+  createInfo.pName = entryPoint.data();
+  createInfo.stage = stage;
+  createInfo.module = *shaderData.shaderPtr;
+}
 
 inline auto make_graphics_pipeline(
     VkDevice device,
