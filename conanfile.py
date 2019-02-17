@@ -2,7 +2,9 @@ from conans import ConanFile, CMake
 
 class vkaEngineConan(ConanFile):
     name = "vkaEngine"
-    version = "0.0.2"
+    versionfile = open(".version")
+    version = versionfile.read()
+    versionfile.close()
     license = "MIT"
     author = "Jeff Wright jeffw387@gmail.com"
     url = "https://github.com/jeffw387/vkaEngine.git"
@@ -11,7 +13,7 @@ class vkaEngineConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = "shared=False"
     generators = "cmake"
-    exports = "CMakeLists.txt", "!build"
+    exports = "CMakeLists.txt", ".version", "!build"
     exports_sources = "!build", "*.hpp", "*.cpp"
     build_policy = "missing"
     requires = (
