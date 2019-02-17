@@ -221,6 +221,14 @@ inline void validate_dynamic_state(dynamic_state& dynamicState) {
   dynamicState.createInfo.pDynamicStates = dynamicState.states.data();
 }
 
+inline void validate_viewport_state(viewport_state& viewportState) {
+  viewportState.createInfo.viewportCount =
+      static_cast<uint32_t>(viewportState.viewports.size());
+  viewportState.createInfo.pViewports = viewportState.viewports.data();
+  viewportState.createInfo.scissorCount =
+      static_cast<uint32_t>(viewportState.scissors.size());
+  viewportState.createInfo.pScissors = viewportState.scissors.data();
+}
 
 template <typename T>
 inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
