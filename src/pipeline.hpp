@@ -294,4 +294,16 @@ inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
 inline auto make_graphics_pipeline(
     VkDevice device,
     graphics_pipeline_state pipelineState) {
+  auto& [renderPass,
+         subpass,
+         blendState,
+         depthStencilState,
+         dynamicState,
+         inputAssemblyState,
+         viewportState,
+         rasterizationState,
+         vertexShader,
+         fragmentShader,
+         vertexState,
+         createInfo] = pipelineState;
 }  // namespace vka
