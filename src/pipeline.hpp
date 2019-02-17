@@ -241,7 +241,8 @@ inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   }
 }
 
-struct graphics_pipeline_create_info {
+  VkRenderPass renderPass;
+  uint32_t subpass;
   blend_state blendState;
   depth_stencil_state depthStencilState;
   dynamic_state dynamicState;
