@@ -54,8 +54,8 @@ install:
   - conan user
   - conan remote add jeffw https://api.bintray.com/conan/jeffw387/conan-public
   - ./make-profiles.sh
-  - ./run-install.sh
+  - ./install.sh
 script:
   - eval "${MATRIX_EVAL}"
-  - ./run-build.sh
+  - ./build.sh
   # - ./run-test.sh
