@@ -56,13 +56,15 @@ template <typename T>
 inline auto make_shader(VkDevice device, std::string_view name)
     -> shader_expected<T> {
   shader_data<T> result{};
-  auto j = json::parse(io::read_text_file(std::string(name) + ".json"));
+  auto jsonFileName = std::string{name} + ".json";
+  auto spvFileName = std::string{name} + ".spv";
+  auto j = json::parse(io::read_text_file(jsonFileName));
   if constexpr (std::is_same_v<T, jshd::vertex_shader_data>) {
     result.shaderData = jshd::vertex_shader_deserialize(j);
   } else if constexpr (std::is_same_v<T, jshd::fragment_shader_data>) {
     result.shaderData = jshd::fragment_shader_deserialize(j);
   }
-  if (auto b = io::read_binary_file(fs::path(name.data()))) {
+  if (auto b = io::read_binary_file(fs::path{spvFileName})) {
     VkShaderModuleCreateInfo createInfo{
         VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
     createInfo.codeSize = static_cast<uint32_t>(b->size());
