@@ -32,20 +32,6 @@ target_link_libraries(vkaEngine PUBLIC ${CONAN_LIBS})
 add_executable(vka_tests ${src_dir}/catch_main.cpp)
 target_link_libraries(vka_tests PRIVATE vkaEngine)
 
-add_custom_target(vka_tests_tidy)
-add_custom_target(vka_tests_format)
-
-add_custom_command(
-  TARGET vka_tests_format
-  POST_BUILD
-  WORKING_DIRECTORY ${src_dir}
-  COMMAND ./clang-format-all.sh ${src_dir})
-
-add_custom_command(
-  TARGET vka_tests_tidy
-  POST_BUILD
-  COMMAND run-clang-tidy ${src_dir} -p ${bin_dir} -fix -header-filter=${src_dir}/*,-gsl_lite.hpp,-spookyhash.*)
-
 function(add_module module_name)
   set(module_source ${src_dir}/${module_name}.cpp)
   set(test_name ${module_name}.test)
