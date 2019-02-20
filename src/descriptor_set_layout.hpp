@@ -125,13 +125,8 @@ constexpr auto get_shader_stage() -> VkShaderStageFlagBits {
   }
 }
 
-inline auto make_set_layouts(
-    VkDevice device,
-    shader_data<jshd::vertex_shader_data> vertexShaderData,
-    shader_data<jshd::fragment_shader_data> fragmentShaderData) {
-  std::vector<set_data> setData;
-
-  auto parseShaderData = [&setData, device](auto& shaderModuleData) {
+template <typename T>
+auto parseShaderData = [](auto& setData, auto device, shader_data<T>& shaderModuleData) {
     auto& [ptr, shaderData] = shaderModuleData;
     auto shaderStage = get_shader_stage<decltype(shaderData)>();
     for (jshd::buffer_data bufferData : shaderData.buffers) {
@@ -157,8 +152,14 @@ inline auto make_set_layouts(
     }
   };
 
-  parseShaderData(vertexShaderData);
-  parseShaderData(fragmentShaderData);
+inline auto make_set_layouts(
+    VkDevice device,
+    shader_data<jshd::vertex_shader_data>& vertexShaderData,
+    shader_data<jshd::fragment_shader_data>& fragmentShaderData) {
+  std::vector<set_data> setData;
+
+  parseShaderData<jshd::vertex_shader_data>(setData, device, vertexShaderData);
+  parseShaderData<jshd::fragment_shader_data>(setData, device, fragmentShaderData);
 
   for (auto& set : setData) {
     auto bindingCount = static_cast<uint32_t>(set.bindingData.size());
