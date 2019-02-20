@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(EngineVersionMajor 0)
-set(EngineVersionMinor 0)
-set(EngineVersionPatch 1)
+file(READ .version engine_version)
 project(vkaEngineProject 
-  LANGUAGES C CXX 
-  VERSION ${EngineVersionMajor}.${EngineVersionMinor}.${EngineVersionPatch})
-set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
+  VERSION ${engine_version})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_SHARED_LIBS OFF)
 
