@@ -23,7 +23,6 @@ include(${CMAKE_BINARY_DIR}/conan.cmake)
 conan_cmake_run(CONANFILE conanfile.py
                 BASIC_SETUP
                 PROFILE $ENV{CONANPROFILE}
-                SETTINGS cppstd=17
                 BUILD missing)
 
 ##
