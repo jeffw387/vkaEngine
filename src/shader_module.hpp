@@ -20,6 +20,9 @@ using nlohmann::json;
 namespace fs = std::experimental::filesystem;
 namespace vka {
 
+using vertex_shader_data = jshd::vertex_shader_data;
+using fragment_shader_data = jshd::fragment_shader_data;
+
 struct shader_module {
   shader_module(VkDevice device, VkShaderModule shaderModule)
       : m_device(device), m_shaderModule(shaderModule) {}
