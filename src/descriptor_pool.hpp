@@ -30,12 +30,12 @@ private:
 
 inline auto make_descriptor_pool(
     VkDevice device,
-    std::vector<set_data> set_layouts,
+    std::vector<set_data>& setLayouts,
     bool individualReset = false) {
   std::vector<VkDescriptorPoolSize> poolSizes;
   VkDescriptorPoolCreateInfo createInfo{
       VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-  for (set_data& set : set_layouts) {
+  for (set_data& set : setLayouts) {
     auto& [bindings, l, maxSets] = set;
     createInfo.maxSets += maxSets;
     for (auto& binding : bindings) {
