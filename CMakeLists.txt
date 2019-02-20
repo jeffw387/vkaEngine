@@ -6,6 +6,9 @@ project(vkaEngineProject
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_SHARED_LIBS OFF)
 
+set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
+
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
