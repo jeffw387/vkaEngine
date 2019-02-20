@@ -241,23 +241,6 @@ inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
   }
 }
 
-struct graphics_pipeline_state {
-  VkRenderPass renderPass;
-  uint32_t subpass;
-  VkPipelineCache cache;
-  blend_state blendState;
-  depth_stencil_state depthStencilState;
-  dynamic_state dynamicState;
-  input_assembly_state inputAssemblyState;
-  viewport_state viewportState;
-  rasterization_state rasterizationState;
-  shader_stage_state<jshd::vertex_shader_data>* vertexShader;
-  shader_stage_state<jshd::fragment_shader_data>* fragmentShader;
-  vertex_state vertexState;
-  VkGraphicsPipelineCreateInfo createInfo{
-      VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
-};
-
 inline void validate_blend_state(blend_state& blendState) {
   blendState.createInfo.attachmentCount =
       static_cast<uint32_t>(blendState.attachments.size());
@@ -293,26 +276,27 @@ inline void validate_shader_stage(shader_stage_state<T>& shaderStageState) {
   createInfo.module = *shaderData.shaderPtr;
 }
 
-inline void validate_pipeline_state(graphics_pipeline_state& pipelineState) {
-  auto& [renderPass,
-         subpass,
-         cache,
-         blendState,
-         depthStencilState,
-         dynamicState,
-         inputAssemblyState,
-         viewportState,
-         rasterizationState,
-         vertexShader,
-         fragmentShader,
-         vertexState,
-         createInfo] = pipelineState;
+inline auto make_pipeline(
+    VkDevice device,
+    VkRenderPass renderPass,
+    uint32_t subpass,
+    VkPipelineCache cache,
+    blend_state blendState,
+    depth_stencil_state depthStencilState,
+    dynamic_state dynamicState,
+    input_assembly_state inputAssemblyState,
+    viewport_state viewportState,
+    rasterization_state rasterizationState,
+    shader_stage_state<jshd::vertex_shader_data> vertexShader,
+    shader_stage_state<jshd::fragment_shader_data> fragmentShader,
+    vertex_state vertexState) {
   validate_blend_state(blendState);
   validate_dynamic_state(dynamicState);
   validate_viewport_state(viewportState);
   validate_shader_stage(vertexShader);
   validate_shader_stage(fragmentShader);
 
+  VkGraphicsPipelineCreateInfo createInfo{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
   createInfo.renderPass = renderPass;
   createInfo.subpass = subpass;
   createInfo.pColorBlendState = &blendState.createInfo;
@@ -325,18 +309,13 @@ inline void validate_pipeline_state(graphics_pipeline_state& pipelineState) {
   createInfo.stageCount = static_cast<uint32_t>(stages.size());
   createInfo.pStages = stages.data();
   createInfo.pVertexInputState = &vertexState.createInfo;
-}
 
-inline auto make_pipeline(
-    VkDevice device,
-    graphics_pipeline_state pipelineState) {
-  validate_pipeline_state(pipelineState);
   VkPipeline pipelineHandle;
   auto pipelineResult = vkCreateGraphicsPipelines(
       device,
-      pipelineState.cache,
+      cache,
       1,
-      &pipelineState.createInfo,
+      &createInfo,
       nullptr,
       &pipelineHandle);
   if (pipelineResult != VK_SUCCESS) {
