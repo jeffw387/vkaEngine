@@ -19,7 +19,7 @@ class vkaEngineConan(ConanFile):
     requires = (
         "vulkan-sdk/1.X.X@jeffw387/testing",
         "libcpp/latest@jeffw387/testing",
-        "libstdcpp/latest@jeff387/testing",
+        "libstdcpp/latest@jeffw387/testing",
         "pthread/latest@jeffw387/testing",
         "cppfs/experimental@jeffw387/testing",
         "glfw/3.2.1@jeffw387/testing", 
