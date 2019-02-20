@@ -127,30 +127,30 @@ constexpr auto get_shader_stage() -> VkShaderStageFlagBits {
 
 template <typename T>
 auto parseShaderData = [](auto& setData, auto device, shader_data<T>& shaderModuleData) {
-    auto& [ptr, shaderData] = shaderModuleData;
-    auto shaderStage = get_shader_stage<decltype(shaderData)>();
-    for (jshd::buffer_data bufferData : shaderData.buffers) {
-      enlarge(setData, bufferData.set);
-      auto& [bindingData, setLayoutPtr, m] = setData[bufferData.set];
-      enlarge(bindingData, bufferData.binding);
-      bindingData[bufferData.binding] =
-          make_buffer_binding(shaderStage, bufferData);
-    }
-    for (jshd::image_data imageData : shaderData.images) {
-      enlarge(setData, imageData.set);
-      auto& [bindingData, setLayoutPtr, m] = setData[imageData.set];
-      enlarge(bindingData, imageData.binding);
-      bindingData[imageData.binding] =
-          make_image_binding(shaderStage, imageData);
-    }
-    for (jshd::sampler_data samplerData : shaderData.samplers) {
-      enlarge(setData, samplerData.set);
-      auto& [bindingData, setLayoutPtr, m] = setData[samplerData.set];
-      enlarge(bindingData, samplerData.binding);
-      bindingData[samplerData.binding] =
-          make_sampler_binding(device, shaderStage, samplerData);
-    }
-  };
+  auto& [ptr, shaderData] = shaderModuleData;
+  auto shaderStage = get_shader_stage<decltype(shaderData)>();
+  for (jshd::buffer_data bufferData : shaderData.buffers) {
+    enlarge(setData, bufferData.set);
+    auto& [bindingData, setLayoutPtr, m] = setData[bufferData.set];
+    enlarge(bindingData, bufferData.binding);
+    bindingData[bufferData.binding] =
+        make_buffer_binding(shaderStage, bufferData);
+  }
+  for (jshd::image_data imageData : shaderData.images) {
+    enlarge(setData, imageData.set);
+    auto& [bindingData, setLayoutPtr, m] = setData[imageData.set];
+    enlarge(bindingData, imageData.binding);
+    bindingData[imageData.binding] =
+        make_image_binding(shaderStage, imageData);
+  }
+  for (jshd::sampler_data samplerData : shaderData.samplers) {
+    enlarge(setData, samplerData.set);
+    auto& [bindingData, setLayoutPtr, m] = setData[samplerData.set];
+    enlarge(bindingData, samplerData.binding);
+    bindingData[samplerData.binding] =
+        make_sampler_binding(device, shaderStage, samplerData);
+  }
+};
 
 inline auto make_set_layouts(
     VkDevice device,

@@ -27,10 +27,12 @@ private:
   VkPipelineLayout m_layout = {};
 };
 
+
+
 inline auto make_pipeline_layout(
     VkDevice device,
-    shader_data<jshd::vertex_shader_data> vertexShaderData,
-    shader_data<jshd::fragment_shader_data> fragmentShaderData,
+    shader_data<jshd::vertex_shader_data>& vertexShaderData,
+    shader_data<jshd::fragment_shader_data>& fragmentShaderData,
     std::vector<set_data> setData) {
   std::vector<VkDescriptorSetLayout> layouts;
   layouts.reserve(setData.size());
