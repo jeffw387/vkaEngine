@@ -17,7 +17,11 @@ class vkaEngineConan(ConanFile):
     exports_sources = "!build", "*.hpp", "*.cpp"
     build_policy = "missing"
     requires = (
-        "vulkan-sdk/1.X.X@jeffw387/testing", 
+        "vulkan-sdk/1.X.X@jeffw387/testing",
+        "libcpp/latest@jeffw387/testing",
+        "libstdcpp/latest@jeff387/testing",
+        "pthread/latest@jeffw387/testing",
+        "cppfs/experimental@jeffw387/testing",
         "glfw/3.2.1@jeffw387/testing", 
         "glm/0.9.9.1@g-truc/stable", 
         "VulkanMemoryAllocator/2.2.0@jeffw387/testing", 

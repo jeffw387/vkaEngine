@@ -22,7 +22,7 @@ include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 conan_cmake_run(CONANFILE conanfile.py
                 BASIC_SETUP
-                PROFILE_AUTO
+                PROFILE $ENV{CONANPROFILE}
                 SETTINGS cppstd=17
                 BUILD missing)
 
@@ -31,15 +31,6 @@ conan_cmake_run(CONANFILE conanfile.py
 ##
 add_library(vkaEngine)
 target_link_libraries(vkaEngine PUBLIC ${CONAN_LIBS})
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  if (NOT WIN32)
-    target_link_libraries(vkaEngine PUBLIC c++abi c++fs pthread)
-  endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if (NOT WIN32)
-    target_link_libraries(vkaEngine PUBLIC stdc++fs pthread)
-  endif()
-endif()
 
 add_executable(vka_tests ${src_dir}/catch_main.cpp)
 target_link_libraries(vka_tests PRIVATE vkaEngine)
