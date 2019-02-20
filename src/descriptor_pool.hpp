@@ -28,7 +28,7 @@ private:
   bool m_individualResetAllowed = {};
 };
 
-inline auto make_pool(
+inline auto make_descriptor_pool(
     VkDevice device,
     std::vector<set_data> set_layouts,
     bool individualReset = false) {
