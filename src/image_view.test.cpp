@@ -1,14 +1,14 @@
 #include "image_view.hpp"
 
 #include <catch2/catch.hpp>
-#include "platform_glfw.hpp"
-#include "instance.hpp"
-#include "physical_device.hpp"
-#include "queue_family.hpp"
 #include "device.hpp"
-#include "memory_allocator.hpp"
 #include "image.hpp"
+#include "instance.hpp"
+#include "memory_allocator.hpp"
 #include "move_into.hpp"
+#include "physical_device.hpp"
+#include "platform_glfw.hpp"
+#include "queue_family.hpp"
 
 using namespace vka;
 TEST_CASE("Create an image view from an image") {

@@ -1,6 +1,6 @@
-#include "platform_glfw.hpp"
-#include "logger.hpp"
 #include <catch2/catch.hpp>
+#include "logger.hpp"
+#include "platform_glfw.hpp"
 
 TEST_CASE("Init/Create Window") {
   SECTION("No exception during window creation.") {

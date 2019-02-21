@@ -1,10 +1,10 @@
 #pragma once
 #include <array>
-#include <mutex>
-#include <functional>
-#include <optional>
-#include <iterator>
 #include <cstddef>
+#include <functional>
+#include <iterator>
+#include <mutex>
+#include <optional>
 
 template <typename T, size_t S>
 struct flatlist_iterator {

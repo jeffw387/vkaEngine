@@ -11,8 +11,8 @@
 //   SpookyV2: d = should be d += in short hash, and remove
 //   extra mix from long hash
 
-#include <memory.h>
 #include "spookyhash.hpp"
+#include <memory.h>
 
 #define ALLOW_UNALIGNED_READS 1
 

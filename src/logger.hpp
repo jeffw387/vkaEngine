@@ -1,8 +1,8 @@
 #pragma once
 #include <spdlog/spdlog.h>
+#include <memory>
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
-#include <memory>
 
 static auto logFileName = "vkaEngineLog.txt";
 

@@ -1,11 +1,11 @@
 #pragma once
-#include <variant>
 #include <map>
 #include <unordered_map>
+#include <variant>
 
-#include "spookyhash.hpp"
-#include "flat_list.hpp"
 #include "clock.hpp"
+#include "flat_list.hpp"
+#include "spookyhash.hpp"
 #include "surface.hpp"
 
 namespace input {

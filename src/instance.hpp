@@ -1,7 +1,7 @@
 #include <vulkan/vulkan.h>
-#include <vector>
 #include <memory>
 #include <tl/expected.hpp>
+#include <vector>
 #include "gsl-lite.hpp"
 
 namespace vka {

@@ -401,12 +401,12 @@ typedef enum ThsvsAccessType {
                                                       // tessellation
                                                       // evaluation
                                                       // shader
-  THSVS_ACCESS_GEOMETRY_SHADER_WRITE,  // Written as any
-                                       // resource in a
-                                       // geometry shader
-  THSVS_ACCESS_FRAGMENT_SHADER_WRITE,  // Written as any
-                                       // resource in a
-                                       // fragment shader
+  THSVS_ACCESS_GEOMETRY_SHADER_WRITE,   // Written as any
+                                        // resource in a
+                                        // geometry shader
+  THSVS_ACCESS_FRAGMENT_SHADER_WRITE,   // Written as any
+                                        // resource in a
+                                        // fragment shader
   THSVS_ACCESS_COLOR_ATTACHMENT_WRITE,  // Written as a
                                         // color attachment
                                         // during rendering,

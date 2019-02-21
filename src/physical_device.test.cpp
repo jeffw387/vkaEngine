@@ -1,9 +1,9 @@
 
 #include <catch2/catch.hpp>
 #include <memory>
-#include "physical_device.hpp"
 #include "instance.hpp"
 #include "move_into.hpp"
+#include "physical_device.hpp"
 #include "platform_glfw.hpp"
 
 using namespace vka;

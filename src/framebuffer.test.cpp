@@ -1,16 +1,16 @@
 #include "framebuffer.hpp"
 
 #include <catch2/catch.hpp>
-#include "platform_glfw.hpp"
-#include "instance.hpp"
-#include "physical_device.hpp"
-#include "queue_family.hpp"
 #include "device.hpp"
-#include "memory_allocator.hpp"
 #include "image.hpp"
 #include "image_view.hpp"
-#include "render_pass.hpp"
+#include "instance.hpp"
+#include "memory_allocator.hpp"
 #include "move_into.hpp"
+#include "physical_device.hpp"
+#include "platform_glfw.hpp"
+#include "queue_family.hpp"
+#include "render_pass.hpp"
 
 using namespace vka;
 TEST_CASE(

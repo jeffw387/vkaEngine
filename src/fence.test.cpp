@@ -1,12 +1,12 @@
 #include "fence.hpp"
 
 #include <catch2/catch.hpp>
-#include "platform_glfw.hpp"
-#include "instance.hpp"
-#include "physical_device.hpp"
-#include "queue_family.hpp"
 #include "device.hpp"
+#include "instance.hpp"
 #include "move_into.hpp"
+#include "physical_device.hpp"
+#include "platform_glfw.hpp"
+#include "queue_family.hpp"
 
 using namespace vka;
 TEST_CASE("Create a signaled fence") {

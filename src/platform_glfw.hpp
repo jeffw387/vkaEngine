@@ -2,10 +2,10 @@
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 
-#include <string_view>
-#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 #include <memory>
+#include <string_view>
 #include <tl/expected.hpp>
 #include "gsl-lite.hpp"
 

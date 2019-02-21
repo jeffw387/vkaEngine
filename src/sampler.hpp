@@ -2,8 +2,8 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <tl/expected.hpp>
-#include <variant>
 #include <type_traits>
+#include <variant>
 
 namespace vka {
 struct sampler {

@@ -1,6 +1,6 @@
 #include <future>
-#include "object_pool.hpp"
 #include "flat_list.hpp"
+#include "object_pool.hpp"
 
 template <typename T>
 struct State {

@@ -1,11 +1,11 @@
 
 #include <catch2/catch.hpp>
-#include "queue_family.hpp"
-#include "surface.hpp"
 #include "instance.hpp"
+#include "move_into.hpp"
 #include "physical_device.hpp"
 #include "platform_glfw.hpp"
-#include "move_into.hpp"
+#include "queue_family.hpp"
+#include "surface.hpp"
 
 using namespace vka;
 TEST_CASE("Select a graphics/present queue") {

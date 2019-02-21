@@ -1,8 +1,8 @@
 #pragma once
-#include <array>
-#include <vector>
 #include <algorithm>
+#include <array>
 #include <memory>
+#include <vector>
 #include "intrusive_list.hpp"
 
 namespace QT {

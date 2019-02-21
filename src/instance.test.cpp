@@ -2,8 +2,8 @@
 #include <catch2/catch.hpp>
 #include <memory>
 #include "instance.hpp"
-#include "platform_glfw.hpp"
 #include "move_into.hpp"
+#include "platform_glfw.hpp"
 
 TEST_CASE("Create an instance") {
   platform::glfw::init();

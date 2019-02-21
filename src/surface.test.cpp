@@ -1,9 +1,9 @@
 
 #include <catch2/catch.hpp>
 #include "instance.hpp"
-#include "surface.hpp"
 #include "move_into.hpp"
 #include "platform_glfw.hpp"
+#include "surface.hpp"
 
 using namespace platform;
 TEST_CASE("Create Surface") {

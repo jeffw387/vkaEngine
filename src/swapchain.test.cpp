@@ -1,13 +1,13 @@
 #include "swapchain.hpp"
 
 #include <catch2/catch.hpp>
-#include "instance.hpp"
-#include "queue_family.hpp"
-#include "physical_device.hpp"
 #include "device.hpp"
-#include "surface.hpp"
-#include "platform_glfw.hpp"
+#include "instance.hpp"
 #include "move_into.hpp"
+#include "physical_device.hpp"
+#include "platform_glfw.hpp"
+#include "queue_family.hpp"
+#include "surface.hpp"
 
 using namespace vka;
 TEST_CASE("Create a swapchain") {

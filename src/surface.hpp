@@ -1,12 +1,12 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include "platform_glfw.hpp"
 #include <memory>
-#include <variant>
-#include <vector>
 #include <string_view>
 #include <tl/expected.hpp>
+#include <variant>
+#include <vector>
+#include "platform_glfw.hpp"
 
 namespace vka {
 using WindowType = platform::glfw::window_type;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include <tl/expected.hpp>
 #include <memory>
+#include <tl/expected.hpp>
 
 namespace vka {
 struct fence {
