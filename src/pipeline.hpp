@@ -68,11 +68,13 @@ struct shader_stage_state {
       VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
   VkSpecializationInfo specInfo{};
   VkShaderStageFlagBits shaderStage = {};
-  shader_data<T> shaderData = {};
+  shader_data<T>& shaderData;
   std::string_view entryPoint = {};
   std::vector<VkSpecializationMapEntry> mapEntries = {};
   const void* pData = {};
   size_t dataSize = {};
+
+  shader_stage_state(shader_data<T>& shaderData) : shaderData(shaderData) {}
 };
 
 struct blend_state {
