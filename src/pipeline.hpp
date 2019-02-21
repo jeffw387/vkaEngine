@@ -271,6 +271,7 @@ inline auto make_vertex_state(jshd::vertex_shader_data vertexShaderData) {
     enlarge(state.attributes, input.location);
     set_attribute(state.attributes[input.location], input);
   }
+  return state;
 }
 
 inline void validate_blend_state(blend_state& blendState) {
