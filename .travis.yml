@@ -19,7 +19,7 @@ matrix:
             - mesa-vulkan-drivers
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/gccprofile"
-        - CONANPROFILE=./profiles/gccprofile
+        - CONANPROFILE=gccprofile
     - os: linux
       compiler: clang
       addons:
@@ -34,7 +34,7 @@ matrix:
             - libc++abi1
       env:
         - MATRIX_EVAL="CC=clang && CXX=clang++ && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/clangprofile"
-        - CONANPROFILE=./profiles/clangprofile
+        - CONANPROFILE=clangprofile
 
 before_install:
   - eval "${MATRIX_EVAL}"
