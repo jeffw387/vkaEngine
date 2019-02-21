@@ -18,7 +18,7 @@ matrix:
             - libglu1-mesa-dev
             - mesa-vulkan-drivers
       env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/gccprofile"
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=gccprofile"
         - CONANPROFILE=gccprofile
     - os: linux
       compiler: clang
@@ -33,7 +33,7 @@ matrix:
             - libc++abi-dev
             - libc++abi1
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=./profiles/clangprofile"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONAN_CMAKE_GENERATOR=Ninja && CONANPROFILE=clangprofile"
         - CONANPROFILE=clangprofile
 
 before_install:
