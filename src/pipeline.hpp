@@ -75,35 +75,6 @@ struct shader_stage_state {
   size_t dataSize = {};
 };
 
-template <typename T>
-inline auto make_shader_stage(
-  shader_data<T>& shaderData,
-  std::string_view entryPoint,
-  gsl::span<char> data) {
-    shader_stage_state<T> result{shaderData};
-    result.dataSize = data.size();
-    result.pData = reinterpret_cast<void*>(data.data());
-    uint32_t dataOffset{};
-    for (jshd::constant_data& constantData : shaderData.shaderData.constants) {
-    auto constantSize = std::visit(variant_size, constantData.glslType);
-      if (constantData.specializationID) {
-        VkSpecializationMapEntry mapEntry{};
-        mapEntry.constantID = *constantData.specializationID;
-        mapEntry.offset = dataOffset;
-        mapEntry.size = constantSize;
-        result.mapEntries.push_back(mapEntry);
-      }
-      dataOffset += constantSize;
-    }
-    if constexpr (std::is_same_v<T, jshd::vertex_shader_data>) {
-      result.shaderStage = VK_SHADER_STAGE_VERTEX_BIT;
-    } else if constexpr (std::is_same_v<T, jshd::fragment_shader_data>) {
-      result.shaderStage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    }
-    result.entryPoint = entryPoint;
-    return result;
-  }
-
 struct blend_state {
   std::vector<VkPipelineColorBlendAttachmentState> attachments;
   VkPipelineColorBlendStateCreateInfo createInfo{
@@ -317,8 +288,8 @@ inline auto make_pipeline(
     input_assembly_state inputAssemblyState,
     viewport_state viewportState,
     rasterization_state rasterizationState,
-    shader_stage_state<jshd::vertex_shader_data> vertexShader,
-    shader_stage_state<jshd::fragment_shader_data> fragmentShader,
+    shader_stage_state<jshd::vertex_shader_data>& vertexShader,
+    shader_stage_state<jshd::fragment_shader_data>& fragmentShader,
     vertex_state vertexState) {
   validate_blend_state(blendState);
   validate_dynamic_state(dynamicState);
