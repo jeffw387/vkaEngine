@@ -10,12 +10,14 @@
 using namespace vka;
 TEST_CASE("Select a graphics/present queue") {
   auto instanceBuilder = instance_builder{};
-  auto surfaceExtensions = platform::glfw::get_required_instance_extensions();
+  auto surfaceExtensions =
+      platform::glfw::get_required_instance_extensions();
   for (auto extension : surfaceExtensions) {
     instanceBuilder.add_extension(extension);
   }
   std::unique_ptr<instance> instancePtr = {};
-  instanceBuilder.add_layer("VK_LAYER_LUNARG_standard_validation")
+  instanceBuilder
+      .add_layer("VK_LAYER_LUNARG_standard_validation")
       .build()
       .map(move_into{instancePtr})
       .map_error([](auto error) { REQUIRE(false); });

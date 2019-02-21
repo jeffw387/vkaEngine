@@ -29,7 +29,9 @@ struct descriptor_set {
     }
   }
   operator VkDescriptorSet() { return m_set; }
-  descriptor_set_layout* set_layout() const noexcept { return m_layout; }
+  descriptor_set_layout* set_layout() const noexcept {
+    return m_layout;
+  }
 
 private:
   VkDevice m_device = {};
@@ -40,9 +42,8 @@ private:
 };
 
 struct descriptor_set_allocator {
-  tl::expected<std::unique_ptr<descriptor_set>, VkResult> allocate(
-      VkDevice device,
-      descriptor_pool& pool) {
+  tl::expected<std::unique_ptr<descriptor_set>, VkResult>
+  allocate(VkDevice device, descriptor_pool& pool) {
     VkDescriptorSetLayout layout = *m_layout;
     VkDescriptorSetAllocateInfo allocateInfo = {
         VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
@@ -51,15 +52,21 @@ struct descriptor_set_allocator {
     allocateInfo.pSetLayouts = &layout;
 
     VkDescriptorSet set = {};
-    auto result = vkAllocateDescriptorSets(device, &allocateInfo, &set);
+    auto result = vkAllocateDescriptorSets(
+        device, &allocateInfo, &set);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
     return std::make_unique<descriptor_set>(
-        device, pool, m_layout, set, pool.individual_reset_allowed());
+        device,
+        pool,
+        m_layout,
+        set,
+        pool.individual_reset_allowed());
   }
 
-  descriptor_set_allocator& set_layout(descriptor_set_layout* layout) {
+  descriptor_set_allocator& set_layout(
+      descriptor_set_layout* layout) {
     m_layout = layout;
     return *this;
   }

@@ -21,8 +21,10 @@ public:
   T* front() { return root; }
 
   void erase(T* element) {
-    if (element->previous != nullptr) element->previous->next = element->next;
-    if (element->next != nullptr) element->next->previous = element->previous;
+    if (element->previous != nullptr)
+      element->previous->next = element->next;
+    if (element->next != nullptr)
+      element->next->previous = element->previous;
     if (root == element) root = nullptr;
     if (count > 0) --count;
   }

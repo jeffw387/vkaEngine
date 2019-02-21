@@ -45,5 +45,7 @@ TEST_CASE("Create a semaphore") {
       .build(*devicePtr)
       .map(move_into{semaphorePtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(semaphorePtr->operator VkSemaphore() != VK_NULL_HANDLE);
+  REQUIRE(
+      semaphorePtr->operator VkSemaphore() !=
+      VK_NULL_HANDLE);
 }

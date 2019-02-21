@@ -7,11 +7,14 @@ using namespace ranges;
 
 template <>
 float Font<>::vectorToRenderRatio(int fontPixelHeight) {
-  return stbtt_ScaleForPixelHeight(&fontInfo, fontPixelHeight);
+  return stbtt_ScaleForPixelHeight(
+      &fontInfo, fontPixelHeight);
 }
 
 template <>
-float Font<>::getAdvance(int glyphIndex, int fontPixelHeight) {
+float Font<>::getAdvance(
+    int glyphIndex,
+    int fontPixelHeight) {
   int adv{};
   int lsb{};
   stbtt_GetGlyphHMetrics(&fontInfo, glyphIndex, &adv, &lsb);
@@ -23,8 +26,9 @@ float Font<>::getKerning(
     int glyphIndex1,
     int glyphIndex2,
     int fontPixelHeight) {
-  auto unscaledKern = static_cast<float>(
-      stbtt_GetGlyphKernAdvance(&fontInfo, glyphIndex1, glyphIndex2));
+  auto unscaledKern =
+      static_cast<float>(stbtt_GetGlyphKernAdvance(
+          &fontInfo, glyphIndex1, glyphIndex2));
   return unscaledKern;
 }
 
@@ -60,10 +64,11 @@ std::unique_ptr<VertexData> Font<>::getVertexData() {
     auto uv = bitmap->uv;
     action::push_back(
         result.vertices,
-        std::vector<Vertex>{{{pos.xmin, pos.ymin}, {uv.xmin, uv.ymin}},
-                            {{pos.xmin, pos.ymax}, {uv.xmin, uv.ymax}},
-                            {{pos.xmax, pos.ymax}, {uv.xmax, uv.ymax}},
-                            {{pos.xmax, pos.ymin}, {uv.xmax, uv.ymin}}});
+        std::vector<Vertex>{
+            {{pos.xmin, pos.ymin}, {uv.xmin, uv.ymin}},
+            {{pos.xmin, pos.ymax}, {uv.xmin, uv.ymax}},
+            {{pos.xmax, pos.ymax}, {uv.xmax, uv.ymax}},
+            {{pos.xmax, pos.ymin}, {uv.xmax, uv.ymin}}});
     result.offsets[glyphIndex] = indexOffset;
     indexOffset += IndicesPerQuad;
     vertexOffset += VerticesPerQuad;
@@ -89,7 +94,8 @@ std::vector<uint8_t> Font<>::getTextureData() {
   namespace view = ranges::view;
   namespace action = ranges::action;
   auto pixelRanges =
-      glyphMap | view::values | view::transform([](auto& bitmapPtr) {
+      glyphMap | view::values |
+      view::transform([](auto& bitmapPtr) {
         auto& bmp = bitmapPtr->bitmap;
         return gsl::span<msdfgen::FloatRGB>(
             bmp.data(), bmp.width() * bmp.height());
@@ -103,9 +109,11 @@ std::vector<uint8_t> Font<>::getTextureData() {
 }
 
 template <>
-std::vector<stbtt_vertex> Font<>::getGlyphShape(int glyphIndex) {
+std::vector<stbtt_vertex> Font<>::getGlyphShape(
+    int glyphIndex) {
   stbtt_vertex* vertArray{};
-  auto vertCount = stbtt_GetGlyphShape(&fontInfo, glyphIndex, &vertArray);
+  auto vertCount = stbtt_GetGlyphShape(
+      &fontInfo, glyphIndex, &vertArray);
   std::vector<stbtt_vertex> result;
   result.reserve(vertCount);
   for (int i{}; i < vertCount; ++i) {
@@ -128,7 +136,8 @@ auto addQuadraticEdge = [](msdfgen::Contour& contour,
                            msdfgen::Point2 controlPoint,
                            msdfgen::Point2 endPoint) {
   auto& newEdge = contour.addEdge();
-  newEdge = msdfgen::EdgeHolder(startPoint, controlPoint, endPoint);
+  newEdge = msdfgen::EdgeHolder(
+      startPoint, controlPoint, endPoint);
   return endPoint;
 };
 
@@ -138,13 +147,14 @@ auto addCubicEdge = [](msdfgen::Contour& contour,
                        msdfgen::Point2 controlPoint2,
                        msdfgen::Point2 endPoint) {
   auto& newEdge = contour.addEdge();
-  newEdge =
-      msdfgen::EdgeHolder(startPoint, controlPoint1, controlPoint2, endPoint);
+  newEdge = msdfgen::EdgeHolder(
+      startPoint, controlPoint1, controlPoint2, endPoint);
   return endPoint;
 };
 
 auto makePoint = [](short x, short y) {
-  return msdfgen::Point2{static_cast<double>(x), static_cast<double>(y)};
+  return msdfgen::Point2{static_cast<double>(x),
+                         static_cast<double>(y)};
 };
 
 auto makeShape = [](auto stbtt_shape) {
@@ -158,7 +168,9 @@ auto makeShape = [](auto stbtt_shape) {
         break;
       case STBTT_vline:
         nextStartPoint = addLineEdge(
-            shape.contours.back(), nextStartPoint, makePoint(vert.x, vert.y));
+            shape.contours.back(),
+            nextStartPoint,
+            makePoint(vert.x, vert.y));
         break;
       case STBTT_vcurve:
         nextStartPoint = addQuadraticEdge(
@@ -182,26 +194,32 @@ auto makeShape = [](auto stbtt_shape) {
 };
 
 template <typename T>
-auto findCenter = [](T min, T max) { return ((max - min) * 0.5) + min; };
+auto findCenter =
+    [](T min, T max) { return ((max - min) * 0.5) + min; };
 
 // calculate translation to center shape in frame
 template <typename T>
-auto calcTranslation = [](T shapeMin, T shapeMax, T frameMin, T frameMax) {
-  auto shapeCenter = findCenter<T>(shapeMin, shapeMax);
-  auto frameCenter = findCenter<T>(frameMin, frameMax);
-  return frameCenter - shapeCenter;
-};
+auto calcTranslation =
+    [](T shapeMin, T shapeMax, T frameMin, T frameMax) {
+      auto shapeCenter = findCenter<T>(shapeMin, shapeMax);
+      auto frameCenter = findCenter<T>(frameMin, frameMax);
+      return frameCenter - shapeCenter;
+    };
 
-auto getGlyphRenderBounds = [](Rect<double> shapeBounds, float scaleFactor) {
-  Rect<float> result = {static_cast<float>(shapeBounds.xmin * scaleFactor),
-                        static_cast<float>(shapeBounds.ymin * scaleFactor),
-                        static_cast<float>(shapeBounds.xmax * scaleFactor),
-                        static_cast<float>(shapeBounds.ymax * scaleFactor)};
+auto getGlyphRenderBounds = [](Rect<double> shapeBounds,
+                               float scaleFactor) {
+  Rect<float> result = {
+      static_cast<float>(shapeBounds.xmin * scaleFactor),
+      static_cast<float>(shapeBounds.ymin * scaleFactor),
+      static_cast<float>(shapeBounds.xmax * scaleFactor),
+      static_cast<float>(shapeBounds.ymax * scaleFactor)};
   return result;
 };
 
 auto getTransformedRenderBounds =
-    [](Rect<float> renderBounds, float xOffset, float yOffset) {
+    [](Rect<float> renderBounds,
+       float xOffset,
+       float yOffset) {
       renderBounds.xmin += xOffset;
       renderBounds.xmax += xOffset;
       renderBounds.ymin += yOffset;
@@ -212,8 +230,10 @@ auto getTransformedRenderBounds =
 auto getUV = [](Rect<float> transformedBounds, float size) {
   transformedBounds.xmin /= size;
   transformedBounds.xmax /= size;
-  transformedBounds.ymin = 1 - (transformedBounds.ymin / size);
-  transformedBounds.ymax = 1 - (transformedBounds.ymax / size);
+  transformedBounds.ymin =
+      1 - (transformedBounds.ymin / size);
+  transformedBounds.ymax =
+      1 - (transformedBounds.ymax / size);
   std::swap(transformedBounds.ymin, transformedBounds.ymax);
   return transformedBounds;
 };
@@ -240,23 +260,35 @@ std::unique_ptr<MSDFGlyph> Font<>::getMSDFGlyph(
   auto shape = makeShape(getGlyphShape(glyphIndex));
   if (!shape.validate()) {
     MultiLogger::get()->error(
-        "Error: problem with shape from glyph index {}.", glyphIndex);
+        "Error: problem with shape from glyph index {}.",
+        glyphIndex);
   }
 
   msdfgen::edgeColoringSimple(shape, 2.8);
   shape.normalize();
   Rect<double> shapeBounds{};
   shape.bounds(
-      shapeBounds.xmin, shapeBounds.ymin, shapeBounds.xmax, shapeBounds.ymax);
+      shapeBounds.xmin,
+      shapeBounds.ymin,
+      shapeBounds.xmax,
+      shapeBounds.ymax);
 
-  auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(bitmapSize, bitmapSize);
+  auto output = msdfgen::Bitmap<msdfgen::FloatRGB>(
+      bitmapSize, bitmapSize);
   auto bitmapSizeShapeUnits = bitmapSize / scaleFactor;
-  // msdfgen::Vector2 scaleToOutput{scaleFactor, scaleFactor};
+  // msdfgen::Vector2 scaleToOutput{scaleFactor,
+  // scaleFactor};
   msdfgen::Vector2 translateShapeUnits{
       calcTranslation<double>(
-          shapeBounds.xmin, shapeBounds.xmax, 0, bitmapSizeShapeUnits),
+          shapeBounds.xmin,
+          shapeBounds.xmax,
+          0,
+          bitmapSizeShapeUnits),
       calcTranslation<double>(
-          shapeBounds.ymin, shapeBounds.ymax, 0, bitmapSizeShapeUnits)};
+          shapeBounds.ymin,
+          shapeBounds.ymax,
+          0,
+          bitmapSizeShapeUnits)};
   auto rangeShapeUnits = pixelRange / scaleFactor;
   msdfgen::generateMSDF(
       output,
@@ -265,35 +297,44 @@ std::unique_ptr<MSDFGlyph> Font<>::getMSDFGlyph(
       {scaleFactor, scaleFactor},
       translateShapeUnits);
 
-  auto renderedGlyphBounds = getGlyphRenderBounds(shapeBounds, scaleFactor);
-  auto paddedRenderedBounds = flipY(padRect(renderedGlyphBounds, padding));
+  auto renderedGlyphBounds =
+      getGlyphRenderBounds(shapeBounds, scaleFactor);
+  auto paddedRenderedBounds =
+      flipY(padRect(renderedGlyphBounds, padding));
 
-  auto translateRenderUnits = translateShapeUnits * scaleFactor;
+  auto translateRenderUnits =
+      translateShapeUnits * scaleFactor;
   auto transformedRenderBounds = getTransformedRenderBounds(
       renderedGlyphBounds,
       static_cast<float>(translateRenderUnits.x),
       static_cast<float>(translateRenderUnits.y));
   auto paddedTransformedRenderBounds =
       padRect(transformedRenderBounds, padding);
-  auto uv = getUV(paddedTransformedRenderBounds, bitmapSize);
+  auto uv =
+      getUV(paddedTransformedRenderBounds, bitmapSize);
 
-  return std::make_unique<MSDFGlyph>(MSDFGlyph{
-      std::move(output), std::move(paddedRenderedBounds), std::move(uv)});
+  return std::make_unique<MSDFGlyph>(
+      MSDFGlyph{std::move(output),
+                std::move(paddedRenderedBounds),
+                std::move(uv)});
 }
 
 template <>
 MSDFGlyphMap Font<>::getGlyphMap(int bitmapSize) {
   auto charRanges = charSet();
   auto charIndexView =
-      charRanges | ranges::view::transform([&](auto charRange) {
+      charRanges |
+      ranges::view::transform([&](auto charRange) {
         return ranges::view::closed_indices(
-            charRange.firstChar, charRange.firstChar + charRange.charCount - 1);
+            charRange.firstChar,
+            charRange.firstChar + charRange.charCount - 1);
       }) |
       ranges::view::join;
   MSDFGlyphMap result{};
   RANGES_FOR(auto charIndex, charIndexView) {
     auto glyphIndex = getGlyphIndex(charIndex);
-    result[glyphIndex] = getMSDFGlyph(glyphIndex, bitmapSize);
+    result[glyphIndex] =
+        getMSDFGlyph(glyphIndex, bitmapSize);
   }
 
   return result;

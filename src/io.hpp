@@ -19,8 +19,8 @@ enum class path_error {
 };
 
 template <typename T = char>
-inline tl::expected<std::basic_string<T>, path_error> read_binary_file(
-    fs::path filePath) {
+inline tl::expected<std::basic_string<T>, path_error>
+read_binary_file(fs::path filePath) {
   if (!fs::exists(filePath)) {
     return tl::make_unexpected(path_error::PathProblem);
   }

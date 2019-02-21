@@ -46,5 +46,7 @@ TEST_CASE("Create a command pool") {
       .build(*devicePtr)
       .map(move_into{commandPoolPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(commandPoolPtr->operator VkCommandPool() != VK_NULL_HANDLE);
+  REQUIRE(
+      commandPoolPtr->operator VkCommandPool() !=
+      VK_NULL_HANDLE);
 }

@@ -47,5 +47,6 @@ TEST_CASE("Create a sampler") {
       .build(*devicePtr)
       .map(move_into{samplerPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(samplerPtr->operator VkSampler() != VK_NULL_HANDLE);
+  REQUIRE(
+      samplerPtr->operator VkSampler() != VK_NULL_HANDLE);
 }

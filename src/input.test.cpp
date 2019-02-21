@@ -5,7 +5,8 @@
 
 TEST_CASE("Create input manager") {
   auto createLambda = [] {
-    if (auto instanceResult = vka::instance_builder{}.build()) {
+    if (auto instanceResult =
+            vka::instance_builder{}.build()) {
       auto instance = std::move(*instanceResult);
       if (auto surfaceResult = vka::surface_builder{}
                                    .width(100)
@@ -20,8 +21,11 @@ TEST_CASE("Create input manager") {
   REQUIRE_NOTHROW(createLambda());
 }
 
-TEST_CASE("Simulate key strokes, get events before arbitrary time") {
-  if (auto instanceResult = vka::instance_builder{}.build()) {
+TEST_CASE(
+    "Simulate key strokes, get events before arbitrary "
+    "time") {
+  if (auto instanceResult =
+          vka::instance_builder{}.build()) {
     auto instance = std::move(*instanceResult);
     if (auto surfaceResult = vka::surface_builder{}
                                  .width(100)
@@ -31,22 +35,29 @@ TEST_CASE("Simulate key strokes, get events before arbitrary time") {
       auto surface = std::move(*surfaceResult);
       auto inputManager = input::manager{*surface};
       for (int i = {}; i < 3; ++i) {
-        inputManager.enqueue(input::event<input::key>{{GLFW_KEY_0, GLFW_PRESS},
-                                                      vka::Clock::now()});
+        inputManager.enqueue(input::event<input::key>{
+            {GLFW_KEY_0, GLFW_PRESS}, vka::Clock::now()});
       }
 
       for (int i = {}; i < 3; ++i) {
-        auto eventOptional = inputManager.next_event_before(vka::Clock::now());
+        auto eventOptional = inputManager.next_event_before(
+            vka::Clock::now());
         REQUIRE(eventOptional);
         std::visit(
             [](auto event_variant) {
-              REQUIRE(event_variant.eventSignature.code == GLFW_KEY_0);
-              REQUIRE(event_variant.eventSignature.action == GLFW_PRESS);
+              REQUIRE(
+                  event_variant.eventSignature.code ==
+                  GLFW_KEY_0);
+              REQUIRE(
+                  event_variant.eventSignature.action ==
+                  GLFW_PRESS);
             },
             *eventOptional);
       }
-      SECTION("No events remain, optional should be empty") {
-        auto eventOptional = inputManager.next_event_before(vka::Clock::now());
+      SECTION(
+          "No events remain, optional should be empty") {
+        auto eventOptional = inputManager.next_event_before(
+            vka::Clock::now());
         REQUIRE(!eventOptional);
       }
     }

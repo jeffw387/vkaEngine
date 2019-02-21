@@ -17,7 +17,9 @@ public:
         m_pool(pool),
         m_individualResetAllowed(individualResetAllowed) {}
   operator VkDescriptorPool() { return m_pool; }
-  ~descriptor_pool() { vkDestroyDescriptorPool(m_device, m_pool, nullptr); }
+  ~descriptor_pool() {
+    vkDestroyDescriptorPool(m_device, m_pool, nullptr);
+  }
   bool individual_reset_allowed() const noexcept {
     return m_individualResetAllowed;
   }
@@ -40,17 +42,21 @@ inline auto make_descriptor_pool(
     createInfo.maxSets += maxSets;
     for (auto& binding : bindings) {
       auto& [s, type, elements, i] = binding;
-      poolSizes.push_back(
-          {type, static_cast<uint32_t>(elements.size() * maxSets)});
+      poolSizes.push_back({type,
+                           static_cast<uint32_t>(
+                               elements.size() * maxSets)});
     }
   }
-  createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+  createInfo.poolSizeCount =
+      static_cast<uint32_t>(poolSizes.size());
   createInfo.pPoolSizes = poolSizes.data();
   VkDescriptorPool pool{};
-  auto poolResult = vkCreateDescriptorPool(device, &createInfo, nullptr, &pool);
+  auto poolResult = vkCreateDescriptorPool(
+      device, &createInfo, nullptr, &pool);
   if (poolResult != VK_SUCCESS) {
     exit(poolResult);
   }
-  return std::make_unique<descriptor_pool>(device, pool, individualReset);
+  return std::make_unique<descriptor_pool>(
+      device, pool, individualReset);
 }
 }  // namespace vka

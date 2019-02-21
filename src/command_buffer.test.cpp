@@ -53,5 +53,7 @@ TEST_CASE("Allocate a command buffer") {
       .allocate(*devicePtr)
       .map(move_into{commandPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(commandPtr->operator VkCommandBuffer() != VK_NULL_HANDLE);
+  REQUIRE(
+      commandPtr->operator VkCommandBuffer() !=
+      VK_NULL_HANDLE);
 }

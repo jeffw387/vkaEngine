@@ -14,5 +14,6 @@ TEST_CASE("Create an instance") {
       .map(move_into{instancePtr})
       .map_error([](auto error) { REQUIRE(false); });
 
-  REQUIRE(instancePtr->operator VkInstance() != VK_NULL_HANDLE);
+  REQUIRE(
+      instancePtr->operator VkInstance() != VK_NULL_HANDLE);
 }

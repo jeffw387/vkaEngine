@@ -20,9 +20,12 @@ struct command_buffer {
   command_buffer& operator=(const command_buffer&) = delete;
   command_buffer& operator=(command_buffer&&) = default;
   ~command_buffer() {
-    vkFreeCommandBuffers(m_device, *m_pool, 1, &m_commandBuffer);
+    vkFreeCommandBuffers(
+        m_device, *m_pool, 1, &m_commandBuffer);
   }
-  operator VkCommandBuffer() const noexcept { return m_commandBuffer; }
+  operator VkCommandBuffer() const noexcept {
+    return m_commandBuffer;
+  }
   bool can_reset() const noexcept { return m_canReset; }
 
 private:
@@ -33,8 +36,8 @@ private:
 };
 
 struct command_buffer_allocator {
-  tl::expected<std::unique_ptr<command_buffer>, VkResult> allocate(
-      VkDevice device) {
+  tl::expected<std::unique_ptr<command_buffer>, VkResult>
+  allocate(VkDevice device) {
     VkCommandBufferAllocateInfo allocateInfo = {
         VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     allocateInfo.level = m_level;
@@ -42,28 +45,34 @@ struct command_buffer_allocator {
     allocateInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer = {};
-    auto result =
-        vkAllocateCommandBuffers(device, &allocateInfo, &commandBuffer);
+    auto result = vkAllocateCommandBuffers(
+        device, &allocateInfo, &commandBuffer);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
 
     return std::make_unique<command_buffer>(
-        device, m_pool, commandBuffer, m_pool->can_reset_buffers());
+        device,
+        m_pool,
+        commandBuffer,
+        m_pool->can_reset_buffers());
   }
 
-  command_buffer_allocator& set_command_pool(command_pool* pool) {
+  command_buffer_allocator& set_command_pool(
+      command_pool* pool) {
     m_pool = pool;
     return *this;
   }
 
-  command_buffer_allocator& level(VkCommandBufferLevel bufferLevel) {
+  command_buffer_allocator& level(
+      VkCommandBufferLevel bufferLevel) {
     m_level = bufferLevel;
     return *this;
   }
 
 private:
   command_pool* m_pool = {};
-  VkCommandBufferLevel m_level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  VkCommandBufferLevel m_level =
+      VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 };
 }  // namespace vka

@@ -20,14 +20,17 @@ struct buffer {
   buffer& operator=(const buffer&) = delete;
   buffer& operator=(buffer&&) = default;
 
-  ~buffer() noexcept { vmaDestroyBuffer(m_allocator, m_buffer, m_allocation); }
+  ~buffer() noexcept {
+    vmaDestroyBuffer(m_allocator, m_buffer, m_allocation);
+  }
 
   operator VkBuffer() { return m_buffer; }
   operator VmaAllocation() { return m_allocation; }
 
   tl::expected<void*, VkResult> map() noexcept {
     if (!m_mapped) {
-      auto result = vmaMapMemory(m_allocator, m_allocation, &m_mapPtr);
+      auto result = vmaMapMemory(
+          m_allocator, m_allocation, &m_mapPtr);
       if (result != VK_SUCCESS) {
         return tl::make_unexpected(result);
       }
@@ -58,9 +61,11 @@ struct buffer_builder {
         VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     bufferCreateInfo.usage = m_bufferUsage;
     bufferCreateInfo.size = m_bufferSize;
-    bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bufferCreateInfo.sharingMode =
+        VK_SHARING_MODE_EXCLUSIVE;
     bufferCreateInfo.queueFamilyIndexCount = 1;
-    bufferCreateInfo.pQueueFamilyIndices = &m_queueFamilyIndex;
+    bufferCreateInfo.pQueueFamilyIndices =
+        &m_queueFamilyIndex;
 
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.flags = m_allocationFlags;
@@ -80,11 +85,13 @@ struct buffer_builder {
       return tl::make_unexpected(result);
     }
 
-    return std::make_unique<buffer>(allocator, allocation, bufferHandle);
+    return std::make_unique<buffer>(
+        allocator, allocation, bufferHandle);
   }
 
   buffer_builder& dedicated() {
-    m_allocationFlags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+    m_allocationFlags |=
+        VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     return *this;
   }
 

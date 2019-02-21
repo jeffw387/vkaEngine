@@ -14,7 +14,9 @@ struct fence {
   fence& operator=(const fence&) = delete;
   fence& operator=(fence&&) = default;
 
-  ~fence() noexcept { vkDestroyFence(m_device, m_fence, nullptr); }
+  ~fence() noexcept {
+    vkDestroyFence(m_device, m_fence, nullptr);
+  }
 
   operator VkFence() const noexcept { return m_fence; }
 
@@ -24,12 +26,17 @@ private:
 };
 
 struct fence_builder {
-  tl::expected<std::unique_ptr<fence>, VkResult> build(VkDevice device) {
-    VkFenceCreateInfo createInfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-    createInfo.flags |= (m_createSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0);
+  tl::expected<std::unique_ptr<fence>, VkResult> build(
+      VkDevice device) {
+    VkFenceCreateInfo createInfo = {
+        VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    createInfo.flags |=
+        (m_createSignaled ? VK_FENCE_CREATE_SIGNALED_BIT
+                          : 0);
 
     VkFence fenceHandle = {};
-    auto result = vkCreateFence(device, &createInfo, nullptr, &fenceHandle);
+    auto result = vkCreateFence(
+        device, &createInfo, nullptr, &fenceHandle);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }

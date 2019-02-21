@@ -15,7 +15,9 @@ struct sampler {
   sampler& operator=(const sampler&) = delete;
   sampler& operator=(sampler&&) = default;
 
-  ~sampler() noexcept { vkDestroySampler(m_device, m_sampler, nullptr); }
+  ~sampler() noexcept {
+    vkDestroySampler(m_device, m_sampler, nullptr);
+  }
 
   operator VkSampler() const noexcept { return m_sampler; }
 
@@ -28,8 +30,8 @@ using border_type = std::variant<float, int>;
 struct black_border {};
 struct white_border {};
 struct transparent_border {};
-using border_color =
-    std::variant<black_border, white_border, transparent_border>;
+using border_color = std::
+    variant<black_border, white_border, transparent_border>;
 
 template <class T>
 struct always_false : std::false_type {};
@@ -40,31 +42,47 @@ inline auto border_visitor = [](auto&& color, auto&& type) {
   if constexpr (std::is_same_v<int, typeT>) {
     if constexpr (std::is_same_v<black_border, colorT>) {
       return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    } else if constexpr (std::is_same_v<white_border, colorT>) {
+    } else if constexpr (std::is_same_v<
+                             white_border,
+                             colorT>) {
       return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
-    } else if constexpr (std::is_same_v<transparent_border, colorT>) {
+    } else if constexpr (std::is_same_v<
+                             transparent_border,
+                             colorT>) {
       return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
     } else {
-      static_assert(always_false<colorT>::value, "Border color not supported!");
+      static_assert(
+          always_false<colorT>::value,
+          "Border color not supported!");
     }
   } else if constexpr (std::is_same_v<float, typeT>) {
     if constexpr (std::is_same_v<black_border, colorT>) {
       return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
-    } else if constexpr (std::is_same_v<white_border, colorT>) {
+    } else if constexpr (std::is_same_v<
+                             white_border,
+                             colorT>) {
       return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    } else if constexpr (std::is_same_v<transparent_border, colorT>) {
+    } else if constexpr (std::is_same_v<
+                             transparent_border,
+                             colorT>) {
       return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
     } else {
-      static_assert(always_false<colorT>::value, "Border color not supported!");
+      static_assert(
+          always_false<colorT>::value,
+          "Border color not supported!");
     }
   } else {
-    static_assert(always_false<typeT>::value, "Border type not supported!");
+    static_assert(
+        always_false<typeT>::value,
+        "Border type not supported!");
   }
 };
 
 struct sampler_builder {
-  tl::expected<std::unique_ptr<sampler>, VkResult> build(VkDevice device) {
-    VkSamplerCreateInfo createInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+  tl::expected<std::unique_ptr<sampler>, VkResult> build(
+      VkDevice device) {
+    VkSamplerCreateInfo createInfo = {
+        VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
     createInfo.magFilter = m_magFilter;
     createInfo.minFilter = m_minFilter;
     createInfo.addressModeU = m_uAddressMode;
@@ -72,12 +90,14 @@ struct sampler_builder {
     createInfo.addressModeW = m_wAddressMode;
     createInfo.minLod = m_minLod;
     createInfo.maxLod = m_maxLod;
-    createInfo.borderColor =
-        std::visit(border_visitor, m_borderColor, m_borderType);
-    createInfo.unnormalizedCoordinates = m_unnormalizedCoordinates;
+    createInfo.borderColor = std::visit(
+        border_visitor, m_borderColor, m_borderType);
+    createInfo.unnormalizedCoordinates =
+        m_unnormalizedCoordinates;
 
     VkSampler samplerHandle = {};
-    auto result = vkCreateSampler(device, &createInfo, nullptr, &samplerHandle);
+    auto result = vkCreateSampler(
+        device, &createInfo, nullptr, &samplerHandle);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
@@ -85,7 +105,9 @@ struct sampler_builder {
     return std::make_unique<sampler>(device, samplerHandle);
   }
 
-  sampler_builder& filter_types(VkFilter magFilter, VkFilter minFilter) {
+  sampler_builder& filter_types(
+      VkFilter magFilter,
+      VkFilter minFilter) {
     m_magFilter = magFilter;
     m_minFilter = minFilter;
     return *this;

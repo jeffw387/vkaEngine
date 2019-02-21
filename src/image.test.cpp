@@ -11,7 +11,8 @@
 
 using namespace vka;
 TEST_CASE(
-    "Create a 100x100 r32g32b32a32_sfloat optimal-tiled device-local image") {
+    "Create a 100x100 r32g32b32a32_sfloat optimal-tiled "
+    "device-local image") {
   platform::glfw::init();
   std::unique_ptr<instance> instancePtr = {};
   instance_builder{}

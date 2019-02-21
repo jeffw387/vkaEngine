@@ -42,28 +42,35 @@ TEST_CASE("Create a render pass with a single subpass") {
 
   subpass mainSubpass =
       subpass_builder{}
-          .color_attachment(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-          .depth_attachment(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+          .color_attachment(
+              0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+          .depth_attachment(
+              1,
+              VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
           .build();
   std::unique_ptr<render_pass> renderPassPtr = {};
   render_pass_builder{}
-      .add_attachment(attachment_builder{}
-                          .format(VK_FORMAT_B8G8R8A8_UNORM)
-                          .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-                          .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
-                          .initial_layout(VK_IMAGE_LAYOUT_UNDEFINED)
-                          .final_layout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-                          .build())
-      .add_attachment(attachment_builder{}
-                          .format(VK_FORMAT_D32_SFLOAT)
-                          .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
-                          .storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
-                          .initial_layout(VK_IMAGE_LAYOUT_UNDEFINED)
-                          .final_layout(VK_IMAGE_LAYOUT_UNDEFINED)
-                          .build())
+      .add_attachment(
+          attachment_builder{}
+              .format(VK_FORMAT_B8G8R8A8_UNORM)
+              .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+              .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
+              .initial_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+              .final_layout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+              .build())
+      .add_attachment(
+          attachment_builder{}
+              .format(VK_FORMAT_D32_SFLOAT)
+              .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
+              .storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE)
+              .initial_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+              .final_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+              .build())
       .add_subpass(mainSubpass)
       .build(*devicePtr)
       .map(move_into{renderPassPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(renderPassPtr->operator VkRenderPass() != VK_NULL_HANDLE);
+  REQUIRE(
+      renderPassPtr->operator VkRenderPass() !=
+      VK_NULL_HANDLE);
 }

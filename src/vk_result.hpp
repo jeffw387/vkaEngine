@@ -12,13 +12,15 @@ public:
   virtual const char* name() const noexcept override final {
     return "VkResult";
   }
-  virtual std::string message(int result) const override final {
+  virtual std::string message(
+      int result) const override final {
     return "unknown VkResult";
   }
 };
 }  // namespace detail
 
-static const detail::VkResult_category& VkResult_category() {
+static const detail::VkResult_category&
+VkResult_category() {
   static detail::VkResult_category c;
   return c;
 }

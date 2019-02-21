@@ -117,8 +117,8 @@ public:
     return {};
   }
 
-  // pushes the given T to the end of the queue if space is available, returns
-  // false otherwise
+  // pushes the given T to the end of the queue if space is
+  // available, returns false otherwise
   bool push_last(T newValue) {
     if (!(m_size < S)) return false;
     new (m_end) T(std::move(newValue));
@@ -133,7 +133,9 @@ public:
 
 private:
   std::array<std::byte, sizeof(T) * S> storage;
-  iterator m_begin = {reinterpret_cast<T*>(storage.data()), 0};
-  iterator m_end = {reinterpret_cast<T*>(storage.data()), 0};
+  iterator m_begin = {reinterpret_cast<T*>(storage.data()),
+                      0};
+  iterator m_end = {reinterpret_cast<T*>(storage.data()),
+                    0};
   size_t m_size = 0;
 };

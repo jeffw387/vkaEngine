@@ -19,10 +19,12 @@ class Pool {
 
 public:
   [[nodiscard]] Pooled<T> allocate() noexcept {
-    for (size_t resultIndex{}; resultIndex < N; ++resultIndex) {
+    for (size_t resultIndex{}; resultIndex < N;
+         ++resultIndex) {
       if (!allocated[resultIndex]) {
         allocated[resultIndex] = true;
-        return Pooled<T>{&storage[resultIndex], resultIndex};
+        return Pooled<T>{&storage[resultIndex],
+                         resultIndex};
       }
     }
     return {};

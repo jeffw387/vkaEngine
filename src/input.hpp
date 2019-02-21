@@ -14,7 +14,9 @@ struct action {
   std::string name;
 };
 
-inline bool operator==(action a, action b) { return a.name == b.name; }
+inline bool operator==(action a, action b) {
+  return a.name == b.name;
+}
 
 struct signature {
   int code;
@@ -43,7 +45,8 @@ struct cursor_position {
 class manager {
 public:
   manager(vka::WindowType*);
-  std::optional<input_event> next_event_before(vka::Clock::time_point cutoff) {
+  std::optional<input_event> next_event_before(
+      vka::Clock::time_point cutoff) {
     auto eventSelect = [=](auto inputEvent) {
       return std::visit(
           [=](const auto& inputVariant) {
@@ -52,18 +55,22 @@ public:
           inputEvent);
     };
 
-    if (auto eventOptional = m_inputQueue.first_if(eventSelect)) {
+    if (auto eventOptional =
+            m_inputQueue.first_if(eventSelect)) {
       m_inputQueue.pop_first();
       return eventOptional;
     }
     return {};
   }
 
-  platform::window_should_close poll_events(vka::WindowType* window) {
+  platform::window_should_close poll_events(
+      vka::WindowType* window) {
     return platform::glfw::poll_os(window);
   }
 
-  void enqueue(input_event inputEvent) { m_inputQueue.push_last(inputEvent); };
+  void enqueue(input_event inputEvent) {
+    m_inputQueue.push_last(inputEvent);
+  };
 
   void update_cursor_position(cursor_position position) {
     m_position = position;
@@ -79,7 +86,8 @@ private:
 };
 
 using bindings = std::unordered_multimap<action, signature>;
-using inverse_bindings = std::unordered_map<signature, action>;
+using inverse_bindings =
+    std::unordered_map<signature, action>;
 using state = std::unordered_map<action, bool>;
 }  // namespace input
 
@@ -87,14 +95,16 @@ namespace std {
 template <>
 struct hash<input::signature> {
   size_t operator()(input::signature value) const {
-    return SpookyHash::Hash64(&value, sizeof(input::signature), 0);
+    return SpookyHash::Hash64(
+        &value, sizeof(input::signature), 0);
   }
 };
 
 template <>
 struct hash<input::action> {
   size_t operator()(input::action value) const {
-    return SpookyHash::Hash64(&value, sizeof(input::action), 0);
+    return SpookyHash::Hash64(
+        &value, sizeof(input::action), 0);
   }
 };
 }  // namespace std

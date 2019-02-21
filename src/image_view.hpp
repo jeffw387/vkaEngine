@@ -7,7 +7,9 @@
 
 namespace vka {
 struct image_view {
-  explicit image_view(VkDevice device, VkImageView imageView)
+  explicit image_view(
+      VkDevice device,
+      VkImageView imageView)
       : m_device(device), m_imageView(imageView) {}
 
   image_view(const image_view&) = delete;
@@ -15,9 +17,13 @@ struct image_view {
   image_view& operator=(const image_view&) = delete;
   image_view& operator=(image_view&&) = default;
 
-  ~image_view() noexcept { vkDestroyImageView(m_device, m_imageView, nullptr); }
+  ~image_view() noexcept {
+    vkDestroyImageView(m_device, m_imageView, nullptr);
+  }
 
-  operator VkImageView() const noexcept { return m_imageView; }
+  operator VkImageView() const noexcept {
+    return m_imageView;
+  }
 
 private:
   VkDevice m_device = {};
@@ -29,9 +35,11 @@ struct image_type_not_supported {};
 inline auto convert = [](VkImageType type, bool arrayType) {
   switch (type) {
     case VK_IMAGE_TYPE_1D:
-      return arrayType ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D;
+      return arrayType ? VK_IMAGE_VIEW_TYPE_1D_ARRAY
+                       : VK_IMAGE_VIEW_TYPE_1D;
     case VK_IMAGE_TYPE_2D:
-      return arrayType ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+      return arrayType ? VK_IMAGE_VIEW_TYPE_2D_ARRAY
+                       : VK_IMAGE_VIEW_TYPE_2D;
     case VK_IMAGE_TYPE_3D:
       return VK_IMAGE_VIEW_TYPE_3D;
     default:
@@ -39,7 +47,8 @@ inline auto convert = [](VkImageType type, bool arrayType) {
   }
 };
 
-using image_view_expected = tl::expected<std::unique_ptr<image_view>, VkResult>;
+using image_view_expected =
+    tl::expected<std::unique_ptr<image_view>, VkResult>;
 struct image_view_builder {
   image_view_expected build(VkDevice device) {
     image_view_expected expectedView = {};
@@ -47,11 +56,13 @@ struct image_view_builder {
         VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     createInfo.format = m_format;
     createInfo.image = m_image;
-    createInfo.viewType = convert(m_imageType, m_arrayLayers > 1);
+    createInfo.viewType =
+        convert(m_imageType, m_arrayLayers > 1);
     createInfo.subresourceRange = m_subrange;
 
     VkImageView imageView = {};
-    auto result = vkCreateImageView(device, &createInfo, nullptr, &imageView);
+    auto result = vkCreateImageView(
+        device, &createInfo, nullptr, &imageView);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
@@ -64,8 +75,8 @@ struct image_view_builder {
     m_arrayLayers = sourceImage.array_layers();
     m_imageType = sourceImage.image_type();
     m_format = sourceImage.image_format();
-    m_subrange.aspectMask =
-        static_cast<VkImageAspectFlags>(sourceImage.get_image_aspect());
+    m_subrange.aspectMask = static_cast<VkImageAspectFlags>(
+        sourceImage.get_image_aspect());
     m_subrange.layerCount = VK_REMAINING_ARRAY_LAYERS;
     m_subrange.levelCount = VK_REMAINING_MIP_LEVELS;
     return *this;
@@ -91,7 +102,8 @@ struct image_view_builder {
     return *this;
   }
 
-  image_view_builder& image_aspect(VkImageAspectFlags aspect) {
+  image_view_builder& image_aspect(
+      VkImageAspectFlags aspect) {
     m_subrange.aspectMask = aspect;
     m_subrange.layerCount = VK_REMAINING_ARRAY_LAYERS;
     m_subrange.levelCount = VK_REMAINING_MIP_LEVELS;

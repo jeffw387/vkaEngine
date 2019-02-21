@@ -44,7 +44,8 @@ TEST_CASE("Read first item in queue with size 2") {
   REQUIRE(first == 1);
 }
 
-TEST_CASE("Add a single item them pop it, leaving queue empty") {
+TEST_CASE(
+    "Add a single item them pop it, leaving queue empty") {
   FlatList<int, 3> queue;
   auto push_result = queue.push_last(1);
   queue.pop_first();
@@ -77,14 +78,17 @@ struct TestStructWithDestructor {
 
 TEST_CASE("Item destructor is called on item pop") {
   bool destructorRun = false;
-  auto reportDestruct = [&destructorRun]() { destructorRun = true; };
+  auto reportDestruct = [&destructorRun]() {
+    destructorRun = true;
+  };
   FlatList<
-      std::unique_ptr<TestStructWithDestructor<decltype(reportDestruct)>>,
+      std::unique_ptr<TestStructWithDestructor<decltype(
+          reportDestruct)>>,
       1>
       queue;
   queue.push_last(
-      std::make_unique<TestStructWithDestructor<decltype(reportDestruct)>>(
-          reportDestruct));
+      std::make_unique<TestStructWithDestructor<decltype(
+          reportDestruct)>>(reportDestruct));
 
   REQUIRE(destructorRun == false);
 

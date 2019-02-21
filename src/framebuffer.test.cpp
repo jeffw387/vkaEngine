@@ -14,7 +14,8 @@
 
 using namespace vka;
 TEST_CASE(
-    "Create two images/views, create framebuffer and attach those views") {
+    "Create two images/views, create framebuffer and "
+    "attach those views") {
   platform::glfw::init();
   std::unique_ptr<instance> instancePtr = {};
   instance_builder{}
@@ -97,24 +98,32 @@ TEST_CASE(
   render_pass_builder{}
       .add_attachment(
           attachment_builder{}
-              .initial_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-              .final_layout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+              .initial_layout(
+                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+              .final_layout(
+                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
               .format(VK_FORMAT_R32G32B32A32_SFLOAT)
               .loadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
               .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
               .build())
       .add_attachment(
           attachment_builder{}
-              .initial_layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-              .final_layout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+              .initial_layout(
+                  VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+              .final_layout(
+                  VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
               .format(VK_FORMAT_R32G32B32A32_SFLOAT)
               .loadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
               .storeOp(VK_ATTACHMENT_STORE_OP_STORE)
               .build())
       .add_subpass(
           subpass_builder{}
-              .input_attachment(0, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-              .color_attachment(1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+              .input_attachment(
+                  0,
+                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+              .color_attachment(
+                  1,
+                  VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
               .build())
       .build(*devicePtr)
       .map(move_into{renderPassPtr})
@@ -128,5 +137,7 @@ TEST_CASE(
       .build(*devicePtr)
       .map(move_into{framebufferPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(framebufferPtr->operator VkFramebuffer() != VK_NULL_HANDLE);
+  REQUIRE(
+      framebufferPtr->operator VkFramebuffer() !=
+      VK_NULL_HANDLE);
 }

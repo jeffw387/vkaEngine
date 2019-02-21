@@ -69,5 +69,6 @@ TEST_CASE("Create an image view from an image") {
       .build(*devicePtr)
       .map(move_into{viewPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(viewPtr->operator VkImageView() != VK_NULL_HANDLE);
+  REQUIRE(
+      viewPtr->operator VkImageView() != VK_NULL_HANDLE);
 }

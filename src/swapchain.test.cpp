@@ -14,7 +14,9 @@ TEST_CASE("Create a swapchain") {
   platform::glfw::init();
   std::unique_ptr<vka::instance> instancePtr = {};
   vka::instance_builder{}
-      .add_extensions(platform::glfw::get_required_instance_extensions())
+      .add_extensions(
+          platform::glfw::
+              get_required_instance_extensions())
       .add_layer(vka::standard_validation)
       .build()
       .map(move_into{instancePtr})
@@ -60,5 +62,7 @@ TEST_CASE("Create a swapchain") {
       .build(physicalDevice, *surfacePtr, *devicePtr)
       .map(move_into{swapchainPtr})
       .map_error([](auto error) { REQUIRE(false); });
-  REQUIRE(swapchainPtr->operator VkSwapchainKHR() != VK_NULL_HANDLE);
+  REQUIRE(
+      swapchainPtr->operator VkSwapchainKHR() !=
+      VK_NULL_HANDLE);
 }

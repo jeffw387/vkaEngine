@@ -99,7 +99,8 @@ inline void to_vulkan_feature(
       vulkanFeatures.multiDrawIndirect = VkBool32(true);
       break;
     case device_features::drawIndirectFirstInstance:
-      vulkanFeatures.drawIndirectFirstInstance = VkBool32(true);
+      vulkanFeatures.drawIndirectFirstInstance =
+          VkBool32(true);
       break;
     case device_features::depthClamp:
       vulkanFeatures.depthClamp = VkBool32(true);
@@ -129,10 +130,12 @@ inline void to_vulkan_feature(
       vulkanFeatures.samplerAnisotropy = VkBool32(true);
       break;
     case device_features::textureCompressionETC2:
-      vulkanFeatures.textureCompressionETC2 = VkBool32(true);
+      vulkanFeatures.textureCompressionETC2 =
+          VkBool32(true);
       break;
     case device_features::textureCompressionASTC_LDR:
-      vulkanFeatures.textureCompressionASTC_LDR = VkBool32(true);
+      vulkanFeatures.textureCompressionASTC_LDR =
+          VkBool32(true);
       break;
     case device_features::textureCompressionBC:
       vulkanFeatures.textureCompressionBC = VkBool32(true);
@@ -141,43 +144,68 @@ inline void to_vulkan_feature(
       vulkanFeatures.occlusionQueryPrecise = VkBool32(true);
       break;
     case device_features::pipelineStatisticsQuery:
-      vulkanFeatures.pipelineStatisticsQuery = VkBool32(true);
+      vulkanFeatures.pipelineStatisticsQuery =
+          VkBool32(true);
       break;
     case device_features::vertexPipelineStoresAndAtomics:
-      vulkanFeatures.vertexPipelineStoresAndAtomics = VkBool32(true);
+      vulkanFeatures.vertexPipelineStoresAndAtomics =
+          VkBool32(true);
       break;
     case device_features::fragmentStoresAndAtomics:
-      vulkanFeatures.fragmentStoresAndAtomics = VkBool32(true);
+      vulkanFeatures.fragmentStoresAndAtomics =
+          VkBool32(true);
       break;
-    case device_features::shaderTessellationAndGeometryPointSize:
-      vulkanFeatures.shaderTessellationAndGeometryPointSize = VkBool32(true);
+    case device_features::
+        shaderTessellationAndGeometryPointSize:
+      vulkanFeatures
+          .shaderTessellationAndGeometryPointSize =
+          VkBool32(true);
       break;
     case device_features::shaderImageGatherExtended:
-      vulkanFeatures.shaderImageGatherExtended = VkBool32(true);
+      vulkanFeatures.shaderImageGatherExtended =
+          VkBool32(true);
       break;
     case device_features::shaderStorageImageExtendedFormats:
-      vulkanFeatures.shaderStorageImageExtendedFormats = VkBool32(true);
+      vulkanFeatures.shaderStorageImageExtendedFormats =
+          VkBool32(true);
       break;
     case device_features::shaderStorageImageMultisample:
-      vulkanFeatures.shaderStorageImageMultisample = VkBool32(true);
+      vulkanFeatures.shaderStorageImageMultisample =
+          VkBool32(true);
       break;
-    case device_features::shaderStorageImageReadWithoutFormat:
-      vulkanFeatures.shaderStorageImageReadWithoutFormat = VkBool32(true);
+    case device_features::
+        shaderStorageImageReadWithoutFormat:
+      vulkanFeatures.shaderStorageImageReadWithoutFormat =
+          VkBool32(true);
       break;
-    case device_features::shaderStorageImageWriteWithoutFormat:
-      vulkanFeatures.shaderStorageImageWriteWithoutFormat = VkBool32(true);
+    case device_features::
+        shaderStorageImageWriteWithoutFormat:
+      vulkanFeatures.shaderStorageImageWriteWithoutFormat =
+          VkBool32(true);
       break;
-    case device_features::shaderUniformBufferArrayDynamicIndexing:
-      vulkanFeatures.shaderUniformBufferArrayDynamicIndexing = VkBool32(true);
+    case device_features::
+        shaderUniformBufferArrayDynamicIndexing:
+      vulkanFeatures
+          .shaderUniformBufferArrayDynamicIndexing =
+          VkBool32(true);
       break;
-    case device_features::shaderSampledImageArrayDynamicIndexing:
-      vulkanFeatures.shaderSampledImageArrayDynamicIndexing = VkBool32(true);
+    case device_features::
+        shaderSampledImageArrayDynamicIndexing:
+      vulkanFeatures
+          .shaderSampledImageArrayDynamicIndexing =
+          VkBool32(true);
       break;
-    case device_features::shaderStorageBufferArrayDynamicIndexing:
-      vulkanFeatures.shaderStorageBufferArrayDynamicIndexing = VkBool32(true);
+    case device_features::
+        shaderStorageBufferArrayDynamicIndexing:
+      vulkanFeatures
+          .shaderStorageBufferArrayDynamicIndexing =
+          VkBool32(true);
       break;
-    case device_features::shaderStorageImageArrayDynamicIndexing:
-      vulkanFeatures.shaderStorageImageArrayDynamicIndexing = VkBool32(true);
+    case device_features::
+        shaderStorageImageArrayDynamicIndexing:
+      vulkanFeatures
+          .shaderStorageImageArrayDynamicIndexing =
+          VkBool32(true);
       break;
     case device_features::shaderClipDistance:
       vulkanFeatures.shaderClipDistance = VkBool32(true);
@@ -195,7 +223,8 @@ inline void to_vulkan_feature(
       vulkanFeatures.shaderInt16 = VkBool32(true);
       break;
     case device_features::shaderResourceResidency:
-      vulkanFeatures.shaderResourceResidency = VkBool32(true);
+      vulkanFeatures.shaderResourceResidency =
+          VkBool32(true);
       break;
     case device_features::shaderResourceMinLod:
       vulkanFeatures.shaderResourceMinLod = VkBool32(true);
@@ -207,28 +236,36 @@ inline void to_vulkan_feature(
       vulkanFeatures.sparseResidencyBuffer = VkBool32(true);
       break;
     case device_features::sparseResidencyImage2D:
-      vulkanFeatures.sparseResidencyImage2D = VkBool32(true);
+      vulkanFeatures.sparseResidencyImage2D =
+          VkBool32(true);
       break;
     case device_features::sparseResidencyImage3D:
-      vulkanFeatures.sparseResidencyImage3D = VkBool32(true);
+      vulkanFeatures.sparseResidencyImage3D =
+          VkBool32(true);
       break;
     case device_features::sparseResidency2Samples:
-      vulkanFeatures.sparseResidency2Samples = VkBool32(true);
+      vulkanFeatures.sparseResidency2Samples =
+          VkBool32(true);
       break;
     case device_features::sparseResidency4Samples:
-      vulkanFeatures.sparseResidency4Samples = VkBool32(true);
+      vulkanFeatures.sparseResidency4Samples =
+          VkBool32(true);
       break;
     case device_features::sparseResidency8Samples:
-      vulkanFeatures.sparseResidency8Samples = VkBool32(true);
+      vulkanFeatures.sparseResidency8Samples =
+          VkBool32(true);
       break;
     case device_features::sparseResidency16Samples:
-      vulkanFeatures.sparseResidency16Samples = VkBool32(true);
+      vulkanFeatures.sparseResidency16Samples =
+          VkBool32(true);
       break;
     case device_features::sparseResidencyAliased:
-      vulkanFeatures.sparseResidencyAliased = VkBool32(true);
+      vulkanFeatures.sparseResidencyAliased =
+          VkBool32(true);
       break;
     case device_features::variableMultisampleRate:
-      vulkanFeatures.variableMultisampleRate = VkBool32(true);
+      vulkanFeatures.variableMultisampleRate =
+          VkBool32(true);
       break;
     case device_features::inheritedQueries:
       vulkanFeatures.inheritedQueries = VkBool32(true);
@@ -237,27 +274,30 @@ inline void to_vulkan_feature(
 }
 
 struct no_device_found {};
-using physical_device_error = std::variant<no_device_found, VkResult>;
+using physical_device_error =
+    std::variant<no_device_found, VkResult>;
 
 struct physical_device_selector {
-  tl::expected<VkPhysicalDevice, physical_device_error> select(
-      VkInstance instance) {
+  tl::expected<VkPhysicalDevice, physical_device_error>
+  select(VkInstance instance) {
     uint32_t count = {};
-    auto countResult = vkEnumeratePhysicalDevices(instance, &count, nullptr);
+    auto countResult = vkEnumeratePhysicalDevices(
+        instance, &count, nullptr);
     if (countResult != VK_SUCCESS) {
       return tl::make_unexpected(countResult);
     }
     std::vector<VkPhysicalDevice> physicalDevices = {};
     physicalDevices.resize(count);
-    auto enumerateResult =
-        vkEnumeratePhysicalDevices(instance, &count, physicalDevices.data());
+    auto enumerateResult = vkEnumeratePhysicalDevices(
+        instance, &count, physicalDevices.data());
     if (enumerateResult != VK_SUCCESS) {
       return tl::make_unexpected(enumerateResult);
     }
     std::vector<VkPhysicalDeviceProperties> properties = {};
     properties.resize(count);
     for (uint32_t i = {}; i < count; ++i) {
-      vkGetPhysicalDeviceProperties(physicalDevices[i], &properties[i]);
+      vkGetPhysicalDeviceProperties(
+          physicalDevices[i], &properties[i]);
     }
 
     if (m_deviceType) {
@@ -272,7 +312,8 @@ struct physical_device_selector {
     return tl::make_unexpected(no_device_found{});
   }
 
-  physical_device_selector& device_type(VkPhysicalDeviceType deviceType) {
+  physical_device_selector& device_type(
+      VkPhysicalDeviceType deviceType) {
     m_deviceType = deviceType;
     return *this;
   }

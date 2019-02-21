@@ -7,30 +7,38 @@
 
 namespace vka {
 struct allocator {
-  explicit allocator(VmaAllocator allocator) : m_allocator(allocator) {}
+  explicit allocator(VmaAllocator allocator)
+      : m_allocator(allocator) {}
 
   allocator(const allocator&) = delete;
   allocator(allocator&&) = default;
   allocator& operator=(const allocator&) = delete;
   allocator& operator=(allocator&&) = default;
 
-  ~allocator() noexcept { vmaDestroyAllocator(m_allocator); }
+  ~allocator() noexcept {
+    vmaDestroyAllocator(m_allocator);
+  }
 
-  operator VmaAllocator() const noexcept { return m_allocator; }
+  operator VmaAllocator() const noexcept {
+    return m_allocator;
+  }
 
 private:
   VmaAllocator m_allocator = {};
 };
 
 struct allocator_builder {
-  tl::expected<std::unique_ptr<allocator>, VkResult> build() {
+  tl::expected<std::unique_ptr<allocator>, VkResult>
+  build() {
     VmaAllocatorCreateInfo createInfo = {};
     createInfo.physicalDevice = m_physicalDevice;
     createInfo.device = m_device;
-    createInfo.preferredLargeHeapBlockSize = m_preferredBlockSize;
+    createInfo.preferredLargeHeapBlockSize =
+        m_preferredBlockSize;
 
     VmaAllocator allocatorHandle = {};
-    auto result = vmaCreateAllocator(&createInfo, &allocatorHandle);
+    auto result =
+        vmaCreateAllocator(&createInfo, &allocatorHandle);
     if (result != VK_SUCCESS) {
       return tl::make_unexpected(result);
     }
@@ -38,7 +46,8 @@ struct allocator_builder {
     return std::make_unique<allocator>(allocatorHandle);
   }
 
-  allocator_builder& physical_device(VkPhysicalDevice physicalDevice) {
+  allocator_builder& physical_device(
+      VkPhysicalDevice physicalDevice) {
     m_physicalDevice = physicalDevice;
     return *this;
   }
@@ -48,7 +57,8 @@ struct allocator_builder {
     return *this;
   }
 
-  allocator_builder& preferred_block_size(VkDeviceSize size) {
+  allocator_builder& preferred_block_size(
+      VkDeviceSize size) {
     m_preferredBlockSize = size;
     return *this;
   }

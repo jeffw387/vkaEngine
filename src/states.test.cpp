@@ -47,7 +47,9 @@ TEST_CASE("Sync data (two threads)") {
   auto int_future = int_promise.get_future().share();
   states.add(int_future);
 
-  auto update_state = [](auto promise) { promise.set_value(3); };
+  auto update_state = [](auto promise) {
+    promise.set_value(3);
+  };
   std::thread worker(update_state, std::move(int_promise));
 
   auto latest = states.latest();
@@ -67,24 +69,30 @@ TEST_CASE("Roughly intended use case") {
     return pos;
   };
   States<Position, 3> positionStates;
-  auto initialPos =
-      std::packaged_task<Position(Position)>([](auto pos) { return pos; });
+  auto initialPos = std::packaged_task<Position(Position)>(
+      [](auto pos) { return pos; });
   positionStates.add(initialPos.get_future());
   initialPos(Position{});
 
   auto updateLoop = [&]() {
-    for (int updateCount{}; updateCount < 5; ++updateCount) {
+    for (int updateCount{}; updateCount < 5;
+         ++updateCount) {
       if (auto latest = positionStates.latest()) {
-        auto update_task = std::packaged_task<Position(Position)>(posUpdate);
+        auto update_task =
+            std::packaged_task<Position(Position)>(
+                posUpdate);
         latest->sync();
-        auto positionFuture = update_task.get_future().share();
+        auto positionFuture =
+            update_task.get_future().share();
         positionStates.add(positionFuture);
-        std::thread worker{std::move(update_task), latest->value()};
+        std::thread worker{std::move(update_task),
+                           latest->value()};
         worker.join();
       }
     }
   };
   REQUIRE_NOTHROW(updateLoop());
   positionStates.latest()->sync();
-  REQUIRE(positionStates.latest()->value()[1] == 9.8f * 5.f);
+  REQUIRE(
+      positionStates.latest()->value()[1] == 9.8f * 5.f);
 }

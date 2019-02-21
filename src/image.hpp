@@ -33,18 +33,30 @@ struct image {
   image& operator=(const image&) = delete;
   image& operator=(image&&) = default;
 
-  ~image() noexcept { vmaDestroyImage(m_allocator, m_image, m_allocation); }
+  ~image() noexcept {
+    vmaDestroyImage(m_allocator, m_image, m_allocation);
+  }
 
   operator VkImage() const noexcept { return m_image; }
-  operator VmaAllocation() const noexcept { return m_allocation; }
+  operator VmaAllocation() const noexcept {
+    return m_allocation;
+  }
 
-  VkImageType image_type() const noexcept { return m_imageType; }
+  VkImageType image_type() const noexcept {
+    return m_imageType;
+  }
 
-  VkFormat image_format() const noexcept { return m_imageFormat; }
+  VkFormat image_format() const noexcept {
+    return m_imageFormat;
+  }
 
-  uint32_t array_layers() const noexcept { return m_arrayLayers; }
+  uint32_t array_layers() const noexcept {
+    return m_arrayLayers;
+  }
 
-  image_aspect get_image_aspect() const noexcept { return m_aspect; }
+  image_aspect get_image_aspect() const noexcept {
+    return m_aspect;
+  }
 
 private:
   VmaAllocator m_allocator = {};
@@ -57,13 +69,15 @@ private:
 };
 
 struct image_builder {
-  tl::expected<std::unique_ptr<image>, VkResult> build(VmaAllocator allocator) {
+  tl::expected<std::unique_ptr<image>, VkResult> build(
+      VmaAllocator allocator) {
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.flags = m_allocationFlags;
     allocationCreateInfo.usage = m_memoryUsage;
     allocationCreateInfo.pool = m_memoryPool;
 
-    VkImageCreateInfo imageCreateInfo = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+    VkImageCreateInfo imageCreateInfo = {
+        VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
     imageCreateInfo.format = m_format;
     imageCreateInfo.imageType = m_imageType;
     imageCreateInfo.tiling = m_tiling;
@@ -75,7 +89,8 @@ struct image_builder {
              ? VK_IMAGE_LAYOUT_UNDEFINED
              : VK_IMAGE_LAYOUT_PREINITIALIZED);
     imageCreateInfo.queueFamilyIndexCount = 1;
-    imageCreateInfo.pQueueFamilyIndices = &m_queueFamilyIndex;
+    imageCreateInfo.pQueueFamilyIndices =
+        &m_queueFamilyIndex;
     imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageCreateInfo.arrayLayers = m_arrayLayers;
     imageCreateInfo.extent = m_imageExtent;
@@ -121,8 +136,10 @@ struct image_builder {
     return *this;
   }
 
-  image_builder&
-  image_extent(uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1) {
+  image_builder& image_extent(
+      uint32_t width = 1,
+      uint32_t height = 1,
+      uint32_t depth = 1) {
     m_imageExtent = {width, height, depth};
     return *this;
   }
@@ -197,7 +214,8 @@ struct image_builder {
     return *this;
   }
   image_builder& depth_attachment() {
-    m_imageUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    m_imageUsage |=
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     m_aspect = image_aspect::depth;
     return *this;
   }
@@ -211,7 +229,8 @@ struct image_builder {
   }
 
   image_builder& dedicated() {
-    m_allocationFlags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+    m_allocationFlags |=
+        VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     return *this;
   }
 

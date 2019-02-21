@@ -9,7 +9,9 @@ TEST_CASE("Allocate an object") {
   REQUIRE(obj.value() == int{});
 }
 
-TEST_CASE("An allocated object isn't necessarily in initial state") {
+TEST_CASE(
+    "An allocated object isn't necessarily in initial "
+    "state") {
   Pool<int, 1> pool = {};
   auto obj = pool.allocate();
   REQUIRE(obj.value() == int{});
@@ -21,7 +23,8 @@ TEST_CASE("An allocated object isn't necessarily in initial state") {
   REQUIRE(obj2.value() == 2);
 }
 
-TEST_CASE("Over-allocation results in null pooled objects") {
+TEST_CASE(
+    "Over-allocation results in null pooled objects") {
   Pool<int, 1> pool = {};
   auto obj = pool.allocate();
   auto obj2 = pool.allocate();
@@ -35,7 +38,9 @@ TEST_CASE("Dereference object and assign") {
   REQUIRE_NOTHROW(obj.value() = 1);
 }
 
-TEST_CASE("Returning null pooled object to empty pool doesn't free anything") {
+TEST_CASE(
+    "Returning null pooled object to empty pool doesn't "
+    "free anything") {
   Pool<int, 1> pool = {};
   auto obj = pool.allocate();
   auto obj2 = pool.allocate();

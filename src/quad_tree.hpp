@@ -20,13 +20,15 @@ struct Rect {
       : x(x), y(y), xRadius(xRadius), yRadius(yRadius) {}
 
   bool ContainsPoint(const double x, const double y) const {
-    return (x >= GetLeft()) && (x <= GetRight()) && (y >= GetTop()) &&
-           (y <= GetBottom());
+    return (x >= GetLeft()) && (x <= GetRight()) &&
+           (y >= GetTop()) && (y <= GetBottom());
   }
 
   bool ContainsRect(const Rect& rect) const {
-    return (rect.GetLeft() >= GetLeft()) && (rect.GetRight() <= GetRight()) &&
-           (rect.GetTop() >= GetTop()) && (rect.GetBottom() <= GetBottom());
+    return (rect.GetLeft() >= GetLeft()) &&
+           (rect.GetRight() <= GetRight()) &&
+           (rect.GetTop() >= GetTop()) &&
+           (rect.GetBottom() <= GetBottom());
   }
 
   double GetLeft() const { return x - xRadius; }
@@ -39,7 +41,8 @@ struct Rect {
 
   friend bool operator==(const Rect& lhs, const Rect& rhs) {
     return (lhs.x == rhs.x) && (lhs.y == rhs.y) &&
-           (lhs.xRadius == rhs.xRadius) && (lhs.yRadius == rhs.yRadius);
+           (lhs.xRadius == rhs.xRadius) &&
+           (lhs.yRadius == rhs.yRadius);
   }
 
 private:
@@ -58,9 +61,9 @@ struct Object {
 template <typename ObjectType>
 class Tree {
 public:
-  static constexpr size_t TotalNodes = 1 + (2 * 2) + (4 * 4) + (8 * 8) +
-                                       (16 * 16) + (32 * 32) + (64 * 64) +
-                                       (128 * 128);
+  static constexpr size_t TotalNodes =
+      1 + (2 * 2) + (4 * 4) + (8 * 8) + (16 * 16) +
+      (32 * 32) + (64 * 64) + (128 * 128);
 
   struct Node {
   public:
@@ -71,17 +74,25 @@ public:
     explicit Node(const Rect& region) : rect(region) {}
 
     // move assign a rect
-    Node& operator=(Rect&& region) { rect = std::move(region); }
+    Node& operator=(Rect&& region) {
+      rect = std::move(region);
+    }
 
     ObjectType* begin() { return objects.front(); }
 
-    void InsertObject(ObjectType* objectPtr) { objects.push_front(objectPtr); }
+    void InsertObject(ObjectType* objectPtr) {
+      objects.push_front(objectPtr);
+    }
 
-    void RemoveObject(ObjectType* objectPtr) { objects.erase(objectPtr); }
+    void RemoveObject(ObjectType* objectPtr) {
+      objects.erase(objectPtr);
+    }
 
     void SetRegion(const Rect& region) { rect = region; }
 
-    void SetRegion(Rect&& region) { rect = std::move(region); }
+    void SetRegion(Rect&& region) {
+      rect = std::move(region);
+    }
 
     const Rect& GetRegion() { return rect; }
     std::array<Node*, 4> children;
@@ -137,7 +148,8 @@ public:
 
   // radius must be positive
   Tree(const double& radius)
-      : radius(radius), inverseRadius(255.0 / (radius * 2)) {
+      : radius(radius),
+        inverseRadius(255.0 / (radius * 2)) {
     nodes.resize(TotalNodes);
     auto radiusAtDepth = radius;
     auto nodeIndex = 0U;
@@ -147,17 +159,22 @@ public:
         for (auto x = 0U; x < cellsPerAxis; ++x) {
           Node& node = nodes[nodeIndex];
           node.SetRegion(Rect(
-              (2 * x * radiusAtDepth) - radius + radiusAtDepth,
-              (2 * y * radiusAtDepth) - radius + radiusAtDepth,
+              (2 * x * radiusAtDepth) - radius +
+                  radiusAtDepth,
+              (2 * y * radiusAtDepth) - radius +
+                  radiusAtDepth,
               radiusAtDepth));
-          // if we're not at the root, we have a parent node to find
+          // if we're not at the root, we have a parent node
+          // to find
           if (depth) {
             auto parentX = x >> 1U;
             auto parentY = y >> 1U;
-            Node& parent = nodes[GetIndexAt(depth - 1, parentX, parentY)];
+            Node& parent = nodes[GetIndexAt(
+                depth - 1, parentX, parentY)];
             uint8_t childX = x & 1U;
             uint8_t childY = y & 1U;
-            parent.children[(childY << 1U) + childX] = &node;
+            parent.children[(childY << 1U) + childX] =
+                &node;
           } else {
             root = &node;
           }
@@ -181,7 +198,9 @@ public:
     nodes[objectPtr->nodeIndex].RemoveObject(objectPtr);
   }
 
-  void RecurseTree(std::vector<Node*>& nodePtrs, Node* node) {
+  void RecurseTree(
+      std::vector<Node*>& nodePtrs,
+      Node* node) {
     if (node == nullptr) return;
     if (node->size() > 0) {
       nodePtrs.push_back(node);
@@ -198,7 +217,8 @@ public:
     std::vector<Node*> nodePtrsTemp;
     RecurseTree(nodePtrsTemp, &nodes[regionIndex]);
 
-    RegionIterator iter = RegionIterator(std::move(nodePtrsTemp));
+    RegionIterator iter =
+        RegionIterator(std::move(nodePtrsTemp));
     return iter;
   }
 
@@ -238,14 +258,14 @@ private:
     auto rightScaled = (right + radius) * inverseRadius;
     auto topScaled = (top + radius) * inverseRadius;
     auto bottomScaled = (bottom + radius) * inverseRadius;
-    auto xMin =
-        static_cast<uint8_t>(std::clamp(std::floor(leftScaled), 0.0, 255.0));
-    auto xMax =
-        static_cast<uint8_t>(std::clamp(std::ceil(rightScaled), 0.0, 255.0));
-    auto yMin =
-        static_cast<uint8_t>(std::clamp(std::floor(topScaled), 0.0, 255.0));
-    auto yMax =
-        static_cast<uint8_t>(std::clamp(std::ceil(bottomScaled), 0.0, 255.0));
+    auto xMin = static_cast<uint8_t>(
+        std::clamp(std::floor(leftScaled), 0.0, 255.0));
+    auto xMax = static_cast<uint8_t>(
+        std::clamp(std::ceil(rightScaled), 0.0, 255.0));
+    auto yMin = static_cast<uint8_t>(
+        std::clamp(std::floor(topScaled), 0.0, 255.0));
+    auto yMax = static_cast<uint8_t>(
+        std::clamp(std::ceil(bottomScaled), 0.0, 255.0));
 
     auto xBits = xMin ^ xMax;
     auto yBits = yMin ^ yMax;
@@ -262,10 +282,15 @@ private:
     return index;
   }
 
-  size_t GetIndexAt(const uint8_t depth, const uint8_t x, const uint8_t y) {
+  size_t GetIndexAt(
+      const uint8_t depth,
+      const uint8_t x,
+      const uint8_t y) {
     auto nodeIndex = 0U;
-    for (auto currentDepth = 0U; currentDepth < depth; ++currentDepth) {
-      nodeIndex += (1U << currentDepth) * (1U << currentDepth);
+    for (auto currentDepth = 0U; currentDepth < depth;
+         ++currentDepth) {
+      nodeIndex +=
+          (1U << currentDepth) * (1U << currentDepth);
     }
     auto sideLength = 1U << depth;
     nodeIndex += (sideLength * y) + x;
